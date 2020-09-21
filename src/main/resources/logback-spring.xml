@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="druid.driver-class-name" source="spring.datasource.druid.driver-class-name"/>
+    <springProperty scope="context" name="druid.url" source="spring.datasource.druid.url"/>
+    <springProperty scope="context" name="druid.username" source="spring.datasource.druid.username"/>
+    <springProperty scope="context" name="druid.password" source="spring.datasource.druid.password"/>
+    <property name="log.dir" value="E:\\parkingLine\\log" />
+    
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender"> 
+        <encoder charset="UTF-8">  
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>  
+        </encoder>  
+    </appender>  
+    
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">  
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">  
+            <!-- daily rollover -->  
+            <fileNamePattern>${log.dir}\parkingLine.%d{yyyy-MM-dd}.%i.log</fileNamePattern>  
+            <!-- keep 30 days' worth of history -->  
+            <maxHistory>30</maxHistory>  
+            <maxFileSize>5MB</maxFileSize>  
+            <totalSizeCap>10GB</totalSizeCap>  
+        </rollingPolicy>  
+        <encoder charset="UTF-8">  
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>  
+        </encoder>  
+    </appender>  
+    
+    <!--数据库日志-->
+    <!-- <appender name="DB" class="ch.qos.logback.classic.db.DBAppender">
+        <connectionSource class="ch.qos.logback.core.db.DriverManagerConnectionSource">
+            <driverClass>com.mysql.cj.jdbc.Driver</driverClass>
+            <url>jdbc:mysql://localhost:3306/parking-line?characterEncoding=UTF-8</url>
+            <user>root</user>
+            <password>LuZhaiAudit2wsx#EDC</password>
+        </connectionSource>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>error</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender> -->
+    
+    <logger name="org.springframework.web" level="INFO"/>
+    <!-- show parameters for hibernate sql 专为 Hibernate 定制 -->  
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder"  level="TRACE" />  
+    <logger name="org.hibernate.type.descriptor.sql.BasicExtractor"  level="DEBUG" />  
+    <logger name="org.hibernate.SQL" level="DEBUG" />  
+    <logger name="org.hibernate.engine.QueryParameters" level="DEBUG" />  
+    <logger name="org.hibernate.engine.query.HQLQueryPlan" level="DEBUG" />  
+    
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>  
+        <!-- <appender-ref ref="DB"/>   -->
+    </root>
+</configuration>
