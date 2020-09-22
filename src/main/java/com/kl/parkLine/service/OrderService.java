@@ -13,6 +13,7 @@ import com.kl.parkLine.entity.Dict;
 import com.kl.parkLine.entity.Event;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.Park;
+import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.util.DictCode;
 
 /**
@@ -42,7 +43,7 @@ public class OrderService
      * @param event 事件对象
      */
     @Transactional
-    public void processEvent(Event event)
+    public void processEvent(Event event) throws BusinessException
     {
         //保存event
         eventService.save(event);
@@ -155,28 +156,51 @@ public class OrderService
      * 事件取消事件（人工清理时触发）
      * @param event
      */
-    private void eventCancel(Event event)
+    private void eventCancel(Event event) throws BusinessException
     {
+        //取消targetEvent
+        Event targetEvent = eventService.findOneByGuid(event.getTargetGuid());
+        if (null == targetEvent) //未找到被取消的事件
+        {
+            return;
+        }
+        targetEvent.setEnabled("N");
+        eventService.save(targetEvent);
+        
         //涉及到的订单
         Order order = orderDao.findOneByActId(event.getActId());
         if (null == order)
         {
             return;
         }
+        //如果订单已经付款以及后续状态，返回失败
+        Dict status = dictService.findOneByCode(DictCode.ORDER_STATUS_PAYED);
+        if (0 <= order.getStatus().getSortIdx().compareToIgnoreCase(status.getSortIdx()))
+        {
+            throw new BusinessException(String.format("停车订单【%s】处于【%s】状态, 无法撤销", 
+                    order.getCode(), order.getStatus().getText()));
+        }
 
         String targetCode = event.getTargetType().getCode();
         // 取消的是入场事件，取消订单
         if (targetCode.equalsIgnoreCase(DictCode.EVENT_TYPE_CAR_IN))
         {
+            status = dictService.findOneByCode(DictCode.ORDER_STATUS_CANCELED);
+            order.setStatus(status);
+            //金额为0
+            order.setAmt(BigDecimal.ZERO);
         }
-        
         // 取消的是出场或者停车完成事件
         else if(targetCode.equalsIgnoreCase(DictCode.EVENT_TYPE_CAR_COMPLETE))
         {
-            
+            //将订单改成入场状态
+            status = dictService.findOneByCode(DictCode.ORDER_STATUS_IN);
+            order.setStatus(status);
+            //金额为0
+            order.setAmt(BigDecimal.ZERO);
         }
         
-        //订单处于“等待付款状态”, 则将订单改成入场状态
-        //如果订单已经付款，返回失败
+        orderDao.save(order);
+        
     }
 }

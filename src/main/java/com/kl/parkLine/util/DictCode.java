@@ -36,4 +36,5 @@ public class DictCode
     public final static String ORDER_STATUS_PAYED = "ORDER_STATUS_PAYED"; //已支付
     public final static String ORDER_STATUS_INVOICING = "ORDER_STATUS_INVOICING"; //已开票
     public final static String ORDER_STATUS_INVOICED = "ORDER_STATUS_INVOICED"; //已开票
+    public final static String ORDER_STATUS_CANCELED = "ORDER_STATUS_CANCELED"; //已取消
 }

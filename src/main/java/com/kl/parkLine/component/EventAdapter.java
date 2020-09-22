@@ -85,7 +85,7 @@ public class EventAdapter
     {
         Event retEvent = new Event();
         //设备厂商：信路通
-        retEvent.setActId(DEVICE_COMPANY_XLT);
+        retEvent.setDeviceCompany(DEVICE_COMPANY_XLT);
         
         //事件类型
         String dictCode = mapXltEventTypeToDictCode.get(xltEvt.getEvt());
@@ -93,7 +93,7 @@ public class EventAdapter
         retEvent.setType(dict);
         
         //属性赋值
-        retEvent.setEvtGuid(xltEvt.getEvtGuid());
+        retEvent.setGuid(xltEvt.getEvtGuid());
         retEvent.setActId(xltEvt.getParkingActId());
         retEvent.setHappenTime(xltEvt.getHappenTime());
         retEvent.setPlateNo(xltEvt.getPlateNumber());
@@ -135,6 +135,12 @@ public class EventAdapter
         retEvent.setPicUrlIn(xltEvt.getPicUrlIn());
         retEvent.setTimeOut(xltEvt.getTimeOut());
         retEvent.setPicUrlOut(xltEvt.getPicUrlOut());
+        
+        //取消事件
+        retEvent.setTargetGuid(xltEvt.getTargetEvtGuid());
+        dictCode = mapXltEventTypeToDictCode.get(xltEvt.getTargetEvtType());
+        dict = dictService.findOneByCode(dictCode);
+        retEvent.setTargetType(dict);
         
         //有效
         retEvent.setEnabled("Y");

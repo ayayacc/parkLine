@@ -56,7 +56,7 @@ public class Event extends AbstractEntity implements java.io.Serializable
     /**
      * 设备厂商名称
      */
-    @Column(name = "device_company", length = 16)
+    @Column(name = "device_company", length = 16, nullable = false)
     private String deviceCompany;
     
     /**
@@ -69,8 +69,8 @@ public class Event extends AbstractEntity implements java.io.Serializable
     /**
      * 事件唯一标识符
      */
-    @Column(name = "evt_guid", length = 48, nullable = false)
-    private String evtGuid;
+    @Column(name = "guid", length = 48, nullable = false)
+    private String guid;
     
     /**
      * 行为唯一标识符
@@ -103,7 +103,7 @@ public class Event extends AbstractEntity implements java.io.Serializable
     private Set<EventPic> pics;
     
     //停车场编码
-    @Column(name = "park_code", length = 64, nullable = false)
+    @Column(name = "park_code", length = 64)
     private String parkCode;
     
     //停车场名称

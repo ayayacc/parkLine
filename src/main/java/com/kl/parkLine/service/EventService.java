@@ -27,4 +27,16 @@ public class EventService
         eventDao.save(event);
         return;
     }
+    
+    /**
+     * 根据guid和parkCode查找唯一的事件对象
+     * @param guid
+     * @param parkCode
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public Event findOneByGuid(String guid)
+    {
+        return eventDao.findOneByGuid(guid);
+    }
 }

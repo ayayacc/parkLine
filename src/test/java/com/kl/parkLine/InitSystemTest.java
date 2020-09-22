@@ -142,7 +142,7 @@ public class InitSystemTest
             //完成
             {"EVENT_TYPE_CAR_COMPLETE", "完成", "EVENT_TYPE", "0903"},
             //完成
-            {"EVENT_TYPE_CANCLE", "取消", "EVENT_TYPE", "0904"}
+            {"EVENT_TYPE_CANCEL", "取消", "EVENT_TYPE", "0904"}
         };
         
         //保存字典
