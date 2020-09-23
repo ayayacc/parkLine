@@ -9,4 +9,5 @@ import com.kl.parkLine.entity.Order;
 public interface IOrderDao extends JpaRepository<Order, Integer>
 {
     public Order findOneByActId(String actId);
+    public Order findOneByOrderId(Integer orderId);
 }

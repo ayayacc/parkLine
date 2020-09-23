@@ -8,6 +8,6 @@ import com.kl.parkLine.entity.Event;
 @Repository(value="eventDao")
 public interface IEventDao extends JpaRepository<Event, Integer>
 {
-    public Event findOneByGuid(String guid);
+    public Event findOneByGuidAndParkCode(String guid, String parkCode);
     
 }

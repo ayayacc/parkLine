@@ -1,8 +1,11 @@
 package com.kl.parkLine.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 
+import org.joda.time.DateTime;
+import org.joda.time.Minutes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +40,12 @@ public class OrderService
     
     @Autowired
     private ParkService parkService;
+    
+    @Transactional
+    public Order findOneByOrderId(Integer orderId) 
+    {
+        return orderDao.findOneByOrderId(orderId);
+    }
     
     /**
      * 处理出入场/停车完成事件
@@ -125,7 +134,10 @@ public class OrderService
         //入场时间
         order.setInTime(event.getTimeIn());
         
-        //保存
+        //停车场空位-1
+        park.setAvailableCnt(park.getAvailableCnt()-1);
+        
+        //保存 订单
         orderDao.save(order);
     }
     
@@ -145,9 +157,13 @@ public class OrderService
         //记录出厂时间
         order.setOutTime(event.getTimeOut());
         
-        //TODO:计算价格
-        order.setAmt(new BigDecimal(10));
+        //计算并且设置价格
+        this.calAmt(order);
         
+        //停车场空位+1
+        Park park = order.getPark();
+        park.setAvailableCnt(park.getAvailableCnt() + 1);
+
         //保存
         orderDao.save(order);
     }
@@ -158,21 +174,21 @@ public class OrderService
      */
     private void eventCancel(Event event) throws BusinessException
     {
-        //取消targetEvent
-        Event targetEvent = eventService.findOneByGuid(event.getTargetGuid());
-        if (null == targetEvent) //未找到被取消的事件
-        {
-            return;
-        }
-        targetEvent.setEnabled("N");
-        eventService.save(targetEvent);
-        
         //涉及到的订单
         Order order = orderDao.findOneByActId(event.getActId());
         if (null == order)
         {
             return;
         }
+        
+        //取消targetEvent
+        Park park = order.getPark();
+        Event targetEvent = eventService.findOneByGuidAndParkCode(event.getTargetGuid(), park.getCode());
+        if (null == targetEvent) //未找到被取消的事件
+        {
+            return;
+        }
+        
         //如果订单已经付款以及后续状态，返回失败
         Dict status = dictService.findOneByCode(DictCode.ORDER_STATUS_PAYED);
         if (0 <= order.getStatus().getSortIdx().compareToIgnoreCase(status.getSortIdx()))
@@ -189,6 +205,12 @@ public class OrderService
             order.setStatus(status);
             //金额为0
             order.setAmt(BigDecimal.ZERO);
+            
+            //当前订单状态是入场，停车场空位数量+1
+            if (order.getStatus().getCode().equalsIgnoreCase(DictCode.ORDER_STATUS_IN))
+            {
+                park.setAvailableCnt(park.getAvailableCnt() + 1);
+            }
         }
         // 取消的是出场或者停车完成事件
         else if(targetCode.equalsIgnoreCase(DictCode.EVENT_TYPE_CAR_COMPLETE))
@@ -198,9 +220,55 @@ public class OrderService
             order.setStatus(status);
             //金额为0
             order.setAmt(BigDecimal.ZERO);
+            
+            //停车场空位数量-1
+            park.setAvailableCnt(park.getAvailableCnt() - 1);
         }
         
+        //保存订单
         orderDao.save(order);
         
+        //禁用目标事件
+        targetEvent.setEnabled("N");
+        eventService.save(targetEvent);
     }
+    
+    /**
+     * 计算订单金额，并且设置到order中
+     * @param park
+     * @param order
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public void calAmt(Order order)
+    {
+        Park park = order.getPark();
+        BigDecimal amt = BigDecimal.ZERO;
+        //TODO：检查是否月票订单
+        
+        //根据停车场规则计算金额
+        //计算时间差
+        DateTime inTime = new DateTime(order.getInTime());
+        DateTime outTime = new DateTime(order.getOutTime());
+        int minutes = Minutes.minutesBetween(inTime, outTime).getMinutes();
+        
+        //计算价格
+        BigDecimal feeTimeTotal = new BigDecimal(minutes - park.getFreeTime()); //计算应该计费的时间
+        if (0 < feeTimeTotal.compareTo(BigDecimal.ZERO)) //超过免费时间(超过x分钟收费)
+        {
+            amt = amt.add(park.getPriceLev1()); //第一阶段计费(x分钟后，x分钟--x分钟收费x元)
+            
+            //第二阶段计费时间(x分钟后，每x分钟收费x元,不足x分钟，按x分钟算)
+            BigDecimal feeTimeLev2 = feeTimeTotal.subtract(new BigDecimal(park.getTimeLev1())); 
+            if (0 < feeTimeLev2.compareTo(BigDecimal.ZERO)) //达到第二阶段计费条件
+            {
+                BigDecimal amtLev2 = feeTimeLev2.divide(new BigDecimal(park.getTimeLev2()), 
+                        RoundingMode.CEILING).multiply(park.getPriceLev2());
+                amt = amt.add(amtLev2);
+            }
+        }
+        //最多不超过x元
+        order.setAmt(amt.min(park.getMaxAmt()));
+    }
+    
 }

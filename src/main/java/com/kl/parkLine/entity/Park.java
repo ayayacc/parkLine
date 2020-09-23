@@ -1,5 +1,6 @@
 package com.kl.parkLine.entity;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -62,14 +63,14 @@ public class Park extends AbstractEntity implements java.io.Serializable
     /**
      * 停车场总车位数量
      */
-    @Column(name = "total_cnt")
+    @Column(name = "total_cnt", nullable = false)
     private Integer totalCnt;
     
     /**
      * 当前可用车位数量
      */
-    @Column(name = "free_cnt")
-    private Integer freeCnt;
+    @Column(name = "available_cnt", nullable = false)
+    private Integer availableCnt;
     
     /**
      * 经纬度
@@ -114,6 +115,45 @@ public class Park extends AbstractEntity implements java.io.Serializable
      */
     @Column(name = "enabled", length = 4, nullable = false)
     private String enabled;
+    
+    /**
+     * 计费逻辑: x分钟内免费，x小时起x元，每超过1小时加收x元，封顶x元
+     */
+    /*
+     * 免费时长（分钟）
+     */
+    @Column(name = "free_Time", nullable = false, columnDefinition ="int default 0") 
+    private Integer freeTime;
+    
+    /**
+     * 第一阶梯计价时长（分钟）
+     */
+    @Column(name = "time_lev1", columnDefinition ="int default 0") 
+    private Integer timeLev1;
+    
+    /**
+     * 第一阶梯计价单价（元）
+     */
+    @Column(name = "price_lev1", precision = 8 ,scale = 2, columnDefinition ="int default 0")
+    private BigDecimal priceLev1;
+    
+    /**
+     * 第二阶梯计价时长（分钟）
+     */
+    @Column(name = "time_lev2", columnDefinition ="int default 0") 
+    private Integer timeLev2;
+    
+    /**
+     * 第二阶梯计价单价（元）
+     */
+    @Column(name = "price_lev2", precision = 8 ,scale = 2, columnDefinition ="int default 0") 
+    private BigDecimal priceLev2;
+    
+    /**
+     * 封顶x元
+     */
+    @Column(name = "max_amt", precision = 8 ,scale = 2, columnDefinition ="int default 999999") 
+    private BigDecimal maxAmt;
 
     @Override
     public String toString()

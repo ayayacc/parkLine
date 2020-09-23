@@ -35,8 +35,8 @@ public class EventService
      * @return
      */
     @Transactional(readOnly = true)
-    public Event findOneByGuid(String guid)
+    public Event findOneByGuidAndParkCode(String guid, String parkCode)
     {
-        return eventDao.findOneByGuid(guid);
+        return eventDao.findOneByGuidAndParkCode(guid, parkCode);
     }
 }

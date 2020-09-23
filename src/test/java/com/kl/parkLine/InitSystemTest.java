@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -15,7 +14,6 @@ import com.kl.parkLine.entity.Dict;
 import com.kl.parkLine.entity.Park;
 
 @SpringBootTest
-@EnableJpaAuditing(auditorAwareRef = "mockAuditorAware")
 public class InitSystemTest
 {
     @Autowired 
@@ -195,6 +193,8 @@ public class InitSystemTest
             park.setTotalCnt(Integer.valueOf(parkStr[2]));
             park.setGeo(parkStr[3]);
             park.setContact(parkStr[4]);
+            park.setTotalCnt(100);
+            park.setAvailableCnt(100);
             parkDao.save(park);
         }
     }

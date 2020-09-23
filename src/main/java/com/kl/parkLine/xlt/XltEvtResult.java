@@ -8,4 +8,13 @@ public class XltEvtResult
 {
     private Integer errorcode;
     private String message;
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("XltEvtResult [errorcode=").append(errorcode)
+                .append(", message=").append(message).append("]");
+        return builder.toString();
+    }
+    
 }

@@ -26,4 +26,14 @@ public class ParkService
     {
         return parkDao.findOneByCode(code);
     }
+    
+    /**
+     * 保存停车场
+     * @param park
+     */
+    @Transactional
+    public void save(Park park)
+    {
+        parkDao.save(park);
+    }
 }
