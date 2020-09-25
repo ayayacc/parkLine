@@ -49,6 +49,15 @@ public class UserService
     {
         return userDao.findOneByName(name);
     }
+    /**
+     * 根据用户名称查找
+     * @param name 用户名称
+     */ 
+    @Transactional(readOnly = true)
+    public User findOneByMobile(String mobile)
+    {
+        return userDao.findOneByMobile(mobile);
+    }
     
     /**
      * 校验当前登录用户是否可以访问data 数据

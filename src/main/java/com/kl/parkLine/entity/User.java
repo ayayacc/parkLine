@@ -44,13 +44,19 @@ public class User extends AbstractEntity implements UserDetails
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
     
+    /**
+     * 微信用户openid
+     */
     @Column(name = "wx_open_id", length = 64, unique = true)
     private String wxOpenId;
     
+    /**
+     * 用户唯一标识
+     */
     @Column(name = "name", nullable = false, length = 64, unique = true)
     private String name;
     
-    @Column(name = "nick_name", nullable = false, length = 64)
+    @Column(name = "nick_name", length = 64)
     private String nickName;
     
     @Column(name = "mobile", nullable = false, length = 16)

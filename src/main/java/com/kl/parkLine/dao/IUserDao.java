@@ -9,4 +9,5 @@ import com.kl.parkLine.entity.User;
 public interface IUserDao extends JpaRepository<User, Integer>
 {
     public User findOneByName(String name);
+    public User findOneByMobile(String mobile);
 }

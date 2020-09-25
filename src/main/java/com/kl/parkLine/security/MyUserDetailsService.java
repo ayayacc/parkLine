@@ -20,4 +20,9 @@ public class MyUserDetailsService implements UserDetailsService
     {
         return userService.findByName(userName);
     }
+    
+    public User loadUserByMobile(String mobile) 
+    {
+        return userService.findOneByMobile(mobile);
+    }
 }

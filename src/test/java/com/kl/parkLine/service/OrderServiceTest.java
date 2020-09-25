@@ -22,6 +22,6 @@ public class OrderServiceTest
         Order order = orderService.findOneByOrderId(1);
         order.getPark();
         orderService.calAmt(order);
-        assertEquals(0, order.getAmt().intValue());
+        assertEquals(20, order.getAmt().intValue());
     }
 }

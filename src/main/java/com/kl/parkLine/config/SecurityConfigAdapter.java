@@ -18,6 +18,8 @@ import com.kl.parkLine.security.JWTAuthorizationFilter;
 import com.kl.parkLine.security.MyAuthenticationFailureHandler;
 import com.kl.parkLine.security.MyAuthenticationSuccessHandler;
 import com.kl.parkLine.security.MyUserDetailsService;
+import com.kl.parkLine.security.SmsAuthenticationFilter;
+import com.kl.parkLine.security.SmsAuthenticationProvider;
 import com.kl.parkLine.security.WxAuthenticationFilter;
 import com.kl.parkLine.security.WxAuthenticationProvider;
 import com.nimbusds.jose.JWSSigner;
@@ -45,17 +47,12 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
     @Autowired
     private WxAuthenticationProvider wxAuthenticationProvider;
     
+    @Autowired
+    private SmsAuthenticationProvider smsAuthenticationProvider;
+    
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder(){
         return new BCryptPasswordEncoder();
-    }
-    
-    @Bean 
-    public WxAuthenticationProvider wxAuthenticationProvider(MyUserDetailsService userDetailService) 
-    { 
-        WxAuthenticationProvider provider = new WxAuthenticationProvider(); 
-        provider.setUserDetailsService(userDetailService);
-        return provider; 
     }
     
     @Bean
@@ -110,6 +107,15 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         wxAuthenticationFilter.setAuthenticationFailureHandler(failureHandler);
         wxAuthenticationFilter.setAuthenticationManager(authenticationManager); 
         wxAuthenticationFilter.setContinueChainBeforeSuccessfulAuthentication(false); 
+        wxAuthenticationProvider.setUserDetailsService(myUserDetailsService);
+        
+        //短信认证 过滤器
+        SmsAuthenticationFilter smsAuthenticationFilter = new SmsAuthenticationFilter(); 
+        smsAuthenticationFilter.setAuthenticationSuccessHandler(successHandler); 
+        smsAuthenticationFilter.setAuthenticationFailureHandler(failureHandler);
+        smsAuthenticationFilter.setAuthenticationManager(authenticationManager); 
+        smsAuthenticationFilter.setContinueChainBeforeSuccessfulAuthentication(false); 
+        smsAuthenticationProvider.setUserDetailsService(myUserDetailsService);
         
         //Token验证 JWTAuthorizationFilter
         JWTAuthorizationFilter jwtAuthorizationFilter = new JWTAuthorizationFilter();
@@ -119,11 +125,14 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         .headers().frameOptions().sameOrigin()
         .and()
         .authorizeRequests()
-        .antMatchers("/MchApi", "/MchApi/**").permitAll()
+        .antMatchers("/MchApi", "/MchApi/**", "/smsCode", "/smsCode/**", "/smslogin").permitAll()
+        .anyRequest().authenticated()
         .and()          
         .authenticationProvider(wxAuthenticationProvider)
-        .addFilterAfter(accountAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .authenticationProvider(smsAuthenticationProvider)
+        .addFilterBefore(accountAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .addFilterBefore(wxAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(smsAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .addFilterAfter(jwtAuthorizationFilter, AccountAuthenticationFilter.class)
         .csrf().disable()  // 禁用 Spring Security 自带的跨域处理
          // 调整为让 Spring Security 不创建和使用 session;    

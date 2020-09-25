@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.entity.User;
@@ -12,6 +13,7 @@ import com.kl.parkLine.feign.IWxFeignClient;
 import com.kl.parkLine.json.WxCode2SessionResult;
 import com.kl.parkLine.service.UserService;
 
+@Component
 public class WxAuthenticationProvider implements AuthenticationProvider
 {
     @Value("${wx.app.id}")

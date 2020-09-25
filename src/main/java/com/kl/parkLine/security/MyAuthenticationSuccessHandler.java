@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 
+import com.kl.parkLine.util.Const;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -31,14 +32,14 @@ public class MyAuthenticationSuccessHandler extends SimpleUrlAuthenticationSucce
     {
         response.setContentType("application/json;charset=UTF-8");
         
-        //用户名密码验证
+        //获取登录的用户名
         String username = authentication.getName();
         // Prepare JWT with claims set
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-            .subject("store")
-            .issuer("store.chenc.com")
-            .claim("username", username)
-            .expirationTime(new Date(new Date().getTime() + 60 * 1000))
+            .subject("parkLine")
+            .issuer("com.kl.parkLine")
+            .claim(Const.JWT_CLAIM_USER_NAME, username)
+            .expirationTime(new Date(new Date().getTime() + 60 * 1000)) //有效期60分钟
             .build();
         
         

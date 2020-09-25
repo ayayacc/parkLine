@@ -12,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.kl.parkLine.util.Const;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jwt.SignedJWT;
 
@@ -29,7 +30,7 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
             HttpServletResponse response,
             FilterChain chain) throws ServletException, IOException
     {
-        String tokenHeader = request.getHeader("Authentication");
+        String tokenHeader = request.getHeader("Authorization");
         // 如果请求头中没有Authorization信息则直接放行了
         if (tokenHeader == null) {
             chain.doFilter(request, response);
@@ -37,15 +38,15 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
         }
         
         SignedJWT signedJWT;
-        String account;
+        String username;
         try
         {
-            signedJWT = SignedJWT.parse(tokenHeader);
+            signedJWT = SignedJWT.parse(tokenHeader.replace("Bearer ", ""));
             if (false == signedJWT.verify(jwsVerifier))
             {
                 throw new Exception("invalid token");
             }
-            account = (String) signedJWT.getJWTClaimsSet().getClaim("account");
+            username = (String) signedJWT.getJWTClaimsSet().getClaim(Const.JWT_CLAIM_USER_NAME);
         }
         catch (Exception e)
         {
@@ -57,7 +58,7 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
         }
         
         // 如果请求头中有token，则进行解析，并且设置认证信息
-        JWTAuthenticationToken token = new JWTAuthenticationToken(account,
+        JWTAuthenticationToken token = new JWTAuthenticationToken(username,
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")));
         SecurityContextHolder.getContext().setAuthentication(token);
         chain.doFilter(request, response);
