@@ -1,5 +1,7 @@
 package com.kl.parkLine;
 
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +12,10 @@ import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.dao.IDictDao;
 import com.kl.parkLine.dao.IParkDao;
+import com.kl.parkLine.dao.IRoleDao;
 import com.kl.parkLine.entity.Dict;
 import com.kl.parkLine.entity.Park;
+import com.kl.parkLine.entity.Role;
 
 @SpringBootTest
 public class InitSystemTest
@@ -24,6 +28,9 @@ public class InitSystemTest
     
     @Autowired
     private IParkDao parkDao;
+    
+    @Autowired
+    private IRoleDao roleDao;
     
     @BeforeEach
     public void wireUpAuditor()
@@ -39,6 +46,7 @@ public class InitSystemTest
     {
         initDict();
         initPark();
+        initRole();
     }
     
     /**
@@ -195,7 +203,38 @@ public class InitSystemTest
             park.setContact(parkStr[4]);
             park.setTotalCnt(100);
             park.setAvailableCnt(100);
+            park.setFreeTime(60); //60分钟免费
+            //超过60分钟，第一个小时5块
+            park.setTimeLev1(60); 
+            park.setPriceLev1(new BigDecimal(5));
+            //每半小时3块
+            park.setTimeLev2(30); 
+            park.setPriceLev2(new BigDecimal(3));
             parkDao.save(park);
+        }
+    }
+    
+    /**
+     * 初始化角色
+     */
+    private void initRole()
+    {
+        String[][] rolesStr = {
+            {"ROLE_END_USER", "最终用户"}
+        };
+        
+        for (String[] roleStr : rolesStr)
+        {
+            String code = roleStr[0];
+            Role role = roleDao.findOneByCode(code);
+            if (null == role)
+            {
+                role = new Role();
+            }
+            role.setCode(code);
+            role.setName(roleStr[1]);
+            
+            roleDao.save(role);
         }
     }
 }

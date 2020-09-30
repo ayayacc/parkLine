@@ -118,14 +118,17 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         smsAuthenticationProvider.setUserDetailsService(myUserDetailsService);
         
         //Token验证 JWTAuthorizationFilter
-        JWTAuthorizationFilter jwtAuthorizationFilter = new JWTAuthorizationFilter();
+        JWTAuthorizationFilter jwtAuthorizationFilter = new JWTAuthorizationFilter(); 
         jwtAuthorizationFilter.setJwsVerifier(jwsVerifier);
+        jwtAuthorizationFilter.setUserDetailsService(myUserDetailsService);
         
         http
         .headers().frameOptions().sameOrigin()
         .and()
         .authorizeRequests()
         .antMatchers("/MchApi", "/MchApi/**", "/smsCode", "/smsCode/**", "/smslogin").permitAll()
+        .and()
+        .authorizeRequests()
         .anyRequest().authenticated()
         .and()          
         .authenticationProvider(wxAuthenticationProvider)

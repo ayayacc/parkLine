@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -81,18 +82,37 @@ public class User extends AbstractEntity implements UserDetails
     /**
      * 用户绑定的车辆
      */
-    @ManyToMany(fetch = FetchType.LAZY) 
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}) 
     @JoinTable(name = "tr_user_car", joinColumns = { @JoinColumn(name="user_id") }, inverseJoinColumns={ @JoinColumn(name="car_id") })  
     private Set<Car> cars;
     
     @Column(name = "is_enable")
     private boolean isEnable;
+    
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "tr_user_role", joinColumns = { @JoinColumn(name="user_id") }, inverseJoinColumns={ @JoinColumn(name="role_id") })  
+    private Set<Role> roles;
+    
+    public boolean hasRole(String roleCode)
+    {
+        for (Role role : roles)
+        {
+            if (role.getCode().equalsIgnoreCase(roleCode))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities()
     {
         List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+        for (Role role : roles)
+        {
+            authorities.add(new SimpleGrantedAuthority(role.getCode()));
+        }
         
         return authorities;
     }

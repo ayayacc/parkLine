@@ -72,7 +72,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
     /**
      * 停车场
      */
-    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinColumn(name = "park_id")
     private Park park;
     
@@ -104,7 +104,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
     /**
      * 行为唯一标识符
      */
-    @Column(name = "act_id", length = 48)
+    @Column(name = "act_id", length = 48, unique = true)
     private String actId;
     
     /*月票订单*/

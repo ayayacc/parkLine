@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.service.UserService;
@@ -16,13 +17,23 @@ public class MyUserDetailsService implements UserDetailsService
     
     //获取用户名,密码,提供给Spring进行验证
     @Override
+    @Transactional(readOnly = true)
     public User loadUserByUsername(String userName) throws UsernameNotFoundException
     {
         return userService.findByName(userName);
     }
     
+    @Transactional(readOnly = true)
     public User loadUserByMobile(String mobile) 
     {
         return userService.findOneByMobile(mobile);
+    }
+    
+    @Transactional(readOnly = true)
+    public User loadUserByUsernameAndRole(String userName) 
+    {
+        User user = userService.findByName(userName);
+        user.getAuthorities();
+        return user;
     }
 }

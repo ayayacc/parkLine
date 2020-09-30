@@ -13,4 +13,9 @@ public class Const
     //JWT 信息
     public final static String JWT_CLAIM_USER_NAME = "username";
     public final static String JWT_CLAIM_ROLES = "JWT_CLAIM_ROLES";
+    
+    //rest返回值
+    public final static Integer RET_OK = 0;
+    public final static Integer RET_LOGIN_TIME_OUT = 1;
+    public final static Integer RET_FAILED = 2;
 }

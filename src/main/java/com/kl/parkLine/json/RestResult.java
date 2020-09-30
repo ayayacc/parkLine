@@ -7,6 +7,6 @@ import lombok.Setter;
 @Setter
 public class RestResult
 {
-    private Integer errcode;  
-    private String errmsg;  
+    private Integer retCode;  
+    private String errMsg;  
 }

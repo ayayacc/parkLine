@@ -1,11 +1,11 @@
 package com.kl.parkLine.security;
 
 import java.io.IOException;
-import java.util.Date;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.joda.time.DateTime;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 
@@ -35,11 +35,12 @@ public class MyAuthenticationSuccessHandler extends SimpleUrlAuthenticationSucce
         //获取登录的用户名
         String username = authentication.getName();
         // Prepare JWT with claims set
+        DateTime dateTime = new DateTime().plusMinutes(60);
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
             .subject("parkLine")
             .issuer("com.kl.parkLine")
             .claim(Const.JWT_CLAIM_USER_NAME, username)
-            .expirationTime(new Date(new Date().getTime() + 60 * 1000)) //有效期60分钟
+            .expirationTime(dateTime.toDate()) //有效期60分钟
             .build();
         
         

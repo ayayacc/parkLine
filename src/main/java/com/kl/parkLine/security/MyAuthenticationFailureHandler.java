@@ -9,6 +9,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 
+import com.alibaba.fastjson.JSON;
+import com.kl.parkLine.json.RestResult;
+import com.kl.parkLine.util.Const;
+
 
 public class MyAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler
 {
@@ -17,7 +21,10 @@ public class MyAuthenticationFailureHandler extends SimpleUrlAuthenticationFailu
             AuthenticationException exception) throws IOException, ServletException 
     {
         response.setContentType("application/json;charset=UTF-8");
-        //签发token
-        response.getWriter().write("Authentication failed");
+        RestResult restResult = new RestResult();
+        //返回验证结果
+        restResult.setRetCode(Const.RET_FAILED);
+        restResult.setErrMsg(exception.getMessage());
+        response.getWriter().write(JSON.toJSONString(restResult));
     }
 }

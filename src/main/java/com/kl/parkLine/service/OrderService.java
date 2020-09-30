@@ -3,10 +3,16 @@ package com.kl.parkLine.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.joda.time.Minutes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +22,16 @@ import com.kl.parkLine.entity.Dict;
 import com.kl.parkLine.entity.Event;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.Park;
+import com.kl.parkLine.entity.QOrder;
+import com.kl.parkLine.entity.User;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.predicate.OrderPredicates;
 import com.kl.parkLine.util.DictCode;
+import com.kl.parkLine.vo.OrderVo;
+import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
  * @author chenc
@@ -40,6 +54,48 @@ public class OrderService
     
     @Autowired
     private ParkService parkService;
+    
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private JPAQueryFactory jpaQueryFactory;
+    
+    @Transactional(readOnly = true)
+    public Page<OrderVo> fuzzyFindPage(Order order, Pageable pageable, Authentication auth)
+    {
+        User user = userService.findByName(auth.getName());
+        Predicate searchPred = OrderPredicates.fuzzySearch(order, user);
+        
+        QOrder qOrder = QOrder.order;
+        QueryResults<Tuple> queryResults = jpaQueryFactory
+                .select(
+                        qOrder.orderId,
+                        qOrder.code,
+                        qOrder.status.text,
+                        qOrder.type.text
+                )
+                .from(qOrder)
+                .where(searchPred)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetchResults();
+        
+        //转换成vo
+        List<OrderVo> orderVos = queryResults
+                .getResults()
+                .stream()
+                .map(tuple -> OrderVo.builder()
+                        .orderId(tuple.get(qOrder.orderId))
+                        .code(tuple.get(qOrder.code))
+                        .type(tuple.get(qOrder.type.text))
+                        .status(tuple.get(qOrder.status.text))
+                        .build()
+                        )
+                .collect(Collectors.toList());
+        
+        return new PageImpl<>(orderVos, pageable, queryResults.getTotal());
+    }
     
     @Transactional
     public Order findOneByOrderId(Integer orderId) 
@@ -201,8 +257,6 @@ public class OrderService
         // 取消的是入场事件，取消订单
         if (targetCode.equalsIgnoreCase(DictCode.EVENT_TYPE_CAR_IN))
         {
-            status = dictService.findOneByCode(DictCode.ORDER_STATUS_CANCELED);
-            order.setStatus(status);
             //金额为0
             order.setAmt(BigDecimal.ZERO);
             
@@ -211,6 +265,10 @@ public class OrderService
             {
                 park.setAvailableCnt(park.getAvailableCnt() + 1);
             }
+            
+            //取消订单
+            status = dictService.findOneByCode(DictCode.ORDER_STATUS_CANCELED);
+            order.setStatus(status);
         }
         // 取消的是出场或者停车完成事件
         else if(targetCode.equalsIgnoreCase(DictCode.EVENT_TYPE_CAR_COMPLETE))
@@ -259,12 +317,15 @@ public class OrderService
             amt = amt.add(park.getPriceLev1()); //第一阶段计费(x分钟后，x分钟--x分钟收费x元)
             
             //第二阶段计费时间(x分钟后，每x分钟收费x元,不足x分钟，按x分钟算)
-            BigDecimal feeTimeLev2 = feeTimeTotal.subtract(new BigDecimal(park.getTimeLev1())); 
-            if (0 < feeTimeLev2.compareTo(BigDecimal.ZERO)) //达到第二阶段计费条件
+            if (0 != park.getTimeLev2())
             {
-                BigDecimal amtLev2 = feeTimeLev2.divide(new BigDecimal(park.getTimeLev2()), 
-                        RoundingMode.CEILING).multiply(park.getPriceLev2());
-                amt = amt.add(amtLev2);
+                BigDecimal feeTimeLev2 = feeTimeTotal.subtract(new BigDecimal(park.getTimeLev1())); 
+                if (0 < feeTimeLev2.compareTo(BigDecimal.ZERO)) //达到第二阶段计费条件
+                {
+                    BigDecimal amtLev2 = feeTimeLev2.divide(new BigDecimal(park.getTimeLev2()), 
+                            RoundingMode.CEILING).multiply(park.getPriceLev2());
+                    amt = amt.add(amtLev2);
+                }
             }
         }
         //最多不超过x元
