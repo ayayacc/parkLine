@@ -20,6 +20,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.annotation.NeedToCompare;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -51,54 +52,63 @@ public class Park extends AbstractEntity implements java.io.Serializable
     /**
      * 停车场编号
      */
+    @NeedToCompare(name = "编号")
     @Column(name = "code", nullable = false, length = 64, unique = true)
     private String code;
     
     /**
      * 停车场名称
      */
+    @NeedToCompare(name = "名称")
     @Column(name = "name", nullable = false, length = 64, unique = true)
     private String name;
     
     /**
      * 停车场总车位数量
      */
+    @NeedToCompare(name = "车位总数")
     @Column(name = "total_cnt", nullable = false)
     private Integer totalCnt;
     
     /**
      * 当前可用车位数量
      */
+    @NeedToCompare(name = "可用车位数")
     @Column(name = "available_cnt", nullable = false)
     private Integer availableCnt;
     
     /**
      * 经纬度
      */
+    @NeedToCompare(name = "经纬度")
     @Column(name = "geo", length = 32)
     private String geo;
     
     /**
      * 联系方式
      */
+    @NeedToCompare(name = "联系方式")
     @Column(name = "contact", nullable = false, length = 16)
     private String contact;
     
     /**
      * 省
      */
+    @NeedToCompare(name = "省")
     @Column(name = "province", length = 16)
     private String province;
     
     /**
      * 市
      */
+    @NeedToCompare(name = "市")
     @Column(name = "city", length = 16)
     private String city;
     
     /**
      * 详细地址
      */
+    @NeedToCompare(name = "详细地址")
     @Column(name = "address", length = 128)
     private String address;
     
@@ -113,6 +123,7 @@ public class Park extends AbstractEntity implements java.io.Serializable
     /**
      * 是否有效
      */
+    @NeedToCompare(name = "是否有效")
     @Column(name = "enabled", length = 4, nullable = false)
     private String enabled;
     
@@ -122,38 +133,52 @@ public class Park extends AbstractEntity implements java.io.Serializable
     /*
      * 免费时长（分钟）
      */
+    @NeedToCompare(name = "免费时长（分钟）")
     @Column(name = "free_Time", nullable = false, columnDefinition ="int default 0") 
     private Integer freeTime;
     
     /**
      * 第一阶梯计价时长（分钟）
      */
+    @NeedToCompare(name = "第一阶梯计价时长（分钟）")
     @Column(name = "time_lev1", columnDefinition ="int default 0") 
     private Integer timeLev1;
     
     /**
      * 第一阶梯计价单价（元）
      */
+    @NeedToCompare(name = "第一阶梯计价单价（元）")
     @Column(name = "price_lev1", precision = 8 ,scale = 2, columnDefinition ="int default 0")
     private BigDecimal priceLev1;
     
     /**
      * 第二阶梯计价时长（分钟）
      */
+    @NeedToCompare(name = "第二阶梯计价时长（分钟）")
     @Column(name = "time_lev2", columnDefinition ="int default 0") 
     private Integer timeLev2;
     
     /**
      * 第二阶梯计价单价（元）
      */
+    @NeedToCompare(name = "第二阶梯计价单价（元）")
     @Column(name = "price_lev2", precision = 8 ,scale = 2, columnDefinition ="int default 0") 
     private BigDecimal priceLev2;
     
     /**
      * 封顶x元
      */
+    @NeedToCompare(name = "封顶x元")
     @Column(name = "max_amt", precision = 8 ,scale = 2, columnDefinition ="int default 999999") 
     private BigDecimal maxAmt;
+    
+    /**
+     * 操作记录
+     */
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
+    @OrderBy(value = "createdDate desc")
+    @JsonIgnore
+    private List<ParkLog> logs;
 
     @Override
     public String toString()

@@ -11,7 +11,7 @@ import com.kl.parkLine.entity.Car;
  * @author chenc
  *
  */
-@Service("carService")
+@Service
 public class CarService
 {
     @Autowired

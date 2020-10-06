@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.Order;
-import com.kl.parkLine.entity.User;
 import com.kl.parkLine.service.OrderService;
 import com.kl.parkLine.vo.OrderVo;
 
@@ -23,7 +22,7 @@ public class OrderController
     private OrderService orderService;  
     
     /**
-     * 获取用户信息
+     * 获取我的订单信息
      * @return
      */
     @GetMapping("/my")
@@ -33,14 +32,24 @@ public class OrderController
     }
     
     /**
-     * 获取用户信息
+     * 停车场管理员，系统管理员使用
      * @return
      */
-    @GetMapping(value = "/{userId}")
-    @PreAuthorize("hasPermission(#user, 'read')")
-    public User getUser(@PathVariable("userId") Integer userId, 
-            @PathVariable("userId") User user)
+    @GetMapping("/find")
+    public Page<OrderVo> find(Order order, Pageable pageable, Authentication auth)
     {
-        return user;
+        return orderService.fuzzyFindPage(order, pageable, auth);
+    }
+    
+    /**
+     * 获取单张订单信息
+     * @return
+     */
+    @GetMapping(value = "/{orderId}")
+    @PreAuthorize("hasPermission(#order, 'read')")
+    public Order getOrder(@PathVariable("orderId") Integer orderId, 
+            @PathVariable("orderId") Order order)
+    {
+        return order;
     }
 }

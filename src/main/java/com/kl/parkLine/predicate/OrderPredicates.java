@@ -30,6 +30,12 @@ public class OrderPredicates
             where.and(qOrder.status.code.eq(order.getStatus().getCode()));
         }
         
+        //停车场
+        if (null != order.getPark())
+        {
+            where.and(qOrder.park.parkId.eq(order.getPark().getParkId()));
+        }
+        
         //区分用户权限
         where.and(roleFilter(user));
         
