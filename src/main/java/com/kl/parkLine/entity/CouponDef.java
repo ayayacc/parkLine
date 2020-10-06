@@ -25,6 +25,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.annotation.NeedToCompare;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -62,37 +63,50 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
     /**
      * 优惠券名称
      */
+    @NeedToCompare(name = "名称")
     @Column(name = "name", nullable = false, length = 64, unique = true)
     private String name;
 
     /**
      * 金额
      */
+    @NeedToCompare(name = "金额")
     @Column(name = "amt", precision = 15 ,scale = 2)
     private BigDecimal amt;
     
     /**
      *使用支付的最小金额（满xx使用）
      */
+    @NeedToCompare(name = "使用支付的最小金额")
     @Column(name = "min_amt", precision = 15 ,scale = 2)
     private BigDecimal minAmt;
     
     /**
      * 优惠券总数
      */
+    @NeedToCompare(name = "优惠券总数")
     @Column(name = "total_cnt")
     private Integer totalCnt;
     
     /**
      * 已经领取数量
      */
-    @Column(name = "used_cnt")
+    @NeedToCompare(name = "已经领取数量")
+    @Column(name = "applied_cnt", nullable = false, columnDefinition ="int default 0")
+    private Integer appliedCnt;
+    
+    /**
+     * 已经使用数量
+     */
+    @NeedToCompare(name = "已经使用数量")
+    @Column(name = "used_cnt", nullable = false, columnDefinition ="int default 0")
     private Integer usedCnt;
     
     /**
      * 是否有效
      */
-    @Column(name = "enabled", length = 4,nullable = false)
+    @NeedToCompare(name = "是否有效")
+    @Column(name = "enabled", length = 4, nullable = false)
     private String enabled;
     
     /**
@@ -102,6 +116,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
     @Column(name = "start_date", nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @NeedToCompare(name = "有效期开始时间")
     private Date startDate;
     
     /**
@@ -111,6 +126,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
     @Column(name = "end_date", nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @NeedToCompare(name = "有效期结束时间")
     private Date endDate;
     
     /**

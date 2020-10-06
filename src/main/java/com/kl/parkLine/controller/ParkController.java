@@ -27,9 +27,10 @@ public class ParkController
     private ParkService parkService;  
     
     /**
-     * 获取用户信息
-     * @return
-     * @throws BusinessException 
+     * 保存停车场信息
+     * @param park
+     * @return 保存结果
+     * @throws BusinessException
      */
     @PostMapping("/save")
     public RestResult save(@RequestBody Park park) throws BusinessException
@@ -44,8 +45,9 @@ public class ParkController
     }
     
     /**
-     * 获取停车场信息
-     * @return
+     * 获取停车场明细
+     * @param parkId 停车场Id
+     * @return 停车场明细
      */
     @GetMapping(value = "/{parkId}")
     @PreAuthorize("hasPermission(#park, 'park')")
@@ -56,8 +58,11 @@ public class ParkController
     }
     
     /**
-     * 查询停车场信息
-     * @return
+     * 分页查询停车场信息
+     * @param couponDef 查询条件
+     * @param pageable 分页条件
+     * @param auth 当前登录用户
+     * @return 查询结果
      */
     @GetMapping("/find")
     public Page<ParkVo> findParks(Park park, Pageable pageable, Authentication auth)

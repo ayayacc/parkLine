@@ -1,5 +1,6 @@
 package com.kl.parkLine.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -44,6 +45,9 @@ public class ParkService
     @Autowired
     private UserService userService;
     
+    @Autowired
+    private JPAQueryFactory jpaQueryFactory;
+    
     /**
      * 根据停车场编码找到停车场对象
      * @param code 停车场编码
@@ -63,7 +67,11 @@ public class ParkService
     public void save(Park park) throws BusinessException
     {
         String diff = Const.LOG_CREATE;
-        if (null != park.getParkId()) //编辑已有数据
+        if (null == park.getParkId()) //新增数据
+        {
+            park.setLogs(new ArrayList<ParkLog>());
+        }
+        else //编辑已有数据
         {
             //编辑停车场，//合并字段
             Optional<Park> parkDst = parkDao.findById(park.getParkId());
@@ -88,9 +96,6 @@ public class ParkService
         park.getLogs().add(log);
         parkDao.save(park);
     }
-    
-    @Autowired
-    private JPAQueryFactory jpaQueryFactory;
     
     @Transactional(readOnly = true)
     public Page<ParkVo> fuzzyFindPage(Park park, Pageable pageable, Authentication auth)

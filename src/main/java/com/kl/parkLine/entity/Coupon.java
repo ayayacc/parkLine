@@ -60,6 +60,7 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_def")
+    @JsonIgnore
     private CouponDef couponDef;
     
     /**
@@ -108,7 +109,9 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     /**
      * 拥有者
      */
-    @Column(name = "owner", nullable = false)
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner", nullable = false)
     private User owner;
 
     /**

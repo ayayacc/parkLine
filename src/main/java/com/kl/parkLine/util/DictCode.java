@@ -37,4 +37,10 @@ public class DictCode
     public final static String ORDER_STATUS_INVOICING = "ORDER_STATUS_INVOICING"; //已开票
     public final static String ORDER_STATUS_INVOICED = "ORDER_STATUS_INVOICED"; //已开票
     public final static String ORDER_STATUS_CANCELED = "ORDER_STATUS_CANCELED"; //已取消
+    
+    //优惠券有效期
+    public final static String COUPON_STATUS_VALID = "COUPON_STATUS_VALID"; //有效
+    public final static String COUPON_STATUS_USED = "COUPON_STATUS_USED"; //已使用
+    public final static String COUPON_STATUS_INVALID = "COUPON_STATUS_INVALID"; //无效
+    public final static String COUPON_STATUS_EXPIRED = "COUPON_STATUS_EXPIRED"; //已过期
 }

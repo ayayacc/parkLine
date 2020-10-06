@@ -41,7 +41,7 @@ public class ParkPredicates
         BooleanBuilder where = new BooleanBuilder();
         /*QPark qPark = QPark.park;
         
-        if (user.hasRole(RoleCode.END_USER))
+        if (user.hasRole(RoleCode.PARK_ADMIN))
         {
             where.and(qPark.car.in(user.getCars()));
         }*/

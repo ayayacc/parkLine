@@ -21,11 +21,10 @@ public class SmsController
     private SmsCodeService smsCodeService;
     
     /**
-     * 接收信路通事件推送
-     * @param request 请求消息体
-     * @param xltEvt 信路通事件对象
-     * @return
-     * @throws BusinessException 
+     * 获取验证码
+     * @param o json对象，包含手机号信息
+     * @return 验证码
+     * @throws BusinessException
      */
     @PostMapping("/get")
     public Map<String, String> getSmsCode(@RequestBody JSONObject o) throws BusinessException
