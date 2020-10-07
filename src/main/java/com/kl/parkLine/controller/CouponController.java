@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.CouponDef;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.CouponService;
+import com.kl.parkLine.util.Const;
 
 @RestController
 @RequestMapping(value="/coupons")
@@ -27,11 +29,23 @@ public class CouponController
      * @throws BusinessException
      */
     @GetMapping("/apply/{couponDefId}")
-    public Coupon apply(@PathVariable("couponDefId") Integer couponDefId, 
+    public RestResult apply(@PathVariable("couponDefId") Integer couponDefId, 
             @PathVariable("couponDefId") CouponDef couponDef, 
-            Authentication auth) throws BusinessException
+            Authentication auth)
     {
-        Coupon coupon = couponService.apply(couponDef, auth);
-        return coupon;
+        RestResult result = new RestResult();
+        try
+        {
+            Coupon coupon = couponService.apply(couponDef, auth);
+            result.setData(coupon);
+            result.setRetCode(Const.RET_OK);
+        }
+        catch (Exception e)
+        {
+            result.setRetCode(Const.RET_FAILED);
+            result.setErrMsg(e.getMessage());
+        }
+        
+        return result;
     }
 }

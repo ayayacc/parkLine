@@ -1,32 +1,35 @@
-package com.kl.parkLine.security;
+package com.kl.parkLine.filters;
 
 import java.io.IOException;
-import java.util.Date;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.joda.time.DateTime;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.alibaba.fastjson.JSON;
+import com.kl.parkLine.component.JwtCmpt;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.json.RestResult;
+import com.kl.parkLine.security.JWTAuthenticationToken;
+import com.kl.parkLine.security.MyUserDetailsService;
 import com.kl.parkLine.util.Const;
-import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jwt.SignedJWT;
 
 public class JWTAuthorizationFilter extends OncePerRequestFilter 
 {
-    private JWSVerifier jwsVerifier;
-    
-    private MyUserDetailsService userDetailsService;
 
-    public void setJwsVerifier(JWSVerifier jwsVerifier)
+    private JwtCmpt jwtCmpt;
+
+    private MyUserDetailsService userDetailsService;
+    
+    public void setJwtCmpt(JwtCmpt jwtCmpt) 
     {
-        this.jwsVerifier = jwsVerifier;
+        this.jwtCmpt = jwtCmpt;
     }
     
     public void setUserDetailsService(MyUserDetailsService userDetailsService)
@@ -49,16 +52,8 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
         
         try
         {
-            SignedJWT signedJWT = SignedJWT.parse(tokenHeader.replace("Bearer ", ""));
-            if (false == signedJWT.verify(jwsVerifier))
-            {
-                throw new Exception("无效的登录信息，请登录");
-            }
-            //超时
-            if (signedJWT.getJWTClaimsSet().getExpirationTime().before(new Date()))
-            {
-                throw new Exception("登录信息已经超时，请重新登录");
-            }
+            //验证jwt
+            SignedJWT signedJWT = jwtCmpt.verifyJwt(tokenHeader);
             
             //得到用户名
             String username = (String) signedJWT.getJWTClaimsSet().getClaim(Const.JWT_CLAIM_USER_NAME);
@@ -72,6 +67,14 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
             
             JWTAuthenticationToken token = new JWTAuthenticationToken(username, user.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(token);
+            
+            //30分钟内即将超时，签发新的jwt
+            DateTime dateTime = new DateTime().plusMinutes(Const.JWT_EXPIRED_TIME_MIN/2);
+            if (signedJWT.getJWTClaimsSet().getExpirationTime().before(dateTime.toDate()))
+            {
+                response.addHeader("New-Token", jwtCmpt.signJwt(username));
+            }
+            
             chain.doFilter(request, response);
             return;
         }

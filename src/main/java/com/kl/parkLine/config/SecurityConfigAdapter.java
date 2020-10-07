@@ -13,17 +13,16 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.kl.parkLine.security.AccountAuthenticationFilter;
-import com.kl.parkLine.security.JWTAuthorizationFilter;
+import com.kl.parkLine.component.JwtCmpt;
+import com.kl.parkLine.filters.AccountAuthenticationFilter;
+import com.kl.parkLine.filters.JWTAuthorizationFilter;
+import com.kl.parkLine.filters.SmsAuthenticationFilter;
+import com.kl.parkLine.filters.WxAuthenticationFilter;
 import com.kl.parkLine.security.MyAuthenticationFailureHandler;
 import com.kl.parkLine.security.MyAuthenticationSuccessHandler;
 import com.kl.parkLine.security.MyUserDetailsService;
-import com.kl.parkLine.security.SmsAuthenticationFilter;
 import com.kl.parkLine.security.SmsAuthenticationProvider;
-import com.kl.parkLine.security.WxAuthenticationFilter;
 import com.kl.parkLine.security.WxAuthenticationProvider;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.JWSVerifier;
 
 @Configuration
 @EnableWebSecurity
@@ -39,10 +38,7 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
     private AuthenticationManager authenticationManager;
     
     @Autowired
-    private JWSSigner jwsSigner;
-    
-    @Autowired
-    private JWSVerifier jwsVerifier;
+    private JwtCmpt jwtCmpt;
     
     @Autowired
     private WxAuthenticationProvider wxAuthenticationProvider;
@@ -91,7 +87,7 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
     protected void configure(HttpSecurity http) throws Exception 
     {
         MyAuthenticationSuccessHandler successHandler = new MyAuthenticationSuccessHandler();  
-        successHandler.setSigner(jwsSigner);
+        successHandler.setJwtCmpt(jwtCmpt);
         MyAuthenticationFailureHandler failureHandler = new MyAuthenticationFailureHandler();
         
         //用户名密码验证 过滤器
@@ -119,7 +115,7 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         
         //Token验证 JWTAuthorizationFilter
         JWTAuthorizationFilter jwtAuthorizationFilter = new JWTAuthorizationFilter(); 
-        jwtAuthorizationFilter.setJwsVerifier(jwsVerifier);
+        jwtAuthorizationFilter.setJwtCmpt(jwtCmpt);
         jwtAuthorizationFilter.setUserDetailsService(myUserDetailsService);
         
         http

@@ -1,4 +1,4 @@
-package com.kl.parkLine.security;
+package com.kl.parkLine.filters;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,6 +15,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.alibaba.fastjson.JSONObject;
 import com.kl.parkLine.json.WxLoginParam;
+import com.kl.parkLine.security.WxAuthenticationToken;
 public class WxAuthenticationFilter
         extends AbstractAuthenticationProcessingFilter
 {

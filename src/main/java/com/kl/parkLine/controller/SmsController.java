@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson.JSONObject;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.SmsCodeService;
+import com.kl.parkLine.util.Const;
 
 @RestController
 @RequestMapping(value="/smsCode")
@@ -27,12 +29,24 @@ public class SmsController
      * @throws BusinessException
      */
     @PostMapping("/get")
-    public Map<String, String> getSmsCode(@RequestBody JSONObject o) throws BusinessException
+    public RestResult getSmsCode(@RequestBody JSONObject o)
     {
-        String mobile = (String) o.get("mobile");
-        String code = smsCodeService.sendSmsCode(mobile);
-        Map<String, String> ret = new HashMap<String, String>();
-        ret.put("code", code);
-        return ret;
+        RestResult restResult = new RestResult();
+        try
+        {
+            String mobile = (String) o.get("mobile");
+            String code = smsCodeService.sendSmsCode(mobile);
+            Map<String, String> ret = new HashMap<String, String>();
+            ret.put("code", code);
+            restResult.setRetCode(Const.RET_OK);
+            restResult.setData(ret);
+        }
+        catch (Exception e)
+        {
+            restResult.setRetCode(Const.RET_FAILED);
+            restResult.setErrMsg(e.getMessage());
+        }
+        
+        return restResult;
     }
 }
