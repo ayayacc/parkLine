@@ -27,6 +27,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -38,29 +40,35 @@ import lombok.Setter;
 @DynamicInsert
 @Table(name = "TT_USER")
 @EntityListeners({AuditingEntityListener.class})
+@ApiModel("优惠券定义")
 public class User extends AbstractEntity implements UserDetails
 {
     @Id
     @Column(name = "user_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ApiModelProperty("用户Id")
     private Integer userId;
     
     /**
      * 微信用户openid
      */
     @Column(name = "wx_open_id", length = 64, unique = true)
+    @ApiModelProperty("微信用户openid")
     private String wxOpenId;
     
     /**
      * 用户唯一标识
      */
     @Column(name = "name", nullable = false, length = 64, unique = true)
+    @ApiModelProperty("用户唯一标识")
     private String name;
     
     @Column(name = "nick_name", length = 64)
+    @ApiModelProperty("用户昵称")
     private String nickName;
     
     @Column(name = "mobile", nullable = false, length = 16)
+    @ApiModelProperty("手机号码")
     private String mobile;
     
     @Column(name = "country", length = 64)
@@ -77,6 +85,7 @@ public class User extends AbstractEntity implements UserDetails
     
     @Column(name = "password", length = 16)
     @JsonIgnore
+    @ApiModelProperty(hidden = true)
     private String password;
     
     /**

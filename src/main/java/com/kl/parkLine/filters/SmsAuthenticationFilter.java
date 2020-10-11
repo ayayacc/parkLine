@@ -16,12 +16,13 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import com.alibaba.fastjson.JSONObject;
 import com.kl.parkLine.json.SmsLoginParam;
 import com.kl.parkLine.security.SmsAuthenticationToken;
+
 public class SmsAuthenticationFilter
         extends AbstractAuthenticationProcessingFilter
 {
     public SmsAuthenticationFilter() 
     {
-        super(new AntPathRequestMatcher("/smslogin", "POST"));
+        super(new AntPathRequestMatcher("/sms/login", "POST"));
     }
 
     @Override

@@ -80,7 +80,13 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         .antMatchers("/**/*.woff")
         .antMatchers("/**/*.woff2")
         .antMatchers("/**/*.otf")
-        .antMatchers("/**/*.ico");
+        .antMatchers("/**/*.ico")
+        .antMatchers("/swagger-ui.html")
+        .antMatchers("/swagger-ui/*")
+        .antMatchers("/swagger-resources/**")
+        .antMatchers("/v2/api-docs")
+        .antMatchers("/v3/api-docs")
+        .antMatchers("/webjars/**");
     }
     
     @Override
@@ -122,7 +128,7 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         .headers().frameOptions().sameOrigin()
         .and()
         .authorizeRequests()
-        .antMatchers("/MchApi", "/MchApi/**", "/smsCode", "/smsCode/**", "/smslogin").permitAll()
+        .antMatchers("/MchApi", "/MchApi/**", "/sms", "/smsCode/**").permitAll()
         .and()
         .authorizeRequests()
         .anyRequest().authenticated()

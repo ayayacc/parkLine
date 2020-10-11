@@ -16,6 +16,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 
 @MappedSuperclass
@@ -27,10 +28,12 @@ public abstract class AbstractEntity
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss" )
     @CreatedDate
+    @ApiModelProperty(hidden = true)
     private Date createdDate;
     
     @JoinColumn(name="created_by", nullable=false)
     @CreatedBy
+    @ApiModelProperty(hidden = true)
     private String createdBy;
     
     @Temporal(TemporalType.TIMESTAMP)            
@@ -38,10 +41,12 @@ public abstract class AbstractEntity
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss" )
     @LastModifiedDate
+    @ApiModelProperty(hidden = true)
     private Date lastModifiedDate;
     
     @JoinColumn(name="last_modified_by", nullable=false)
     @LastModifiedBy
+    @ApiModelProperty(hidden = true)
     private String lastModifiedBy;
 
 }

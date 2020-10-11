@@ -12,8 +12,16 @@ import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.CarService;
 import com.kl.parkLine.util.Const;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import springfox.documentation.annotations.ApiIgnore;
+
+
 @RestController
 @RequestMapping(value="/cars")
+@Api(tags = "车辆管理")
 public class CarController
 {
     @Autowired 
@@ -26,9 +34,15 @@ public class CarController
      * @return
      */
     @PostMapping("/add")
-    public RestResult add(Authentication authentication, @RequestBody Car car)
+    @ApiOperation(value="添加车辆并且绑定到当前登录用户", notes="若首次添加车牌，则自动创建车辆数据")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name="Authorization", value="登录令牌",required=true, paramType="header"),
+        @ApiImplicitParam(name="carNo",value="车牌号码",required=true)
+    })
+    public RestResult<Car> add(Authentication authentication, 
+            @ApiIgnore @RequestBody Car car)
     {
-        RestResult restResult = new RestResult();
+        RestResult<Car> restResult = new RestResult<Car>();
         restResult.setRetCode(Const.RET_OK);
         restResult.setErrMsg("");
 

@@ -14,35 +14,33 @@ import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.service.OrderService;
 import com.kl.parkLine.vo.OrderVo;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import springfox.documentation.annotations.ApiIgnore;
+
 @RestController
 @RequestMapping(value="/orders")
+@Api(tags = "订单管理")
 public class OrderController
 {
     @Autowired 
     private OrderService orderService;  
     
     /**
-     * 获取我的订单信息,终端用户使用
-     * @param couponDef 查询条件
-     * @param pageable 分页条件
-     * @param auth 当前登录用户
-     * @return 订单VO对象
-     */
-    @GetMapping("/my")
-    public Page<OrderVo> myOrders(Order order, Pageable pageable, Authentication auth)
-    {
-        return orderService.fuzzyFindPage(order, pageable, auth);
-    }
-    
-    /**
-     * 分页查询订单，系统管理员使用
-     * @param couponDef 查询条件
+     * 分页查询订单
+     * @param order 查询条件
      * @param pageable 分页条件
      * @param auth 当前登录用户
      * @return 订单查询结果
      */
     @GetMapping("/find")
-    public Page<OrderVo> find(Order order, Pageable pageable, Authentication auth)
+    @ApiOperation(value="分页查询订单，系统管理员使用", notes="若首次添加车牌，则自动创建车辆数据")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public Page<OrderVo> find(@ApiParam(name="查询条件",type="query")Order order, 
+            @ApiParam(name="分页信息",type="query") Pageable pageable, 
+            Authentication auth)
     {
         return orderService.fuzzyFindPage(order, pageable, auth);
     }
@@ -54,8 +52,9 @@ public class OrderController
      */
     @GetMapping(value = "/{orderId}")
     @PreAuthorize("hasPermission(#order, 'read')")
-    public Order getOrder(@PathVariable("orderId") Integer orderId, 
-            @PathVariable("orderId") Order order)
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public Order getOrder(@ApiParam(name="订单Id",type="path") @PathVariable("orderId") Integer orderId, 
+            @ApiIgnore @PathVariable("orderId") Order order)
     {
         return order;
     }

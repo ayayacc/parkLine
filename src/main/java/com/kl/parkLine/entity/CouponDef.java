@@ -27,6 +27,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.annotation.NeedToCompare;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -47,17 +49,20 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
+@ApiModel("优惠券定义")
 public class CouponDef extends AbstractEntity implements java.io.Serializable
 {
     @Id
     @Column(name = "coupon_def_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ApiModelProperty("优惠券定义id")
     private Integer couponDefId;
     
     /**
      * 优惠券定义编号
      */
     @Column(name = "code", nullable = false, unique = true, length = 16)
+    @ApiModelProperty("优惠券定义唯一编号")
     private String code;
     
     /**
@@ -65,6 +70,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
      */
     @NeedToCompare(name = "名称")
     @Column(name = "name", nullable = false, length = 64, unique = true)
+    @ApiModelProperty("优惠券定义名称")
     private String name;
 
     /**
@@ -72,6 +78,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
      */
     @NeedToCompare(name = "金额")
     @Column(name = "amt", precision = 15 ,scale = 2)
+    @ApiModelProperty("优惠券定义金额")
     private BigDecimal amt;
     
     /**
@@ -79,6 +86,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
      */
     @NeedToCompare(name = "使用支付的最小金额")
     @Column(name = "min_amt", precision = 15 ,scale = 2)
+    @ApiModelProperty("使用支付的最小金额（满xx使用）")
     private BigDecimal minAmt;
     
     /**
@@ -86,6 +94,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
      */
     @NeedToCompare(name = "优惠券总数")
     @Column(name = "total_cnt")
+    @ApiModelProperty("优惠券总数")
     private Integer totalCnt;
     
     /**
@@ -93,6 +102,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
      */
     @NeedToCompare(name = "已经领取数量")
     @Column(name = "applied_cnt", nullable = false, columnDefinition ="int default 0")
+    @ApiModelProperty("已经领取数量")
     private Integer appliedCnt;
     
     /**
@@ -100,6 +110,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
      */
     @NeedToCompare(name = "已经使用数量")
     @Column(name = "used_cnt", nullable = false, columnDefinition ="int default 0")
+    @ApiModelProperty("已经使用数量")
     private Integer usedCnt;
     
     /**
@@ -107,6 +118,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
      */
     @NeedToCompare(name = "是否有效")
     @Column(name = "enabled", length = 4, nullable = false)
+    @ApiModelProperty("是否有效")
     private String enabled;
     
     /**
@@ -117,6 +129,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @NeedToCompare(name = "有效期开始时间")
+    @ApiModelProperty("有效期开始时间")
     private Date startDate;
     
     /**
@@ -127,6 +140,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @NeedToCompare(name = "有效期结束时间")
+    @ApiModelProperty("有效期结束时间")
     private Date endDate;
     
     /**
@@ -135,6 +149,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "couponDef", cascade = {CascadeType.ALL})  
     @OrderBy(value = "createdDate desc")
     @JsonIgnore
+    @ApiModelProperty(hidden = true)
     private List<CouponDefLog> logs;
 
     @Override

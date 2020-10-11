@@ -18,7 +18,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -39,23 +42,28 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
+@ApiModel("短信验证码")
 public class SmsCode extends AbstractEntity implements java.io.Serializable
 {
     @Id
     @Column(name = "sms_code_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
+    @ApiModelProperty(hidden = true)
     private Integer smsCodeId;
     
     /**
      * 手机号码
      */
     @Column(name = "mobile", length = 16, nullable = false)
+    @ApiModelProperty("mobile")
     private String mobile;
     
     /**
      * 验证码
      */
     @Column(name = "code", length = 8, nullable = false)
+    @ApiModelProperty("验证码")
     private String code;
     
     /**
@@ -65,12 +73,14 @@ public class SmsCode extends AbstractEntity implements java.io.Serializable
     @Column(name = "expier_time", nullable = false)
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")     
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @ApiModelProperty("过期时间")
     private Date expierTime;
     
     /**
      * 是否有效
      */
     @Column(name = "enabled", length = 4, nullable = false)
+    @ApiModelProperty("是否有效")
     private String enabled;
 
     @Override

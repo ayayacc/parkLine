@@ -19,8 +19,15 @@ import com.kl.parkLine.service.CouponDefService;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.CouponDefVo;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import springfox.documentation.annotations.ApiIgnore;
+
 @RestController
 @RequestMapping(value="/couponDefs")
+@Api(tags = "优惠券定义")
 public class CouponDefController
 {
     @Autowired 
@@ -34,9 +41,12 @@ public class CouponDefController
      * @throws BusinessException
      */
     @PostMapping("/save")
-    public RestResult save(@RequestBody CouponDef couponDef, String remark) throws BusinessException
+    @ApiOperation(value="保存优惠券定义", notes="创建/修改一个优惠券定义")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<CouponDef> save(@ApiParam(name="优惠券定义") @RequestBody CouponDef couponDef, 
+            @ApiParam(name="修改备注") String remark) throws BusinessException
     {
-        RestResult restResult = new RestResult();
+        RestResult<CouponDef> restResult = new RestResult<CouponDef>();
         restResult.setRetCode(Const.RET_OK);
         restResult.setErrMsg("");
 
@@ -53,8 +63,10 @@ public class CouponDefController
      */
     @GetMapping(value = "/{couponId}")
     @PreAuthorize("hasPermission(#couponDef, 'read')")
-    public CouponDef getCouponDef(@PathVariable("couponDefId") Integer couponDefId, 
-            @PathVariable("couponDefId") CouponDef couponDef)
+    @ApiOperation(value="查询优惠券定义明细", notes="查看单个优惠券定义明细")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public CouponDef getCouponDef(@ApiParam(name="优惠券定义Id",type="path") @PathVariable("couponDefId") Integer couponDefId, 
+            @ApiIgnore @PathVariable("couponDefId") CouponDef couponDef)
     {
         return couponDef;
     }
@@ -67,7 +79,10 @@ public class CouponDefController
      * @return 优惠券定义查询结果
      */
     @GetMapping("/find")
-    public Page<CouponDefVo> find(CouponDef couponDef, Pageable pageable, Authentication auth)
+    @ApiOperation(value="分页查询优惠券定义清单", notes="查询优惠券定义清单")
+    public Page<CouponDefVo> find(@ApiParam(name="查询条件",type="query")CouponDef couponDef, 
+            @ApiParam(name="分页信息",type="query") Pageable pageable, 
+            Authentication auth)
     {
         return couponDefService.fuzzyFindPage(couponDef, pageable, auth);
     }

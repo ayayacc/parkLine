@@ -21,7 +21,7 @@ public class MyAuthenticationFailureHandler extends SimpleUrlAuthenticationFailu
             AuthenticationException exception) throws IOException, ServletException 
     {
         response.setContentType("application/json;charset=UTF-8");
-        RestResult restResult = new RestResult();
+        RestResult<String> restResult = new RestResult<String>();
         //返回验证结果
         restResult.setRetCode(Const.RET_FAILED);
         restResult.setErrMsg(exception.getMessage());

@@ -8,7 +8,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 
+import com.alibaba.fastjson.JSON;
 import com.kl.parkLine.component.JwtCmpt;
+import com.kl.parkLine.json.JwtToken;
 
 public class MyAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 {
@@ -26,8 +28,10 @@ public class MyAuthenticationSuccessHandler extends SimpleUrlAuthenticationSucce
         
         //获取登录的用户名
         String username = authentication.getName();
+        JwtToken jwtToken = new JwtToken();
+        jwtToken.setToken(jwtCmpt.signJwt(username));
         //签发token
-        response.getWriter().write(String.format("{\"token\":\"%s\"}", jwtCmpt.signJwt(username)));
+        response.getWriter().write(JSON.toJSONString(jwtToken));
     }
 
     

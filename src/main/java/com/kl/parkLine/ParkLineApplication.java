@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
+import springfox.documentation.oas.annotations.EnableOpenApi;
+
 @SpringBootApplication
 @EnableJpaRepositories
 @EnableTransactionManagement
@@ -21,6 +23,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 @EnableFeignClients
 @EnableHystrix
 @EnableJpaAuditing(auditorAwareRef = "authAuditorAware")
+@EnableOpenApi
 public class ParkLineApplication {
 
 	public static void main(String[] args) {

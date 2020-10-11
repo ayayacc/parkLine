@@ -28,6 +28,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -48,11 +50,13 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
+@ApiModel("优惠券实例")
 public class Coupon extends AbstractEntity implements java.io.Serializable
 {
     @Id
     @Column(name = "coupon_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ApiModelProperty("优惠券实例id")
     private Integer couponId;
     
     /**
@@ -61,24 +65,28 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_def")
     @JsonIgnore
+    @ApiModelProperty(hidden = true)
     private CouponDef couponDef; 
     
     /**
      * 优惠券编号
      */
     @Column(name = "code", nullable = false, unique = true, length = 16)
+    @ApiModelProperty("优惠券实例唯一编号")
     private String code;
     
     /**
      * 金额
      */
     @Column(name = "amt", precision = 15 ,scale = 2)
+    @ApiModelProperty("优惠券实例金额")
     private BigDecimal amt;
     
     /**
      *使用支付的最小金额（满xx使用）
      */
     @Column(name = "min_amt", precision = 15 ,scale = 2)
+    @ApiModelProperty("使用支付的最小金额（满xx使用）")
     private BigDecimal minAmt;
     
     /**
@@ -86,6 +94,7 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status")
+    @ApiModelProperty("状态: 已使用/无效")
     private Dict status;
     
     /**
@@ -95,6 +104,7 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     @Column(name = "start_date", nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @ApiModelProperty("有效期开始时间")
     private Date startDate;
     
     /**
@@ -104,6 +114,7 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     @Column(name = "end_date", nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @ApiModelProperty("有效期结束时间")
     private Date endDate;
     
     /**
@@ -112,6 +123,7 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner", nullable = false)
+    @ApiModelProperty("拥有者")
     private User owner;
 
     /**
@@ -120,6 +132,7 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "coupon", cascade = {CascadeType.ALL})  
     @OrderBy(value = "createdDate desc")
     @JsonIgnore
+    @ApiModelProperty(hidden = true)
     private List<CouponLog> logs;
 
     @Override

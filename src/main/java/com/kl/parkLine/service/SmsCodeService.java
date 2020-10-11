@@ -37,7 +37,7 @@ public class SmsCodeService
      * @return
      */
     @Transactional
-    public String sendSmsCode(String mobile) throws BusinessException
+    public SmsCode sendSmsCode(String mobile) throws BusinessException
     {
         //找到最新发送的消息
         SmsCode lastSmsCode = findLastByMobile(mobile);
@@ -75,7 +75,7 @@ public class SmsCodeService
         //TODO: 完善短消息内容：您正在登陆xxx，验证码:xxx,1分钟有效
         smsCmpt.sendSms(mobile, String.format("短信验证码:%s", code));
         
-        return newCode.getCode();
+        return newCode;
     }
     
     @Transactional(readOnly = true)

@@ -19,8 +19,15 @@ import com.kl.parkLine.service.ParkService;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.ParkVo;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import springfox.documentation.annotations.ApiIgnore;
+
 @RestController
 @RequestMapping(value="/parks")
+@Api(tags = "停车场管理")
 public class ParkController
 {
     @Autowired 
@@ -33,9 +40,11 @@ public class ParkController
      * @throws BusinessException
      */
     @PostMapping("/save")
-    public RestResult save(@RequestBody Park park) throws BusinessException
+    @ApiOperation(value="保存停车场数据", notes="创建/修改停车场")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Park> save(@ApiParam(name="停车场信息") @RequestBody Park park) throws BusinessException
     {
-        RestResult restResult = new RestResult();
+        RestResult<Park> restResult = new RestResult<Park>();
         restResult.setRetCode(Const.RET_OK);
         restResult.setErrMsg("");
 
@@ -51,8 +60,10 @@ public class ParkController
      */
     @GetMapping(value = "/{parkId}")
     @PreAuthorize("hasPermission(#park, 'park')")
-    public Park getPark(@PathVariable("parkId") Integer parkId, 
-            @PathVariable("parkId") Park park)
+    @ApiOperation(value="查询停车场明细", notes="查看单个停车场明细")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public Park getPark(@ApiParam(name="停车场Id",type="path") @PathVariable("parkId") Integer parkId, 
+            @ApiIgnore @PathVariable("parkId") Park park)
     {
         return park;
     }
@@ -65,7 +76,11 @@ public class ParkController
      * @return 查询结果
      */
     @GetMapping("/find")
-    public Page<ParkVo> findParks(Park park, Pageable pageable, Authentication auth)
+    @ApiOperation(value="分页查询停车场信息", notes="分页查询停车场信息")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public Page<ParkVo> findParks(@ApiParam(name="查询条件",type="query")Park park, 
+            @ApiParam(name="分页信息",type="query") Pageable pageable, 
+            Authentication auth)
     {
         return parkService.fuzzyFindPage(park, pageable, auth);
     }

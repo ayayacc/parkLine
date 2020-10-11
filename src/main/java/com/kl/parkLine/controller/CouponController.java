@@ -14,8 +14,16 @@ import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.CouponService;
 import com.kl.parkLine.util.Const;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import springfox.documentation.annotations.ApiIgnore;
+
 @RestController
 @RequestMapping(value="/coupons")
+@Api(tags = "优惠券实例")
 public class CouponController
 {
     @Autowired
@@ -28,12 +36,17 @@ public class CouponController
      * @return 优惠券领取结果
      * @throws BusinessException
      */
+    @ApiOperation(value="领取优惠券", notes="领取某个优惠券定义的实例")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name="mobile", value="用户手机号", required=true),
+        @ApiImplicitParam(name="validCode", value="验证码", required=true)
+    })
     @GetMapping("/apply/{couponDefId}")
-    public RestResult apply(@PathVariable("couponDefId") Integer couponDefId, 
-            @PathVariable("couponDefId") CouponDef couponDef, 
+    public RestResult<Coupon> apply(@ApiParam(name="优惠券定义Id",type="path") @PathVariable("couponDefId") Integer couponDefId, 
+            @ApiIgnore @PathVariable("couponDefId") CouponDef couponDef, 
             Authentication auth)
     {
-        RestResult result = new RestResult();
+        RestResult<Coupon> result = new RestResult<Coupon>();
         try
         {
             Coupon coupon = couponService.apply(couponDef, auth);
