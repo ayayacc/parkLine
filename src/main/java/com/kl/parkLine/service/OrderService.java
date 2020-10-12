@@ -18,15 +18,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kl.parkLine.dao.IOrderDao;
 import com.kl.parkLine.entity.Car;
-import com.kl.parkLine.entity.Dict;
 import com.kl.parkLine.entity.Event;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.QOrder;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.EventType;
+import com.kl.parkLine.enums.OrderStatus;
+import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.OrderPredicates;
-import com.kl.parkLine.util.DictCode;
 import com.kl.parkLine.vo.OrderVo;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
@@ -50,9 +51,6 @@ public class OrderService
     private CarService carService;
     
     @Autowired
-    private DictService dictService;
-    
-    @Autowired
     private ParkService parkService;
     
     @Autowired
@@ -72,8 +70,8 @@ public class OrderService
                 .select(
                         qOrder.orderId,
                         qOrder.code,
-                        qOrder.status.text,
-                        qOrder.type.text
+                        qOrder.status,
+                        qOrder.type
                 )
                 .from(qOrder)
                 .where(searchPred)
@@ -88,8 +86,8 @@ public class OrderService
                 .map(tuple -> OrderVo.builder()
                         .orderId(tuple.get(qOrder.orderId))
                         .code(tuple.get(qOrder.code))
-                        .type(tuple.get(qOrder.type.text))
-                        .status(tuple.get(qOrder.status.text))
+                        .type(tuple.get(qOrder.type).getText())
+                        .status(tuple.get(qOrder.status).getText())
                         .build()
                         )
                 .collect(Collectors.toList());
@@ -113,15 +111,15 @@ public class OrderService
         //保存event
         eventService.save(event);
         
-        switch (event.getType().getCode())
+        switch (event.getType())
         {
-            case DictCode.EVENT_TYPE_CAR_IN:  //入场事件,创建订单
+            case in:  //入场事件,创建订单
                 carIn(event);
                 break;
-            case DictCode.EVENT_TYPE_CAR_COMPLETE: //停车完成,订单计费,完成订单
+            case complete: //停车完成,订单计费,完成订单
                 carComplete(event);
                 break;
-            case DictCode.EVENT_TYPE_CANCEL:
+            case cancel:
                 eventCancel(event);
                 break;
             default:
@@ -136,26 +134,23 @@ public class OrderService
      * @param type
      * @return 订单编码
      */
-    private String makeCode(String type)
+    private String makeCode(OrderType type)
     {
         Date now = new Date();
         String prefix = "";
         switch (type)
         {
-            case DictCode.ORDER_TYPE_PARK:  //停车
+            case parking:  //停车
                 prefix = "TC";
                 break;
-            case DictCode.ORDER_TYPE_MONTHLY_TICKET: //月票
+            case monthlyTicket: //月票
                 prefix = "YP";
                 break;
-            case DictCode.ORDER_TYPE_COUPON:  //优惠券
+            case coupon:  //优惠券
                 prefix = "YHQ";
                 break;
-            case DictCode.ORDER_TYPE_WALLET_IN: //钱包充值
+            case walletIn: //钱包充值
                 prefix = "CZ";
-                break;
-            case DictCode.ORDER_TYPE_WALLET_OUT: //钱包提现
-                prefix = "TX";
                 break;
             default:
                 break;
@@ -172,16 +167,14 @@ public class OrderService
     {
         Order order = new Order();
         //订单编码
-        order.setCode(makeCode(DictCode.EVENT_TYPE_CAR_IN));
+        order.setCode(makeCode(OrderType.parking));
         //车辆信息
         Car car = carService.getCar(event.getPlateNo());
         order.setCar(car);
         //停车订单类型
-        Dict dict = dictService.findOneByCode(DictCode.ORDER_TYPE_PARK);  
-        order.setType(dict);
+        order.setType(OrderType.parking);
         //入场状态
-        dict = dictService.findOneByCode(DictCode.ORDER_STATUS_IN);
-        order.setStatus(dict);
+        order.setStatus(OrderStatus.in);
         //停车场
         Park park = parkService.findOneByCode(event.getParkCode());
         order.setPark(park);
@@ -207,8 +200,7 @@ public class OrderService
         Order order = orderDao.findOneByActId(event.getActId());
         
         //状态：等待支付ORDER_STATUS_NEED_TO_PAY
-        Dict dict = dictService.findOneByCode(DictCode.ORDER_STATUS_NEED_TO_PAY);
-        order.setStatus(dict);
+        order.setStatus(OrderStatus.needToPay);
         
         //记录出厂时间
         order.setOutTime(event.getTimeOut());
@@ -246,36 +238,33 @@ public class OrderService
         }
         
         //如果订单已经付款以及后续状态，返回失败
-        Dict status = dictService.findOneByCode(DictCode.ORDER_STATUS_PAYED);
-        if (0 <= order.getStatus().getSortIdx().compareToIgnoreCase(status.getSortIdx()))
+        if (OrderStatus.payed.getValue() <= order.getStatus().getValue())
         {
             throw new BusinessException(String.format("停车订单【%s】处于【%s】状态, 无法撤销", 
                     order.getCode(), order.getStatus().getText()));
         }
 
-        String targetCode = event.getTargetType().getCode();
         // 取消的是入场事件，取消订单
-        if (targetCode.equalsIgnoreCase(DictCode.EVENT_TYPE_CAR_IN))
+        if (EventType.in.getValue() == event.getTargetType().getValue())
         {
             //金额为0
             order.setAmt(BigDecimal.ZERO);
             
             //当前订单状态是入场，停车场空位数量+1
-            if (order.getStatus().getCode().equalsIgnoreCase(DictCode.ORDER_STATUS_IN))
+            
+            if (OrderStatus.in.getValue() == order.getStatus().getValue())
             {
                 park.setAvailableCnt(park.getAvailableCnt() + 1);
             }
             
             //取消订单
-            status = dictService.findOneByCode(DictCode.ORDER_STATUS_CANCELED);
-            order.setStatus(status);
+            order.setStatus(OrderStatus.canceled);
         }
         // 取消的是出场或者停车完成事件
-        else if(targetCode.equalsIgnoreCase(DictCode.EVENT_TYPE_CAR_COMPLETE))
+        else if(EventType.complete.getValue() == event.getTargetType().getValue())
         {
             //将订单改成入场状态
-            status = dictService.findOneByCode(DictCode.ORDER_STATUS_IN);
-            order.setStatus(status);
+            order.setStatus(OrderStatus.in);
             //金额为0
             order.setAmt(BigDecimal.ZERO);
             

@@ -8,6 +8,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -27,6 +29,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.enums.OrderStatus;
+import com.kl.parkLine.enums.OrderType;
+import com.kl.parkLine.enums.PaymentType;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -64,9 +69,9 @@ public class Order extends AbstractEntity implements java.io.Serializable
     /**
      * 订单类型: 停车订单/月票订单/优惠券激活订单/钱包充值订单
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "type")
-    private Dict type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private OrderType type;
     
     /*停车订单特有字段*/
     /**
@@ -143,9 +148,9 @@ public class Order extends AbstractEntity implements java.io.Serializable
     /**
      * 订单状态: 已入场/待支付（已出场）/已支付/开票中/已开票
      */
-    @ManyToOne
-    @JoinColumn(name = "status")
-    private Dict status;
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
     
     /**
      * 付款人
@@ -165,9 +170,9 @@ public class Order extends AbstractEntity implements java.io.Serializable
     /**
      * 支付方式: 微信/钱包
      */
-    @ManyToOne
-    @JoinColumn(name = "payment_type")
-    private Dict paymentType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_type")
+    private PaymentType paymentType;
     
     /**
      * 金额

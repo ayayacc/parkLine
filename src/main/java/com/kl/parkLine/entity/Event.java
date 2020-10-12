@@ -8,12 +8,12 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -25,6 +25,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.kl.parkLine.enums.EventType;
+import com.kl.parkLine.enums.ParkAbnormal;
+import com.kl.parkLine.enums.PlateColor;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -62,9 +65,9 @@ public class Event extends AbstractEntity implements java.io.Serializable
     /**
      * 事件类型
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "type", nullable = false)
-    private Dict type; 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private EventType type; 
     
     /**
      * 事件唯一标识符
@@ -91,9 +94,9 @@ public class Event extends AbstractEntity implements java.io.Serializable
     private String plateNo;
     
     //车牌颜色
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plact_color")
-    private Dict plateColor; 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "plact_color")
+    private PlateColor plateColor; 
     
     /**
      * 鉴定图片集
@@ -131,9 +134,9 @@ public class Event extends AbstractEntity implements java.io.Serializable
     private BigDecimal actionCredible;
     
     //异常停车类型
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parking_abnormal")
-    private Dict parkingAbnormal;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "parking_abnormal")
+    private ParkAbnormal parkingAbnormal;
     
     //设备经纬度，不为空时，格式如下： “108.23 22.45”
     @Column(name = "geo", length = 32)
@@ -166,9 +169,9 @@ public class Event extends AbstractEntity implements java.io.Serializable
     private String targetGuid;
     
     //事件类型，此处为作废目标事件类型
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "target_type")
-    private Dict targetType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_type")
+    private EventType targetType;
     
     /**
      * 是否有效

@@ -40,7 +40,7 @@ import lombok.Setter;
 @DynamicInsert
 @Table(name = "TT_USER")
 @EntityListeners({AuditingEntityListener.class})
-@ApiModel("优惠券定义")
+@ApiModel("用户")
 public class User extends AbstractEntity implements UserDetails
 {
     @Id

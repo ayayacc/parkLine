@@ -8,6 +8,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -27,6 +29,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.enums.CouponStatus;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -92,10 +95,10 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     /**
      * 状态: 已使用/无效
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "status")
-    @ApiModelProperty("状态: 已使用/无效")
-    private Dict status;
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    @ApiModelProperty("优惠券状态")
+    private CouponStatus status;
     
     /**
      * 有效期开始时间

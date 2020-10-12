@@ -27,7 +27,7 @@ public class OrderPredicates
         //状态
         if (null != order.getStatus())
         {
-            where.and(qOrder.status.code.eq(order.getStatus().getCode()));
+            where.and(qOrder.status.eq(order.getStatus()));
         }
         
         //停车场

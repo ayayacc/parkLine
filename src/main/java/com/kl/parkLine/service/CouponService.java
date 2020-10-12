@@ -15,11 +15,10 @@ import com.kl.parkLine.dao.ICouponDao;
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.CouponDef;
 import com.kl.parkLine.entity.CouponLog;
-import com.kl.parkLine.entity.Dict;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.util.Const;
-import com.kl.parkLine.util.DictCode;
 
 /**
  * @author chenc
@@ -33,9 +32,6 @@ public class CouponService
     
     @Autowired
     private UserService userService;
-    
-    @Autowired
-    private DictService dictService;
     
     @Autowired
     private CouponDefService couponDefService;
@@ -60,7 +56,7 @@ public class CouponService
             throw new BusinessException("领取失败，还未开始");
         }
         
-        now.minusDays(1); //优惠券过期当天有效
+        now.minusDays(1); //日期加一天，使得优惠券过期当天有效
         //检查优惠券定义是否过期
         if (couponDef.getEndDate().before(now.toDate()))
         {
@@ -92,8 +88,7 @@ public class CouponService
         coupon.setOwner(user);
         coupon.setStartDate(couponDef.getStartDate());
         coupon.setEndDate(couponDef.getEndDate());
-        Dict status = dictService.findOneByCode(DictCode.COUPON_STATUS_VALID);
-        coupon.setStatus(status);
+        coupon.setStatus(CouponStatus.valid);
         this.save(coupon, coupon.getCode());
         couponDao.save(coupon);
         

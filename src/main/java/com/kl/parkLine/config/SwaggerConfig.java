@@ -4,6 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
 
+import com.kl.parkLine.swagger.plugin.EnumModelPropertyBuilderPlugin;
+
 import io.swagger.annotations.ApiOperation;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -28,5 +30,10 @@ public class SwaggerConfig
                         .description("停车线服务端接口文档")
                         .version("1.0")
                         .build());
+    }
+    
+    @Bean
+    public EnumModelPropertyBuilderPlugin enumModelPropertyBuilderPlugin() {
+        return new EnumModelPropertyBuilderPlugin();
     }
 }
