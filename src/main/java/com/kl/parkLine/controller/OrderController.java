@@ -8,11 +8,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.Order;
+import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.OrderService;
 import com.kl.parkLine.vo.OrderVo;
@@ -25,7 +26,7 @@ import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
 @RequestMapping(value="/orders")
-@Api(tags = "订单管理")
+@Api(tags="订单管理")
 public class OrderController
 {
     @Autowired 
@@ -93,12 +94,9 @@ public class OrderController
      * 支付订单
      */
     @PostMapping("/pay")
-    @ApiOperation(value="支付订单")
+    @ApiOperation(value="支付订单", notes="发起订单支付")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<String> pay(@ApiParam(name="订单Id") Integer orderId, 
-            @ApiIgnore Order order,
-            @ApiParam(name="使用的优惠券Id") @PathVariable("couponId") Integer couponId,
-            @ApiIgnore Coupon coupon)
+    public RestResult<String> pay(@ApiParam(name="订单支付参数", required=true) @RequestBody PayOrderParam payParam)
     {
         //TODO: 实现订单支付
         return null;

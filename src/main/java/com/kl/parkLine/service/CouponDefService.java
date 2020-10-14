@@ -53,7 +53,7 @@ public class CouponDefService
      * @throws BusinessException 
      */
     @Transactional
-    public void save(CouponDef couponDef, String remark) throws BusinessException
+    public void save(CouponDef couponDef) throws BusinessException
     {
         String diff = Const.LOG_CREATE;
         if (null == couponDef.getCouponDefId()) //新增数据
@@ -81,7 +81,7 @@ public class CouponDefService
         //保存数据
         CouponDefLog log = new CouponDefLog();
         log.setDiff(diff);
-        log.setRemark(remark);
+        log.setRemark(couponDef.getChangeRemark());
         log.setCouponDef(couponDef);
         couponDef.getLogs().add(log);
         couponDefDao.save(couponDef);

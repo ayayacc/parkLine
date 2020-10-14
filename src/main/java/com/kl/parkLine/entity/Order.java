@@ -21,6 +21,7 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -33,6 +34,7 @@ import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PaymentType;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -195,7 +197,12 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @JsonIgnore
     private List<OrderLog> logs;
 
-    
+    /**
+     * 订单变动备注
+     */
+    @ApiModelProperty("订单变动备注")
+    @Transient
+    private String changeRemark;
 
     @Override
     public int hashCode()

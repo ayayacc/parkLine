@@ -15,7 +15,6 @@ import com.kl.parkLine.service.CouponService;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import springfox.documentation.annotations.ApiIgnore;
@@ -36,10 +35,7 @@ public class CouponController
      * @throws BusinessException
      */
     @ApiOperation(value="领取优惠券", notes="领取某个优惠券定义的实例")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name="mobile", value="用户手机号", required=true),
-        @ApiImplicitParam(name="validCode", value="验证码", required=true)
-    })
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     @GetMapping("/apply/{couponDefId}")
     public RestResult<Coupon> apply(@ApiParam(name="优惠券定义Id",type="path") @PathVariable("couponDefId") Integer couponDefId, 
             @ApiIgnore @PathVariable("couponDefId") CouponDef couponDef, Authentication auth)

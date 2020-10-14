@@ -14,6 +14,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -22,6 +23,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.annotation.NeedToCompare;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -62,6 +64,13 @@ public class Park extends AbstractEntity implements java.io.Serializable
     @NeedToCompare(name = "名称")
     @Column(name = "name", nullable = false, length = 64, unique = true)
     private String name;
+    
+    /**
+     * 停车场变动备注
+     */
+    @ApiModelProperty("停车场变动备注")
+    @Transient
+    private String changeRemark;
     
     /**
      * 停车场总车位数量

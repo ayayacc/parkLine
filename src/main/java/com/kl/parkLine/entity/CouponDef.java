@@ -17,6 +17,7 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -66,12 +67,19 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
     private String code;
     
     /**
-     * 优惠券名称
+     * 优惠券定义名称
      */
     @NeedToCompare(name = "名称")
     @Column(name = "name", nullable = false, length = 64, unique = true)
     @ApiModelProperty("优惠券定义名称")
     private String name;
+    
+    /**
+     * 优惠券定义变动备注
+     */
+    @ApiModelProperty("优惠券定义备注")
+    @Transient
+    private String changeRemark;
 
     /**
      * 金额

@@ -92,6 +92,7 @@ public class ParkService
         ParkLog log = new ParkLog();
         log.setDiff(diff);
         log.setPark(park);
+        log.setRemark(park.getChangeRemark());
         park.getLogs().add(log);
         parkDao.save(park);
     }
