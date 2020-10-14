@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.Gender;
 import com.kl.parkLine.feign.IWxFeignClient;
 import com.kl.parkLine.json.WxCode2SessionResult;
 import com.kl.parkLine.service.UserService;
@@ -55,8 +56,10 @@ public class WxAuthenticationProvider implements AuthenticationProvider
             user.setCountry(wxAuthenticationToken.getWxUserInfo().getCountry());
             user.setProvince(wxAuthenticationToken.getWxUserInfo().getProvince());
             user.setCity(wxAuthenticationToken.getWxUserInfo().getCity());
-            user.setGender(wxAuthenticationToken.getWxUserInfo().getGender());
-            user.setEnable(true);
+            //TODO: 从微信读取性别
+            //Gender..valueOf(wxAuthenticationToken.getWxUserInfo().getGender());
+            user.setGender(Gender.male);
+            user.setEnabled(true);
             userService.save(user);
         }
         

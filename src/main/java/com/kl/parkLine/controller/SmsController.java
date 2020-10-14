@@ -13,7 +13,7 @@ import com.kl.parkLine.json.JwtToken;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.json.SmsLoginParam;
 import com.kl.parkLine.service.SmsCodeService;
-import com.kl.parkLine.util.Const;
+import com.kl.parkLine.vo.SmsCodeVo;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -31,11 +31,11 @@ public class SmsController
     
     /**
      * 无实际意义，为了生成文档使用
-     * @param SmsLoginParam
+     * @param SmsCodeVo
      * @return
      */
     @PostMapping("/login")
-    @ApiOperation(value="短信登录", notes="使用之前获取的短信验证码登录  若用户首次登录，则自动注册", tags="短信登录")
+    @ApiOperation(value="短信登录", notes="使用之前获取的短信验证码登录  若用户首次登录，则自动注册，登录成功后返回token，后续通过Authorization消息头标识用户，token有效期为1小时，快过期时，通过New-Token获取新令牌", tags="短信登录")
     public JwtToken smsLogin(@ApiParam @RequestBody SmsLoginParam SmsLoginParam)
     {
         return null;
@@ -48,24 +48,21 @@ public class SmsController
      * @throws BusinessException
      */
     @PostMapping("/getCode")
-    @ApiOperation(value="获取短信验证码", notes="验证码2分钟内有效，使用该验证码通过/smslogin登录  \n若用户首次登录，则自动注册")
+    @ApiOperation(value="获取短信验证码", notes="验证码2分钟内有效，使用该验证码通过/sms/login登录  \n若用户首次登录，则自动注册")
     @ApiImplicitParam(name="mobile",value="手机号码",required=true)
-    public RestResult<SmsCode> getSmsCode(@ApiIgnore @RequestBody JSONObject o)
+    public RestResult<SmsCodeVo> getSmsCode(@ApiIgnore @RequestBody JSONObject o)
     {
-        RestResult<SmsCode> restResult = new RestResult<SmsCode>();
         try
         {
             String mobile = (String) o.get("mobile");
-            SmsCode code = smsCodeService.sendSmsCode(mobile);
-            restResult.setRetCode(Const.RET_OK);
-            restResult.setData(code);
+            SmsCode smsCode = smsCodeService.sendSmsCode(mobile);
+            SmsCodeVo codeVo = SmsCodeVo.builder().code(smsCode.getCode()).build();
+            return RestResult.success(codeVo);
         }
         catch (Exception e)
         {
-            restResult.setRetCode(Const.RET_FAILED);
-            restResult.setErrMsg(e.getMessage());
+            return RestResult.failed(e.getMessage());
         }
         
-        return restResult;
     }
 }

@@ -12,7 +12,6 @@ import com.kl.parkLine.entity.CouponDef;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.CouponService;
-import com.kl.parkLine.util.Const;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -43,22 +42,16 @@ public class CouponController
     })
     @GetMapping("/apply/{couponDefId}")
     public RestResult<Coupon> apply(@ApiParam(name="优惠券定义Id",type="path") @PathVariable("couponDefId") Integer couponDefId, 
-            @ApiIgnore @PathVariable("couponDefId") CouponDef couponDef, 
-            Authentication auth)
+            @ApiIgnore @PathVariable("couponDefId") CouponDef couponDef, Authentication auth)
     {
-        RestResult<Coupon> result = new RestResult<Coupon>();
         try
         {
-            Coupon coupon = couponService.apply(couponDef, auth);
-            result.setData(coupon);
-            result.setRetCode(Const.RET_OK);
+            Coupon coupon = couponService.apply(couponDef, auth.getName());
+            return RestResult.success(coupon);
         }
         catch (Exception e)
         {
-            result.setRetCode(Const.RET_FAILED);
-            result.setErrMsg(e.getMessage());
+            return RestResult.failed(e.getMessage());
         }
-        
-        return result;
     }
 }

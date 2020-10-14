@@ -82,11 +82,8 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
         {
             //这里也可以filterChain.doFilter(request,response)然后return,那最后就会调用
             //.exceptionHandling().authenticationEntryPoint,也就是本列中的"需要登陆"
-            RestResult<String> restResult = new RestResult<String>();
-            restResult.setRetCode(Const.RET_LOGIN_TIME_OUT);
-            restResult.setErrMsg(e.getMessage());
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write(JSON.toJSONString(restResult));
+            response.getWriter().write(JSON.toJSONString(RestResult.failed(e.getMessage())));
             return;
         }
     }

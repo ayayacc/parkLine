@@ -17,8 +17,7 @@ public class Const
     
     //rest返回值
     public final static Integer RET_OK = 0;
-    public final static Integer RET_LOGIN_TIME_OUT = 1;
-    public final static Integer RET_FAILED = 2;
+    public final static Integer RET_FAILED = 1;
     
     //日志记录
     public final static String LOG_CREATE = "新增";

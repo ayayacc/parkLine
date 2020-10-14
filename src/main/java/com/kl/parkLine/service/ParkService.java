@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,12 +37,12 @@ public class ParkService
 {
     @Autowired
     private IParkDao parkDao;
+
+    @Autowired
+    private UserService userService;
     
     @Autowired
     private CompareUtil compareUtil;
-    
-    @Autowired
-    private UserService userService;
     
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
@@ -98,9 +97,9 @@ public class ParkService
     }
     
     @Transactional(readOnly = true)
-    public Page<ParkVo> fuzzyFindPage(Park park, Pageable pageable, Authentication auth)
+    public Page<ParkVo> fuzzyFindPage(Park park, Pageable pageable, String userName)
     {
-        User user = userService.findByName(auth.getName());
+        User user = userService.findByName(userName);
         Predicate searchPred = ParkPredicates.fuzzySearch(park, user);
         
         QPark qPark = QPark.park;

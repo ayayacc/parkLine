@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,10 +39,10 @@ public class CouponDefService
     private ICouponDefDao couponDefDao;
     
     @Autowired
-    private CompareUtil compareUtil;
+    private UserService userService;
     
     @Autowired
-    private UserService userService;
+    private CompareUtil compareUtil;
     
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
@@ -96,10 +95,10 @@ public class CouponDefService
      * @return
      */
     @Transactional(readOnly = true)
-    public Page<CouponDefVo> fuzzyFindPage(CouponDef couponDef, Pageable pageable, Authentication auth)
+    public Page<CouponDefVo> fuzzyFindPage(CouponDefVo couponDefVo, Pageable pageable, String userName)
     {
-        User user = userService.findByName(auth.getName());
-        Predicate searchPred = CouponDefPredicates.fuzzySearch(couponDef, user);
+        User user = userService.findByName(userName);
+        Predicate searchPred = CouponDefPredicates.fuzzySearch(couponDefVo, user);
         
         QCouponDef qCouponDef = QCouponDef.couponDef;
         QueryResults<Tuple> queryResults = jpaQueryFactory

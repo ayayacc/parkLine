@@ -93,7 +93,7 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     private BigDecimal minAmt;
     
     /**
-     * 状态: 已使用/无效
+     * 状态
      */
     @Column(name = "status")
     @Enumerated(EnumType.STRING)

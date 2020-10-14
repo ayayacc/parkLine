@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,21 +47,22 @@ public class OrderService
     private EventService eventService;
     
     @Autowired
+    private UserService userService;
+    
+    @Autowired
     private CarService carService;
     
     @Autowired
     private ParkService parkService;
     
     @Autowired
-    private UserService userService;
-    
-    @Autowired
     private JPAQueryFactory jpaQueryFactory;
     
     @Transactional(readOnly = true)
-    public Page<OrderVo> fuzzyFindPage(Order order, Pageable pageable, Authentication auth)
+    public Page<OrderVo> fuzzyFindPage(Order order, Pageable pageable, String userName)
     {
-        User user = userService.findByName(auth.getName());
+        User user = userService.findByName(userName);
+        
         Predicate searchPred = OrderPredicates.fuzzySearch(order, user);
         
         QOrder qOrder = QOrder.order;

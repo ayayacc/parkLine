@@ -13,6 +13,7 @@ import com.kl.parkLine.dao.IParkDao;
 import com.kl.parkLine.dao.IRoleDao;
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.Role;
+import com.kl.parkLine.util.RoleCode;
 
 @SpringBootTest
 public class InitSystemTest
@@ -84,7 +85,12 @@ public class InitSystemTest
     private void initRole()
     {
         String[][] rolesStr = {
-            {"ROLE_END_USER", "最终用户"}
+            {RoleCode.END_USER, "最终用户"},
+            {RoleCode.PARK_GUARD, "停车场值班人员（巡检或岗亭）"},
+            {RoleCode.PARK_MANAGER, "停车场经理"},
+            {RoleCode.PARK_OWNER, "停车场业主"},
+            {RoleCode.SYS_OPERATION, "系统运营"},
+            {RoleCode.SYS_ADMIN, "系统管理员"}
         };
         
         for (String[] roleStr : rolesStr)

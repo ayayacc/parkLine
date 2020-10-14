@@ -1,5 +1,6 @@
 package com.kl.parkLine.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
@@ -16,10 +17,14 @@ import springfox.documentation.spring.web.plugins.Docket;
 @Configuration
 public class SwaggerConfig
 {
+    @Value("${swagger.enable}")
+    private boolean enableSwagger;
+    
     @Bean
     public Docket createRestApi() 
     {
         return new Docket(DocumentationType.OAS_30)
+                .enable(enableSwagger)
                 .ignoredParameterTypes(Authentication.class)
                 .pathMapping("/")
                 .select()

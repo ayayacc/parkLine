@@ -7,10 +7,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.Order;
+import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.OrderService;
 import com.kl.parkLine.vo.OrderVo;
 
@@ -36,13 +39,12 @@ public class OrderController
      * @return 订单查询结果
      */
     @GetMapping("/find")
-    @ApiOperation(value="分页查询订单，系统管理员使用", notes="若首次添加车牌，则自动创建车辆数据")
+    @ApiOperation(value="分页查询订单，系统管理员使用", notes="分页批量查询订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public Page<OrderVo> find(@ApiParam(name="查询条件",type="query")Order order, 
-            @ApiParam(name="分页信息",type="query") Pageable pageable, 
-            Authentication auth)
+    public RestResult<Page<OrderVo>> find(@ApiParam(name="查询条件",type="query")Order order, 
+            @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
-        return orderService.fuzzyFindPage(order, pageable, auth);
+        return RestResult.success(orderService.fuzzyFindPage(order, pageable, auth.getName()));
     }
     
     /**
@@ -52,10 +54,53 @@ public class OrderController
      */
     @GetMapping(value = "/{orderId}")
     @PreAuthorize("hasPermission(#order, 'read')")
+    @ApiOperation(value="查询订单明细", notes="根据订单Id")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public Order getOrder(@ApiParam(name="订单Id",type="path") @PathVariable("orderId") Integer orderId, 
+    public RestResult<OrderVo> getOrder(@ApiParam(name="订单Id",type="path") @PathVariable("orderId") Integer orderId, 
             @ApiIgnore @PathVariable("orderId") Order order)
     {
-        return order;
+        if (null == order)
+        {
+            return RestResult.failed(String.format("无效的订单Id: %d", orderId));
+        }
+        else 
+        {
+            OrderVo orderVo = OrderVo.builder()
+                    .code(order.getCode())
+                    .orderId(order.getOrderId())
+                    .status(order.getStatus().getText())
+                    .type(order.getStatus().getText())
+                    .build();
+            return RestResult.success(orderVo);
+        }
+    }
+    
+    /**
+     * 根据车牌号查询等待付款的订单
+     */
+    @GetMapping("/needToPay")
+    @ApiOperation(value="找到等待支付的订单", 
+        notes="1.订单拥有者是登录用户;2.订单拥有者为空，但是车辆绑定到登录用户的未支付订单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<OrderVo>> getNeedToPay(@ApiParam(name="分页信息",type="query") Pageable pageable,
+            Authentication auth)
+    {
+        //TODO: 实现找到等待支付的订单
+        return null;
+    }
+    
+    /**
+     * 支付订单
+     */
+    @PostMapping("/pay")
+    @ApiOperation(value="支付订单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<String> pay(@ApiParam(name="订单Id") Integer orderId, 
+            @ApiIgnore Order order,
+            @ApiParam(name="使用的优惠券Id") @PathVariable("couponId") Integer couponId,
+            @ApiIgnore Coupon coupon)
+    {
+        //TODO: 实现订单支付
+        return null;
     }
 }

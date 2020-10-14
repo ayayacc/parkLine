@@ -1,22 +1,22 @@
 package com.kl.parkLine.swagger.plugin;
 
-import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
-import com.kl.parkLine.annotation.SwaggerDisplayEnum;
-
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.ReflectionUtils;
-import springfox.documentation.builders.ModelPropertyBuilder;
-import springfox.documentation.builders.PropertySpecificationBuilder;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spi.schema.ModelPropertyBuilderPlugin;
-import springfox.documentation.spi.schema.contexts.ModelPropertyContext;
-
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.ReflectionUtils;
+
+import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
+import com.kl.parkLine.annotation.SwaggerDisplayEnum;
+
+import springfox.documentation.builders.PropertySpecificationBuilder;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spi.schema.ModelPropertyBuilderPlugin;
+import springfox.documentation.spi.schema.contexts.ModelPropertyContext;
 
 /**
  * @author chenc

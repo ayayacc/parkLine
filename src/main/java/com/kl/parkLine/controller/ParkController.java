@@ -16,7 +16,6 @@ import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.ParkService;
-import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.ParkVo;
 
 import io.swagger.annotations.Api;
@@ -42,15 +41,17 @@ public class ParkController
     @PostMapping("/save")
     @ApiOperation(value="保存停车场数据", notes="创建/修改停车场")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Park> save(@ApiParam(name="停车场信息") @RequestBody Park park) throws BusinessException
+    public RestResult<Park> save(@ApiParam(name="停车场信息") @RequestBody Park park)
     {
-        RestResult<Park> restResult = new RestResult<Park>();
-        restResult.setRetCode(Const.RET_OK);
-        restResult.setErrMsg("");
-
-        //将车辆绑定到当前用户
-        parkService.save(park);
-        return restResult;
+        try
+        {
+            parkService.save(park);
+            return RestResult.success();
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
     }
     
     /**
@@ -62,10 +63,22 @@ public class ParkController
     @PreAuthorize("hasPermission(#park, 'park')")
     @ApiOperation(value="查询停车场明细", notes="查看单个停车场明细")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public Park getPark(@ApiParam(name="停车场Id",type="path") @PathVariable("parkId") Integer parkId, 
+    public RestResult<ParkVo> getPark(@ApiParam(name="停车场Id",type="path") @PathVariable("parkId") Integer parkId, 
             @ApiIgnore @PathVariable("parkId") Park park)
     {
-        return park;
+        if (null == park)
+        {
+            return RestResult.failed(String.format("无效的停车场Id: %d", parkId));
+        }
+        else
+        {
+            ParkVo parkVo = ParkVo.builder()
+                    .parkId(park.getParkId())
+                    .code(park.getCode())
+                    .name(park.getName())
+                    .build();
+            return RestResult.success(parkVo);
+        }
     }
     
     /**
@@ -78,10 +91,9 @@ public class ParkController
     @GetMapping("/find")
     @ApiOperation(value="分页查询停车场信息", notes="分页查询停车场信息")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public Page<ParkVo> findParks(@ApiParam(name="查询条件",type="query")Park park, 
-            @ApiParam(name="分页信息",type="query") Pageable pageable, 
-            Authentication auth)
+    public RestResult<Page<ParkVo>> find(@ApiParam(name="查询条件",type="query")Park park, 
+            @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
-        return parkService.fuzzyFindPage(park, pageable, auth);
+        return RestResult.success(parkService.fuzzyFindPage(park, pageable, auth.getName()));
     }
 }

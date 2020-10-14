@@ -9,6 +9,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -16,6 +18,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.DynamicInsert;
@@ -26,6 +29,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.enums.Gender;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -81,7 +85,8 @@ public class User extends AbstractEntity implements UserDetails
     private String city;
     
     @Column(name = "gender")
-    private int gender;
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
     
     @Column(name = "password", length = 16)
     @JsonIgnore
@@ -91,12 +96,11 @@ public class User extends AbstractEntity implements UserDetails
     /**
      * 用户绑定的车辆
      */
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}) 
-    @JoinTable(name = "tr_user_car", joinColumns = { @JoinColumn(name="user_id") }, inverseJoinColumns={ @JoinColumn(name="car_id") })  
+    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}) 
     private Set<Car> cars;
     
-    @Column(name = "is_enable")
-    private boolean isEnable;
+    @Column(name = "is_enabled")
+    private boolean isEnabled;
     
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "tr_user_role", joinColumns = { @JoinColumn(name="user_id") }, inverseJoinColumns={ @JoinColumn(name="role_id") })  
@@ -126,34 +130,39 @@ public class User extends AbstractEntity implements UserDetails
         return authorities;
     }
 
+    @JsonIgnore
     @Override
     public String getUsername()
     {
         return name;
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonExpired()
     {
-        return isEnable;
+        return isEnabled;
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonLocked()
     {
-        return isEnable;
+        return isEnabled;
     }
 
+    @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired()
     {
-        return isEnable;
+        return isEnabled;
     }
 
+    @JsonIgnore
     @Override
     public boolean isEnabled()
     {
-        return isEnable;
+        return isEnabled;
     }
 
     @Override

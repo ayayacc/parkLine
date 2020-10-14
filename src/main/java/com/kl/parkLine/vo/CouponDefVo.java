@@ -14,10 +14,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@ApiModel("优惠券定义查询结果")
+@ApiModel("优惠券定义VO")
 public class CouponDefVo
 {
-private Integer couponDefId;
+    @ApiModelProperty(name="优惠券定义Id", position=0)
+    private Integer couponDefId;
     
     /**
      * 优惠券定义编号
@@ -30,7 +31,7 @@ private Integer couponDefId;
      */
     @ApiModelProperty(name="优惠券名称", position=1)
     private String name;
-
+    
     /**
      * 金额
      */
@@ -62,11 +63,6 @@ private Integer couponDefId;
     private Integer usedCnt;
     
     /**
-     * 是否有效
-     */
-    private String enabled;
-    
-    /**
      * 有效期开始时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -77,6 +73,12 @@ private Integer couponDefId;
      * 有效期结束时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @ApiModelProperty(name="有效期开始时间", position=8)
+    @ApiModelProperty(name="有效期结束时间", position=8)
     private Date endDate;
+    
+    /**
+     * 是否有效
+     */
+    @ApiModelProperty(name="是否有效", position=9)
+    private String enabled;
 }

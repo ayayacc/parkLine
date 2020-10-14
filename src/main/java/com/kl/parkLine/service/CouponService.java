@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,10 +30,10 @@ public class CouponService
     private ICouponDao couponDao;
     
     @Autowired
-    private UserService userService;
+    private CouponDefService couponDefService;
     
     @Autowired
-    private CouponDefService couponDefService;
+    private UserService userService;
     
     @Autowired
     private CompareUtil compareUtil;
@@ -46,8 +45,10 @@ public class CouponService
      * @return
      */
     @Transactional
-    public Coupon apply(CouponDef couponDef, Authentication auth) throws BusinessException
+    public Coupon apply(CouponDef couponDef, String userName) throws BusinessException
     {
+        User user = userService.findByName(userName);
+        
         DateTime now = new DateTime();
         
         //检查优惠券定义是否已经开始
@@ -75,9 +76,6 @@ public class CouponService
         {
             throw new BusinessException("请勿重复领取");
         }
-        
-        //获取当前用户
-        User user = userService.findByName(auth.getName());
         
         //新增优惠券
         Coupon coupon = new Coupon();

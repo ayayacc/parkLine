@@ -3,7 +3,6 @@ package com.kl.parkLine.service;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +14,7 @@ import com.kl.parkLine.dao.IUserDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.Gender;
 import com.kl.parkLine.util.RoleCode;
 
 /**
@@ -54,23 +54,15 @@ public class UserService
         String userName = String.format("SJ_%s_%s", sdf.format(new Date()), right);
         user.setMobile(mobile);
         user.setName(userName);
-        user.setEnable(true);
+        //TODO: 获取真实性别
+        user.setGender(Gender.male);
+        user.setEnabled(true);
         Set<Role> roles = new HashSet<>();
         Role role = roleService.findOneByCode(RoleCode.END_USER);
         roles.add(role);
         user.setRoles(roles);
         save(user);
         return user;
-    }
-    
-    /**
-     * 根据名称查找用户
-     * @param user
-     */
-    @Transactional(readOnly = true)
-    public List<User> getUsers()
-    {
-        return userDao.findAll();
     }
     
     /**
@@ -107,7 +99,9 @@ public class UserService
     
     /**
      * 校验当前登录用户是否可以访问data 数据
+     * 停车场人员无权限访问
      * 普通用户只能访问自己的数据
+     * 系统运营和管理员可以访问所有用户
      * @param data 期待访问的数据
      * @param auth 当前登录的用户
      * @param permission 需要的权限
@@ -116,6 +110,7 @@ public class UserService
     @Transactional(readOnly = true)
     public boolean hasPermission(User reqData, Authentication auth, String permission) 
     {
+        //TODO: 实现用户访问权限控制
         return reqData.getUsername().equals(auth.getPrincipal());
     }
 }

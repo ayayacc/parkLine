@@ -22,7 +22,7 @@ public class MyPermissionEvaluator implements PermissionEvaluator
     {
         if (null == targetDomainObject)
         {
-            return false;
+            return true;
         }
         
         //根据不同类型的对象的访问请求，使用不同的对象判断

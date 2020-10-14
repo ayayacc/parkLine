@@ -11,7 +11,6 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 
 import com.alibaba.fastjson.JSON;
 import com.kl.parkLine.json.RestResult;
-import com.kl.parkLine.util.Const;
 
 
 public class MyAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler
@@ -21,10 +20,7 @@ public class MyAuthenticationFailureHandler extends SimpleUrlAuthenticationFailu
             AuthenticationException exception) throws IOException, ServletException 
     {
         response.setContentType("application/json;charset=UTF-8");
-        RestResult<String> restResult = new RestResult<String>();
         //返回验证结果
-        restResult.setRetCode(Const.RET_FAILED);
-        restResult.setErrMsg(exception.getMessage());
-        response.getWriter().write(JSON.toJSONString(restResult));
+        response.getWriter().write(JSON.toJSONString(RestResult.failed(exception.getMessage())));
     }
 }
