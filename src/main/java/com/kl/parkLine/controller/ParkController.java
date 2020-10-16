@@ -83,7 +83,7 @@ public class ParkController
     
     /**
      * 分页查询停车场信息
-     * @param couponDef 查询条件
+     * @param park 查询条件
      * @param pageable 分页条件
      * @param auth 当前登录用户
      * @return 查询结果

@@ -11,6 +11,8 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import com.alibaba.fastjson.JSON;
 import com.kl.parkLine.component.JwtCmpt;
 import com.kl.parkLine.json.JwtToken;
+import com.kl.parkLine.json.RestResult;
+import com.nimbusds.jose.JOSEException;
 
 public class MyAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 {
@@ -28,11 +30,16 @@ public class MyAuthenticationSuccessHandler extends SimpleUrlAuthenticationSucce
         
         //获取登录的用户名
         String username = authentication.getName();
-        JwtToken jwtToken = new JwtToken();
-        jwtToken.setToken(jwtCmpt.signJwt(username));
-        //签发token
-        response.getWriter().write(JSON.toJSONString(jwtToken));
+        try
+        {
+            //签发token
+            JwtToken jwtToken = new JwtToken();
+            jwtToken.setToken(jwtCmpt.signJwt(username));
+            response.getWriter().write(JSON.toJSONString(RestResult.success(jwtToken)));
+        }
+        catch (JOSEException e)
+        {
+            response.getWriter().write(JSON.toJSONString(RestResult.failed(e.getMessage())));
+        }
     }
-
-    
 }

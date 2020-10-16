@@ -30,25 +30,33 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
-public class MonthlyTicketLog extends AbstractLog implements Serializable
+public class MonthlyTktLog extends AbstractLog implements Serializable
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "monthly_ticket_log_id")
+    @Column(name = "monthly_tkt_log_id")
     @JsonIgnore
-    private Integer monthlyTicketLogId;
+    private Integer monthlyTktLogId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
-    @JoinColumn(name = "monthly_ticket_id")
+    @JoinColumn(name = "monthly_tkt_id")
     @JsonIgnore
-    private MonthlyTicket monthlyTicket;
+    private MonthlyTkt monthlyTkt;
+    
+    /**
+     * 
+     */
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    @JsonIgnore
+    private Order order;
 
     @Override
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("MonthlyTicketLog [monthlyTicketLogId=")
-                .append(monthlyTicketLogId).append("]");
+        builder.append("MonthlyTktLog [monthlyTicketLogId=")
+                .append(monthlyTktLogId).append("]");
         return builder.toString();
     }
 
@@ -57,8 +65,8 @@ public class MonthlyTicketLog extends AbstractLog implements Serializable
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((monthlyTicketLogId == null) ? 0
-                : monthlyTicketLogId.hashCode());
+        result = prime * result + ((monthlyTktLogId == null) ? 0
+                : monthlyTktLogId.hashCode());
         return result;
     }
 
@@ -77,15 +85,15 @@ public class MonthlyTicketLog extends AbstractLog implements Serializable
         {
             return false;
         }
-        MonthlyTicketLog other = (MonthlyTicketLog) obj;
-        if (monthlyTicketLogId == null)
+        MonthlyTktLog other = (MonthlyTktLog) obj;
+        if (monthlyTktLogId == null)
         {
-            if (other.monthlyTicketLogId != null)
+            if (other.monthlyTktLogId != null)
             {
                 return false;
             }
         }
-        else if (!monthlyTicketLogId.equals(other.monthlyTicketLogId))
+        else if (!monthlyTktLogId.equals(other.monthlyTktLogId))
         {
             return false;
         }

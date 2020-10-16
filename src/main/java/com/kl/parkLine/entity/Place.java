@@ -61,14 +61,8 @@ public class Place extends AbstractEntity implements java.io.Serializable
     /**
      * 停车位编号
      */
-    @Column(name = "code", nullable = false, length = 8)
+    @Column(name = "code", nullable = false, length = 16)
     private String code;
-
-    /**
-     * 停车位名称
-     */
-    @Column(name = "name", nullable = false, length = 64)
-    private String name;
     
     /**
     * 监控此泊位的设备编号

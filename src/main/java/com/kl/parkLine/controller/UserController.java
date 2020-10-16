@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.UserService;
 import com.kl.parkLine.vo.UserVo;
@@ -103,5 +104,17 @@ public class UserController
         {
             return RestResult.failed(e.getMessage());
         }
+    }
+    
+    /**
+     * 钱包充值
+     */
+    @PostMapping("/wallet/charge")
+    @ApiOperation(value="钱包充值", notes="用户进行钱包充值操作")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Object> chargeWallet(@ApiParam(name="充值参数", required=true) @RequestBody ChargeWalletParam walletChargeParam)
+    {
+        //TODO: 钱包充值
+        return null;
     }
 }

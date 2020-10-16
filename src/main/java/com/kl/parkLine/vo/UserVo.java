@@ -1,5 +1,7 @@
 package com.kl.parkLine.vo;
 
+import java.math.BigDecimal;
+
 import com.kl.parkLine.enums.Gender;
 
 import io.swagger.annotations.ApiModel;
@@ -28,6 +30,15 @@ public class UserVo
     
     @ApiModelProperty("性别")
     private Gender gender;
+    
+    @ApiModelProperty("钱包余额")
+    private BigDecimal walletBalance;
+    
+    @ApiModelProperty("绑定的车辆数量")
+    private Integer carCnt;
+    
+    @ApiModelProperty("未支付的订单数量")
+    private Integer needToPayCnt;
     
     @ApiModelProperty("是否有效")
     private boolean isEnable;

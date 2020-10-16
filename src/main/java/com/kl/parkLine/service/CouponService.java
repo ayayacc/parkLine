@@ -81,8 +81,6 @@ public class CouponService
         Coupon coupon = new Coupon();
         coupon.setCouponDef(couponDef);
         coupon.setCode(String.format("YHJ%s", String.valueOf(now.getMillis())));
-        coupon.setMinAmt(couponDef.getMinAmt()); //满x元使用
-        coupon.setAmt(couponDef.getAmt()); //优惠券金额
         coupon.setOwner(user);
         coupon.setStartDate(couponDef.getStartDate());
         coupon.setEndDate(couponDef.getEndDate());

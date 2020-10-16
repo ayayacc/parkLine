@@ -7,6 +7,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -26,6 +28,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.enums.MonthlyStatus;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -43,16 +46,16 @@ import lombok.Setter;
 @Setter
 @SuppressWarnings("serial")
 @Entity
-@Table(name = "TT_MONTHLY_TICKEY")
+@Table(name = "TT_MONTHLY_TKT")
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
-public class MonthlyTicket extends AbstractEntity implements java.io.Serializable
+public class MonthlyTkt extends AbstractEntity implements java.io.Serializable
 {
     @Id
-    @Column(name = "monthly_ticket_id")
+    @Column(name = "monthly_tkt_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer monthlyTicketId;
+    private Integer monthlyTktId;
     
     /**
      * 月票编号
@@ -63,22 +66,23 @@ public class MonthlyTicket extends AbstractEntity implements java.io.Serializabl
     /**
      * 停车场 
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "park_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "park_id", nullable = false)
     private Park park;
     
     /**
      * 车辆
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "car_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "car_id", nullable = false)
     private Car car;
     
     /**
      * 是否被禁用
      */
-    @Column(name = "is_enable")
-    private boolean isEnable;
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private MonthlyStatus status;
     
     /**
      * 有效期开始时间
@@ -101,17 +105,17 @@ public class MonthlyTicket extends AbstractEntity implements java.io.Serializabl
     /**
      * 操作记录
      */
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "monthlyTicket", cascade = {CascadeType.ALL})  
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "monthlyTkt", cascade = {CascadeType.ALL})  
     @OrderBy(value = "createdDate desc")
     @JsonIgnore
-    private List<MonthlyTicketLog> logs;
+    private List<MonthlyTktLog> logs;
 
     @Override
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("MonthlyTicket [monthlyTicketId=")
-                .append(monthlyTicketId).append(", code=").append(code)
+        builder.append("MonthlyTktVo [monthlyTicketId=")
+                .append(monthlyTktId).append(", code=").append(code)
                 .append("]");
         return builder.toString();
     }
@@ -122,7 +126,7 @@ public class MonthlyTicket extends AbstractEntity implements java.io.Serializabl
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((monthlyTicketId == null) ? 0 : monthlyTicketId.hashCode());
+                + ((monthlyTktId == null) ? 0 : monthlyTktId.hashCode());
         return result;
     }
 
@@ -141,15 +145,15 @@ public class MonthlyTicket extends AbstractEntity implements java.io.Serializabl
         {
             return false;
         }
-        MonthlyTicket other = (MonthlyTicket) obj;
-        if (monthlyTicketId == null)
+        MonthlyTkt other = (MonthlyTkt) obj;
+        if (monthlyTktId == null)
         {
-            if (other.monthlyTicketId != null)
+            if (other.monthlyTktId != null)
             {
                 return false;
             }
         }
-        else if (!monthlyTicketId.equals(other.monthlyTicketId))
+        else if (!monthlyTktId.equals(other.monthlyTktId))
         {
             return false;
         }

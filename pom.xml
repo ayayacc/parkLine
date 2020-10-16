@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.chenc</groupId>
-	<artifactId>store</artifactId>
+	<artifactId>parkLine</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>store</name>
-	<description>Store for Spring Boot</description>
+	<description>parkLine</description>
 
 	<properties>
 	    <maven-jar-plugin.version>3.0.0</maven-jar-plugin.version>

@@ -2,10 +2,11 @@ package com.kl.parkLine.predicate;
 
 import org.springframework.util.StringUtils;
 
-import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.QOrder;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.util.RoleCode;
+import com.kl.parkLine.vo.OrderVo;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 
@@ -13,27 +14,27 @@ public class OrderPredicates
 {
     private OrderPredicates() {}
     
-    public static Predicate fuzzySearch(Order order, User user) 
+    public static Predicate fuzzySearch(OrderVo orderVo, User user) 
     {
         QOrder qOrder = QOrder.order;
         BooleanBuilder where = new BooleanBuilder();
         
         //编号
-        if (false == StringUtils.isEmpty(order.getCode()))
+        if (!StringUtils.isEmpty(orderVo.getCode()))
         {
-            where.and(qOrder.code.containsIgnoreCase(order.getCode()));
+            where.and(qOrder.code.containsIgnoreCase(orderVo.getCode()));
         }
         
         //状态
-        if (null != order.getStatus())
+        if (!StringUtils.isEmpty(orderVo.getStatus()))
         {
-            where.and(qOrder.status.eq(order.getStatus()));
+            where.and(qOrder.status.eq(OrderStatus.valueOf(orderVo.getStatus())));
         }
         
         //停车场
-        if (null != order.getPark())
+        if (!StringUtils.isEmpty(orderVo.getCarNo()))
         {
-            where.and(qOrder.park.parkId.eq(order.getPark().getParkId()));
+            where.and(qOrder.car.carNo.containsIgnoreCase(orderVo.getCarNo()));
         }
         
         //区分用户权限

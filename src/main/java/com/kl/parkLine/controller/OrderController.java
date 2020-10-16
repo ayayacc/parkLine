@@ -40,12 +40,12 @@ public class OrderController
      * @return 订单查询结果
      */
     @GetMapping("/find")
-    @ApiOperation(value="分页查询订单，系统管理员使用", notes="分页批量查询订单")
+    @ApiOperation(value="分页查询订单", notes="分页批量查询订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Page<OrderVo>> find(@ApiParam(name="查询条件",type="query")Order order, 
+    public RestResult<Page<OrderVo>> find(@ApiParam(name="查询条件",type="query")OrderVo orderVo, 
             @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
-        return RestResult.success(orderService.fuzzyFindPage(order, pageable, auth.getName()));
+        return RestResult.success(orderService.fuzzyFindPage(orderVo, pageable, auth.getName()));
     }
     
     /**
@@ -96,9 +96,10 @@ public class OrderController
     @PostMapping("/pay")
     @ApiOperation(value="支付订单", notes="发起订单支付")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<String> pay(@ApiParam(name="订单支付参数", required=true) @RequestBody PayOrderParam payParam)
+    public RestResult<Object> pay(@ApiParam(name="订单支付参数", required=true) @RequestBody PayOrderParam payParam)
     {
         //TODO: 实现订单支付
         return null;
     }
+    
 }

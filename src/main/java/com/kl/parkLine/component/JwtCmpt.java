@@ -29,7 +29,7 @@ public class JwtCmpt
      * @param username 用户名
      * @return
      */
-    public String signJwt(String username)
+    public String signJwt(String username) throws JOSEException
     {
         // Prepare JWT with claims set
         DateTime dateTime = new DateTime().plusMinutes(Const.JWT_EXPIRED_TIME_MIN);
@@ -46,15 +46,7 @@ public class JwtCmpt
                 claimsSet);
 
         // Compute the RSA signature
-        try
-        {
-            signedJWT.sign(jwsSigner);
-        }
-        catch (JOSEException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        signedJWT.sign(jwsSigner);
         String token = signedJWT.serialize();
         return token;
     }

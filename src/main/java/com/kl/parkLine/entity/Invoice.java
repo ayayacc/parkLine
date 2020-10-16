@@ -7,6 +7,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -20,6 +22,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.enums.InvoiceStatus;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -59,6 +62,14 @@ public class Invoice extends AbstractEntity implements java.io.Serializable
      */
     @Column(name = "amt", precision = 15 ,scale = 2)
     private BigDecimal amt;
+    
+    /*所有订单类型公用*/
+    /**
+     * 发票状态: 已经申请/开票成功/开票失败
+     */
+    @Column(name = "status")
+    @Enumerated(EnumType.STRING)
+    private InvoiceStatus status;
     
     /**
      * 开票所包含的订单

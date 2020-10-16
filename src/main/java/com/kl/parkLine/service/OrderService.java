@@ -59,11 +59,11 @@ public class OrderService
     private JPAQueryFactory jpaQueryFactory;
     
     @Transactional(readOnly = true)
-    public Page<OrderVo> fuzzyFindPage(Order order, Pageable pageable, String userName)
+    public Page<OrderVo> fuzzyFindPage(OrderVo orderVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);
         
-        Predicate searchPred = OrderPredicates.fuzzySearch(order, user);
+        Predicate searchPred = OrderPredicates.fuzzySearch(orderVo, user);
         
         QOrder qOrder = QOrder.order;
         QueryResults<Tuple> queryResults = jpaQueryFactory
@@ -291,7 +291,7 @@ public class OrderService
     {
         Park park = order.getPark();
         BigDecimal amt = BigDecimal.ZERO;
-        //TODO：检查是否月票订单
+        //TODO:检查是否月票订单
         
         //根据停车场规则计算金额
         //计算时间差

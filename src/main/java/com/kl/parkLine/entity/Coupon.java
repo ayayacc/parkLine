@@ -1,6 +1,5 @@
 package com.kl.parkLine.entity;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -65,7 +64,7 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     /**
      * 优惠券的定义
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "coupon_def")
     @JsonIgnore
     @ApiModelProperty(hidden = true)
@@ -77,20 +76,6 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     @Column(name = "code", nullable = false, unique = true, length = 16)
     @ApiModelProperty("优惠券实例唯一编号")
     private String code;
-    
-    /**
-     * 金额
-     */
-    @Column(name = "amt", precision = 15 ,scale = 2)
-    @ApiModelProperty("优惠券实例金额")
-    private BigDecimal amt;
-    
-    /**
-     *使用支付的最小金额（满xx使用）
-     */
-    @Column(name = "min_amt", precision = 15 ,scale = 2)
-    @ApiModelProperty("使用支付的最小金额（满xx使用）")
-    private BigDecimal minAmt;
     
     /**
      * 状态
@@ -142,7 +127,7 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("Coupon [couponId=").append(couponId)
+        builder.append("CouponVo [couponId=").append(couponId)
                 .append(", couponDef=").append(couponDef).append("]");
         return builder.toString();
     }
