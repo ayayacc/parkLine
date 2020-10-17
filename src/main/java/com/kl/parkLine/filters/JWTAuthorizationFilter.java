@@ -59,7 +59,7 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
             String username = (String) signedJWT.getJWTClaimsSet().getClaim(Const.JWT_CLAIM_USER_NAME);
             
             // 如果请求头中有token，则进行解析，并且设置认证信息
-            User user = userDetailsService.loadUserByUsernameAndRole(username);
+            User user = userDetailsService.loadUserByName(username);
             if (null == user)
             {
                 throw new Exception(String.format("无效的用户: %s", username));

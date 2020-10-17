@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import com.kl.parkLine.entity.Car;
 
-@Repository(value="carDao")
+@Repository
 public interface ICarDao extends JpaRepository<Car, Integer>
 {
     public Car findOneByCarNo(String carNo);

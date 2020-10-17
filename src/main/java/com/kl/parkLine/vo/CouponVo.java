@@ -31,11 +31,20 @@ public class CouponVo
     @ApiModelProperty("优惠券实例id")
     private Integer couponId;
     
+    @ApiModelProperty("所属优惠券定义Id")
+    private Integer couponDefId;
+    
+    @ApiModelProperty("所属优惠券定义编号")
+    private String couponDefCode;
+    
     @ApiModelProperty("优惠券实例唯一编号")
     private String code;
     
     @ApiModelProperty("优惠券名称")
     private String name;
+    
+    @ApiModelProperty("优惠券拥有者")
+    private String owner;
     
     @ApiModelProperty("优惠券实例金额")
     private BigDecimal amt;

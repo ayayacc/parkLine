@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import com.kl.parkLine.entity.User;
 
-@Repository(value="userDao")
+@Repository
 public interface IUserDao extends JpaRepository<User, Integer>
 {
     public User findOneByName(String name);

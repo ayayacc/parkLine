@@ -56,6 +56,9 @@ public class OrderService
     private ParkService parkService;
     
     @Autowired
+    private OrderPredicates orderPredicates;
+    
+    @Autowired
     private JPAQueryFactory jpaQueryFactory;
     
     @Transactional(readOnly = true)
@@ -63,7 +66,7 @@ public class OrderService
     {
         User user = userService.findByName(userName);
         
-        Predicate searchPred = OrderPredicates.fuzzySearch(orderVo, user);
+        Predicate searchPred = orderPredicates.fuzzy(orderVo, user);
         
         QOrder qOrder = QOrder.order;
         QueryResults<Tuple> queryResults = jpaQueryFactory

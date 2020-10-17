@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import com.kl.parkLine.entity.SmsCode;
 
-@Repository(value="smsCodeDao")
+@Repository
 public interface ISmsCodeDao extends JpaRepository<SmsCode, Integer>
 {
     public SmsCode findTop1ByMobileAndEnabledOrderByCreatedDateDesc(String mobile, String enabled);

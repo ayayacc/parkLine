@@ -3,19 +3,31 @@ package com.kl.parkLine.service;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kl.parkLine.dao.IUserDao;
 import com.kl.parkLine.entity.Car;
+import com.kl.parkLine.entity.QUser;
 import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.Gender;
+import com.kl.parkLine.predicate.UserPredicates;
 import com.kl.parkLine.util.RoleCode;
+import com.kl.parkLine.vo.UserVo;
+import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
  * @author chenc
@@ -29,6 +41,12 @@ public class UserService
     
     @Autowired
     private RoleService roleService;
+    
+    @Autowired
+    private UserPredicates userPredicates;
+    
+    @Autowired
+    private JPAQueryFactory jpaQueryFactory;
     
     /**
      * 保存用户
@@ -95,6 +113,46 @@ public class UserService
         User user = this.findByName(userName);
         user.getCars().add(car);
         this.save(user);
+    }
+    
+    /**
+     * 模糊匹配优惠券定义
+     * @param user  
+     * @param pageable
+     * @param auth
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public Page<UserVo> fuzzyFindPage(UserVo userVo, Pageable pageable, String userName)
+    {
+        User user = this.findByName(userName);
+        Predicate searchPred = userPredicates.fuzzy(userVo, user);
+        
+        QUser qUser = QUser.user;
+        QueryResults<Tuple> queryResults = jpaQueryFactory
+                .select(
+                        qUser.userId,
+                        qUser.name,
+                        qUser.mobile,
+                        qUser.nickName
+                )
+                .from(qUser)
+                .where(searchPred)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetchResults();
+        //转换成vo
+        List<UserVo> userVos = queryResults
+                .getResults()
+                .stream()
+                .map(tuple -> UserVo.builder()
+                        .userId(tuple.get(qUser.userId))
+                        .name(tuple.get(qUser.name))
+                        .mobile(tuple.get(qUser.mobile))
+                        .build()
+                        )
+                .collect(Collectors.toList());
+        return new PageImpl<>(userVos, pageable, queryResults.getTotal());
     }
     
     /**

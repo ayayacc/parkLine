@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.vo.OrderVo;
 
-@Repository(value="orderDao")
+@Repository
 public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredicateExecutor<OrderVo>
 {
     public Order findOneByActId(String actId);

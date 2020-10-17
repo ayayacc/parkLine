@@ -103,8 +103,7 @@ public class CarController
     public RestResult<Page<CarVo>> find(@ApiParam(name="查询条件",type="query")CarVo carVo, 
             @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
-        //TODO:查询车辆清单
-        return null;
+        return RestResult.success(carService.fuzzyFindPage(carVo, pageable, auth.getName()));
     }
     
     /**

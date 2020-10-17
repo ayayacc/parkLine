@@ -1,5 +1,6 @@
 package com.kl.parkLine.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kl.parkLine.entity.MonthlyTkt;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.RestResult;
+import com.kl.parkLine.service.MonthlyTktService;
 import com.kl.parkLine.vo.MonthlyTktVo;
 
 import io.swagger.annotations.Api;
@@ -27,6 +29,9 @@ import springfox.documentation.annotations.ApiIgnore;
 @Api(tags="月票管理")
 public class MonthlyTktController
 {
+    @Autowired
+    private MonthlyTktService monthlyTktService;
+    
     /**
      * 购买月票
      */
@@ -52,8 +57,7 @@ public class MonthlyTktController
     public RestResult<Page<MonthlyTktVo>> find(@ApiParam(name="查询条件",type="query")MonthlyTktVo monthlyTktVo, 
             @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
-        //TODO: 分页查询月票
-        return null;
+        return RestResult.success(monthlyTktService.fuzzyFindPage(monthlyTktVo, pageable, auth.getName()));
     }
     
     /**

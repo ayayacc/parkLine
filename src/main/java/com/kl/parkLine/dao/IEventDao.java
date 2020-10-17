@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import com.kl.parkLine.entity.Event;
 
-@Repository(value="eventDao")
+@Repository
 public interface IEventDao extends JpaRepository<Event, Integer>
 {
     public Event findOneByGuidAndParkCode(String guid, String parkCode);

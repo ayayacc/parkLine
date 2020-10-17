@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import com.kl.parkLine.entity.Role;
 
-@Repository(value="roleDao")
+@Repository
 public interface IRoleDao extends JpaRepository<Role, Integer>
 {
     public Role findOneByCode(String code);

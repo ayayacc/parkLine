@@ -77,7 +77,7 @@ public class CouponDef extends AbstractEntity implements java.io.Serializable
     /**
      * 优惠券定义变动备注
      */
-    @ApiModelProperty("优惠券定义备注")
+    @ApiModelProperty("优惠券定义变动备注")
     @Transient
     private String changeRemark;
 

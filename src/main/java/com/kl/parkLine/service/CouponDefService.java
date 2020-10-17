@@ -45,6 +45,9 @@ public class CouponDefService
     private CompareUtil compareUtil;
     
     @Autowired
+    private CouponDefPredicates couponDefPredicates;
+    
+    @Autowired
     private JPAQueryFactory jpaQueryFactory;
     
     /**
@@ -98,7 +101,7 @@ public class CouponDefService
     public Page<CouponDefVo> fuzzyFindPage(CouponDefVo couponDefVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);
-        Predicate searchPred = CouponDefPredicates.fuzzySearch(couponDefVo, user);
+        Predicate searchPred = couponDefPredicates.fuzzy(couponDefVo, user);
         
         QCouponDef qCouponDef = QCouponDef.couponDef;
         QueryResults<Tuple> queryResults = jpaQueryFactory

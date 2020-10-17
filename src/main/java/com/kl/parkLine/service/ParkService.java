@@ -47,6 +47,9 @@ public class ParkService
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
     
+    @Autowired
+    private ParkPredicates parkPredicates;
+    
     /**
      * 根据停车场编码找到停车场对象
      * @param code 停车场编码
@@ -98,10 +101,10 @@ public class ParkService
     }
     
     @Transactional(readOnly = true)
-    public Page<ParkVo> fuzzyFindPage(Park park, Pageable pageable, String userName)
+    public Page<ParkVo> fuzzyFindPage(ParkVo parkVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);
-        Predicate searchPred = ParkPredicates.fuzzySearch(park, user);
+        Predicate searchPred = parkPredicates.fuzzy(parkVo, user);
         
         QPark qPark = QPark.park;
         QueryResults<Tuple> queryResults = jpaQueryFactory

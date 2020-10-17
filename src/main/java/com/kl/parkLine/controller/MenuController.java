@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kl.parkLine.entity.Invoice;
+import com.kl.parkLine.entity.Menu;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.RestResult;
-import com.kl.parkLine.service.InvoiceService;
-import com.kl.parkLine.vo.InvoiceVo;
+import com.kl.parkLine.service.MenuService;
+import com.kl.parkLine.vo.MenuVo;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -26,75 +26,73 @@ import io.swagger.annotations.ApiParam;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@RequestMapping(value="/invoices")
-@Api(tags = "发票管理")
-public class InvoiceController
+@RequestMapping(value="/menus")
+@Api(tags = "菜单管理")
+public class MenuController
 {
     @Autowired
-    private InvoiceService invoiceService;
+    private MenuService menuService;
     
     /**
-     * 根据发票Id查询单个发票信息
-     * @param invoiceId 发票Id
-     * @param invoice
+     * 根据菜单Id查询单个菜单信息
+     * @param menuId 菜单Id
+     * @param menu
      * @return
      */
-    @GetMapping(value = "/{invoiceId}")
-    @PreAuthorize("hasPermission(#invoice, 'read')")
-    @ApiOperation(value="查询发票", notes="根据发票Id查询单个发票信息")
+    @GetMapping(value = "/{menuId}")
+    @PreAuthorize("hasPermission(#menu, 'read')")
+    @ApiOperation(value="查询菜单", notes="根据菜单Id查询单个菜单信息")
     @ApiImplicitParams({
         @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header"),
-        @ApiImplicitParam(name="invoiceId", value="发票Id", required=true, paramType="path")
+        @ApiImplicitParam(name="menuId", value="菜单Id", required=true, paramType="path")
     })
-    public RestResult<InvoiceVo> getInvoice(@ApiParam(name="发票Id",type="path") @PathVariable("invoiceId") Integer invoiceId, 
-            @ApiIgnore @PathVariable("invoiceId") Invoice invoice)
+    public RestResult<MenuVo> getMenu(@ApiParam(name="菜单Id",type="path") @PathVariable("menuId") Integer menuId, 
+            @ApiIgnore @PathVariable("menuId") Menu menu)
     {
-        if (null == invoice)
+        if (null == menu)
         {
-            return RestResult.failed(String.format("无效的发票Id: %d", invoiceId));
+            return RestResult.failed(String.format("无效的菜单Id: %d", menuId));
         }
         else
         {
-            InvoiceVo invoiceVo = InvoiceVo.builder()
-                    .invoiceId(invoice.getInvoiceId())
-                    .code(invoice.getCode())
-                    .amt(invoice.getAmt())
-                    .status(invoice.getStatus().getText())
+            MenuVo menuVo = MenuVo.builder()
+                    .menuId(menu.getMenuId())
+                    .name(menu.getName())
                     .build();
-            return RestResult.success(invoiceVo);
+            return RestResult.success(menuVo);
         }
     }
     
     /**
-     * 分页查询发票列表
-     * @param invoice 查询条件
+     * 分页查询菜单列表
+     * @param menu 查询条件
      * @param pageable 分页条件
-     * @param auth 当前登录发票
-     * @return 发票查询结果
+     * @param auth 当前登录菜单
+     * @return 菜单查询结果
      */
     @GetMapping("/find")
-    @ApiOperation(value="查询发票清单", notes="分页查询发票清单")
-    public RestResult<Page<InvoiceVo>> find(@ApiParam(name="查询条件",type="query")InvoiceVo invoiceVo, 
+    @ApiOperation(value="查询菜单清单", notes="分页查询菜单清单")
+    public RestResult<Page<MenuVo>> find(@ApiParam(name="查询条件",type="query")MenuVo menuVo, 
             @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
-        return RestResult.success(invoiceService.fuzzyFindPage(invoiceVo, pageable, auth.getName()));
+        return RestResult.success(menuService.fuzzyFindPage(menuVo, pageable, auth.getName()));
     }
     
     /**
-     * 新增/编辑发票
-     * @param invoice 发票信息
+     * 新增/编辑菜单
+     * @param menu 菜单信息
      * @param remark 修改的备注
      * @return
      * @throws BusinessException
      */
     @PostMapping("/save")
-    @ApiOperation(value="新增发票申请")
+    @ApiOperation(value="新增/编辑菜单", notes="普通菜单只能编辑自己的信息，管理员可以编辑所有菜单，name，Id等系统生成的字段不能修改")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<InvoiceVo> apply(@ApiParam(name="发票信息") @RequestBody Invoice invoice)
+    public RestResult<MenuVo> save(@ApiParam(name="菜单信息") @RequestBody Menu menu)
     {
         try
         {
-            invoiceService.save(invoice);
+            menuService.save(menu);
             return RestResult.success();
         }
         catch (Exception e)
@@ -102,5 +100,4 @@ public class InvoiceController
             return RestResult.failed(e.getMessage());
         }
     }
-    
 }

@@ -1,5 +1,6 @@
 package com.kl.parkLine.predicate;
 
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.entity.QOrder;
@@ -10,11 +11,10 @@ import com.kl.parkLine.vo.OrderVo;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 
+@Component
 public class OrderPredicates
 {
-    private OrderPredicates() {}
-    
-    public static Predicate fuzzySearch(OrderVo orderVo, User user) 
+    public Predicate fuzzy(OrderVo orderVo, User user) 
     {
         QOrder qOrder = QOrder.order;
         BooleanBuilder where = new BooleanBuilder();
@@ -44,7 +44,7 @@ public class OrderPredicates
     }
     
     //角色过滤，普通用户只能看自己车辆的订单
-    public static Predicate roleFilter(User user) 
+    private Predicate roleFilter(User user) 
     {
         QOrder qOrder = QOrder.order;
         BooleanBuilder where = new BooleanBuilder();

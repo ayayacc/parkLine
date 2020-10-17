@@ -98,4 +98,20 @@ public class CouponController
         //TODO: 激活优惠券
         return null;
     }
+    
+    /**
+     * 分页查询车辆列表
+     * @param car 查询条件
+     * @param pageable 分页条件
+     * @param auth 当前登录车辆
+     * @return 车辆查询结果
+     */
+    @GetMapping("/find")
+    @ApiOperation(value="查询车辆清单", notes="分页查询车辆清单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<CouponVo>> find(@ApiParam(name="查询条件",type="query")CouponVo couponVo, 
+            @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
+    {
+        return RestResult.success(couponService.fuzzyFindPage(couponVo, pageable, auth.getName()));
+    }
 }

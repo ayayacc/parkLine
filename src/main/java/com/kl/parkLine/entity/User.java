@@ -93,6 +93,11 @@ public class User extends AbstractEntity implements UserDetails
     @ApiModelProperty(hidden = true)
     private String password;
     
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "tr_user_park", joinColumns = { @JoinColumn(name="user_id") }, inverseJoinColumns={ @JoinColumn(name="park_id") })  
+    @ApiModelProperty("所属的停车场")
+    private Set<Park> parks;
+    
     /**
      * 用户绑定的车辆
      */

@@ -1,6 +1,7 @@
 package com.kl.parkLine.entity;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -16,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -24,6 +26,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.enums.InvoiceStatus;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -78,6 +81,22 @@ public class Invoice extends AbstractEntity implements java.io.Serializable
     @OrderBy(value = "createdDate desc")
     @JsonIgnore
     private Set<Order> orders;
+    
+    /**
+     * 发票定义变动备注
+     */
+    @ApiModelProperty("发票定义备注")
+    @Transient
+    private String changeRemark;
+    
+    /**
+     * 操作记录
+     */
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "couponDef", cascade = {CascadeType.ALL})  
+    @OrderBy(value = "createdDate desc")
+    @JsonIgnore
+    @ApiModelProperty(hidden = true)
+    private List<InvoiceLog> logs;
 
     @Override
     public String toString()

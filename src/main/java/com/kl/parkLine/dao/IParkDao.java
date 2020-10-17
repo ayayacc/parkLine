@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import com.kl.parkLine.entity.Park;
 
-@Repository(value="parkDao")
+@Repository
 public interface IParkDao extends JpaRepository<Park, Integer>
 {
     public Park findOneByCode(String code);

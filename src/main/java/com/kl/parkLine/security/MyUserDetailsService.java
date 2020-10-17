@@ -30,7 +30,7 @@ public class MyUserDetailsService implements UserDetailsService
     }
     
     @Transactional(readOnly = true)
-    public User loadUserByUsernameAndRole(String userName) 
+    public User loadUserByName(String userName) 
     {
         User user = userService.findByName(userName);
         user.getAuthorities();

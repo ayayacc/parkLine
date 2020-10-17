@@ -20,6 +20,7 @@ import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -30,6 +31,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.enums.MonthlyStatus;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -83,6 +85,13 @@ public class MonthlyTkt extends AbstractEntity implements java.io.Serializable
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private MonthlyStatus status;
+    
+    /**
+     * 变动备注
+     */
+    @ApiModelProperty("变动备注")
+    @Transient
+    private String changeRemark;
     
     /**
      * 有效期开始时间

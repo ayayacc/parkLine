@@ -102,4 +102,18 @@ public class OrderController
         return null;
     }
     
+    /**
+     * 找到可以开票的订单
+     */
+    @GetMapping("/invoiceable")
+    @ApiOperation(value="找到可以开票的订单", 
+        notes="已经付款，未取消，未进入开票申请")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<OrderVo>> invoiceable(@ApiParam(name="分页信息",type="query") Pageable pageable,
+            Authentication auth)
+    {
+        //TODO: 找到可以开票的订单
+        return null;
+    }
+    
 }

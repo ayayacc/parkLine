@@ -6,6 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,6 +24,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
+@ApiModel("月票Vo")
 public class MonthlyTktVo
 {
     @ApiModelProperty(name="月票Id")

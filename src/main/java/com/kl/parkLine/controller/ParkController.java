@@ -91,9 +91,9 @@ public class ParkController
     @GetMapping("/find")
     @ApiOperation(value="分页查询停车场信息", notes="分页查询停车场信息")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Page<ParkVo>> find(@ApiParam(name="查询条件",type="query")Park park, 
+    public RestResult<Page<ParkVo>> find(@ApiParam(name="查询条件",type="query")ParkVo parkVo, 
             @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
-        return RestResult.success(parkService.fuzzyFindPage(park, pageable, auth.getName()));
+        return RestResult.success(parkService.fuzzyFindPage(parkVo, pageable, auth.getName()));
     }
 }

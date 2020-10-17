@@ -1,11 +1,16 @@
 package com.kl.parkLine.service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,10 +19,17 @@ import com.kl.parkLine.dao.ICouponDao;
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.CouponDef;
 import com.kl.parkLine.entity.CouponLog;
+import com.kl.parkLine.entity.QCoupon;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.predicate.CouponPredicates;
 import com.kl.parkLine.util.Const;
+import com.kl.parkLine.vo.CouponVo;
+import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
  * @author chenc
@@ -37,6 +49,12 @@ public class CouponService
     
     @Autowired
     private CompareUtil compareUtil;
+    
+    @Autowired
+    private CouponPredicates couponPredicates;
+    
+    @Autowired
+    private JPAQueryFactory jpaQueryFactory;
     
     /**
      * 申请一个新的优惠券
@@ -135,5 +153,61 @@ public class CouponService
         log.setCoupon(coupon);
         coupon.getLogs().add(log);
         couponDao.save(coupon);
+    }
+    
+    /**
+     * 模糊查询
+     * @param coupon  
+     * @param pageable
+     * @param auth
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public Page<CouponVo> fuzzyFindPage(CouponVo couponVo, Pageable pageable, String userName)
+    {
+        User user = userService.findByName(userName);
+        Predicate searchPred = couponPredicates.fuzzy(couponVo, user);
+        
+        QCoupon qCoupon = QCoupon.coupon;
+        QueryResults<Tuple> queryResults = jpaQueryFactory
+                .select(
+                        qCoupon.couponId,
+                        qCoupon.code,
+                        qCoupon.couponDef.couponDefId,
+                        qCoupon.couponDef.code,
+                        qCoupon.couponDef.name,
+                        qCoupon.couponDef.amt,
+                        qCoupon.couponDef.minAmt,
+                        qCoupon.status,
+                        qCoupon.owner.name,
+                        qCoupon.status,
+                        qCoupon.startDate,
+                        qCoupon.endDate
+                )
+                .from(qCoupon)
+                .where(searchPred)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetchResults();
+        //转换成vo
+        List<CouponVo> couponVos = queryResults
+                .getResults()
+                .stream()
+                .map(tuple -> CouponVo.builder()
+                        .couponId(tuple.get(qCoupon.couponId))
+                        .code(tuple.get(qCoupon.code))
+                        .couponDefId(tuple.get(qCoupon.couponDef.couponDefId))
+                        .couponDefCode(tuple.get(qCoupon.couponDef.code))
+                        .name(tuple.get(qCoupon.couponDef.name))
+                        .amt(tuple.get(qCoupon.couponDef.amt))
+                        .minAmt(tuple.get(qCoupon.couponDef.minAmt))
+                        .owner(tuple.get(qCoupon.owner.name))
+                        .startDate(tuple.get(qCoupon.startDate))
+                        .endDate(tuple.get(qCoupon.endDate))
+                        .status(tuple.get(qCoupon.status).getText())
+                        .build()
+                        )
+                .collect(Collectors.toList());
+        return new PageImpl<>(couponVos, pageable, queryResults.getTotal());
     }
 }

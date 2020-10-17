@@ -76,11 +76,10 @@ public class UserController
      */
     @GetMapping("/find")
     @ApiOperation(value="查询用户清单", notes="分页查询用户清单")
-    public RestResult<Page<UserVo>> find(@ApiParam(name="查询条件",type="query")User user, 
+    public RestResult<Page<UserVo>> find(@ApiParam(name="查询条件",type="query")UserVo userVo, 
             @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
-        //TODO: 分页查询用户
-        return null;
+        return RestResult.success(userService.fuzzyFindPage(userVo, pageable, auth.getName()));
     }
     
     /**

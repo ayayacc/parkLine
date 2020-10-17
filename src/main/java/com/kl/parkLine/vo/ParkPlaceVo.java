@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@ApiModel("停车位置")
+@ApiModel("停车位置Vo")
 public class ParkPlaceVo
 {
     @ApiModelProperty("停车场Id")
