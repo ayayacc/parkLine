@@ -9,12 +9,14 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @Getter
 @Setter
-@Builder
 @AllArgsConstructor
+@NoArgsConstructor
 @ApiModel("订单VO")
 public class OrderVo
 {

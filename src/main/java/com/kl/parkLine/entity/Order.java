@@ -79,14 +79,14 @@ public class Order extends AbstractEntity implements java.io.Serializable
     /**
      * 停车场
      */
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "park_id")
     private Park park;
     
     /**
      * 车辆
      */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "car_id")
     private Car car;
     

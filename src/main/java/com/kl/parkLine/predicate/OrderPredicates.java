@@ -65,8 +65,8 @@ public class OrderPredicates
         where.and(fuzzy(orderVo, user));
         
         //区分用户权限
-        where.and(qOrder.owner.eq(user)
-                .or(qOrder.owner.isNull().and(qOrder.car.in(user.getCars()))));
+        where.and(qOrder.owner.eq(user))
+                .or(qOrder.owner.isNull().and(qOrder.car.in(user.getCars())));
         
         return where;
     }

@@ -3,9 +3,7 @@ package com.kl.parkLine.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.joda.time.Minutes;
@@ -30,8 +28,8 @@ import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.OrderPredicates;
 import com.kl.parkLine.vo.OrderVo;
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
@@ -71,41 +69,21 @@ public class OrderService
     private Page<OrderVo> fuzzyFindPage(Predicate searchPred, Pageable pageable)
     {
         QOrder qOrder = QOrder.order;
-        QueryResults<Tuple> queryResults = jpaQueryFactory
-                .select(
-                        qOrder.orderId,
+        QueryResults<OrderVo> queryResults = jpaQueryFactory
+                .select(Projections.bean(OrderVo.class, qOrder.orderId,
                         qOrder.code,
                         qOrder.status,
-                        qOrder.park.name,
-                        qOrder.park.parkId,
-                        qOrder.car.carId,
-                        qOrder.car.carNo,
-                        qOrder.type
-                )
+                        qOrder.park.name.as("parkName"),
+                        qOrder.park.parkId.as("parkParkId"),
+                        qOrder.car.carId.as("carCarId"),
+                        qOrder.car.carNo.as("carCarNo"),
+                        qOrder.type))
                 .from(qOrder)
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
-        
-        //转换成vo
-        List<OrderVo> orderVos = queryResults
-                .getResults()
-                .stream()
-                .map(tuple -> OrderVo.builder()
-                        .orderId(tuple.get(qOrder.orderId))
-                        .code(tuple.get(qOrder.code))
-                        .type(tuple.get(qOrder.type))
-                        .parkParkId(tuple.get(qOrder.park.parkId))
-                        .parkName(tuple.get(qOrder.park.name))
-                        .carCarId(tuple.get(qOrder.car.carId))
-                        .carCarNo(tuple.get(qOrder.car.carNo))
-                        .status(tuple.get(qOrder.status))
-                        .build()
-                        )
-                .collect(Collectors.toList());
-        
-        return new PageImpl<>(orderVos, pageable, queryResults.getTotal());
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
     
     /**
