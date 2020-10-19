@@ -1,6 +1,8 @@
 package com.kl.parkLine;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,11 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.dao.IParkDao;
 import com.kl.parkLine.dao.IRoleDao;
+import com.kl.parkLine.dao.IUserDao;
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.Role;
+import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.RoleType;
 import com.kl.parkLine.util.RoleCode;
 
 @SpringBootTest
@@ -26,6 +32,9 @@ public class InitSystemTest
     
     @Autowired
     private IRoleDao roleDao;
+    
+    @Autowired
+    private IUserDao userDao;
     
     @BeforeEach
     public void wireUpAuditor()
@@ -41,6 +50,7 @@ public class InitSystemTest
     {
         initPark();
         initRole();
+        initUser();
     }
     
     /**
@@ -49,7 +59,8 @@ public class InitSystemTest
     private void initPark()
     {
         String[][] parksStr = {
-            {"parkCode01", "parkName01", "100", "108.2815 22.9033", "parkContact01"}
+            {"parkCode01", "parkName01", "100", "108.2815 22.9033", "parkContact01"},
+            {"parkCode02", "parkName02", "100", "108.2815 22.9033", "parkContact02"}
         };
         
         for (String[] parkStr : parksStr)
@@ -85,12 +96,16 @@ public class InitSystemTest
     private void initRole()
     {
         String[][] rolesStr = {
-            {RoleCode.END_USER, "最终用户"},
-            {RoleCode.PARK_GUARD, "停车场值班人员（巡检或岗亭）"},
-            {RoleCode.PARK_MANAGER, "停车场经理"},
-            {RoleCode.PARK_OWNER, "停车场业主"},
-            {RoleCode.SYS_OPERATION, "系统运营"},
-            {RoleCode.SYS_ADMIN, "系统管理员"}
+            {RoleCode.SYS_ADMIN, "系统管理员", "company"},
+            {RoleCode.BIZ_MARKETING, "业务市场", "company"},
+            {RoleCode.BIZ_OPERATE, "业务运营", "company"},
+            {RoleCode.BIZ_CUSTOMERE_SERVICE, "客服", "company"},
+            {RoleCode.BIZ_FINANCIAL, "财务", "company"},
+            {RoleCode.BIZ_PATROL, "巡检", "company"},
+            {RoleCode.PARK_ADMIN, "停车场管理员", "park"},
+            {RoleCode.PARK_GUARD, "停车场值班人员（巡检或岗亭）", "park"},
+            {RoleCode.PARK_FINANCIAL, "停车场财务", "park"},
+            {RoleCode.END_USER, "终端用户", "endUser"}
         };
         
         for (String[] roleStr : rolesStr)
@@ -103,8 +118,52 @@ public class InitSystemTest
             }
             role.setCode(code);
             role.setName(roleStr[1]);
+            role.setType(RoleType.valueOf(roleStr[2]));
             
             roleDao.save(role);
+        }
+    }
+    
+    private void initUser()
+    {
+        String[][] usersStr = {
+                {"PARK_01_ADMIN", "parkUserMobile01", "parkCode01", "ROLE_PARK_ADMIN"},
+                {"PARK_02_ADMIN", "parkUserMobile02", "parkCode02", "ROLE_PARK_ADMIN"},
+                {"SYS_ADMIN", "sysAdminMobile01", "", "ROLE_SYS_ADMIN"}
+            };
+        for (String[] userStr : usersStr)
+        {
+            String name = userStr[0];
+            User user = userDao.findOneByName(name);
+            if (null == user)
+            {
+                user = new User();
+            }
+            user.setName(name);
+            user.setMobile(userStr[1]);
+            user.setEnabled(true);
+            
+            //所属停车场
+            String parkCode = userStr[2];
+            if (!StringUtils.isEmpty(parkCode))
+            {
+                Park park = parkDao.findOneByCode(parkCode);
+                Set<Park> parks = new HashSet<>();
+                parks.add(park);
+                user.setParks(parks);
+            }
+            
+            //角色
+            String roleCode = userStr[3];
+            if (!StringUtils.isEmpty(roleCode))
+            {
+                Role role = roleDao.findOneByCode(roleCode);
+                Set<Role> roles = new HashSet<>();
+                roles.add(role);
+                user.setRoles(roles);
+            }
+            
+            userDao.save(user);
         }
     }
 }

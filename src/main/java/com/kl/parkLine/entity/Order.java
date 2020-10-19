@@ -157,7 +157,9 @@ public class Order extends AbstractEntity implements java.io.Serializable
     /**
      * 付款人
      */
-    @JoinColumn(name = "payer")
+    @ManyToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "payer_id")
+    @JsonIgnore
     private User payer;
     
     /**
@@ -186,7 +188,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
      * 开票ID
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invoice")
+    @JoinColumn(name = "invoice_id")
     private Invoice invoice;
     
     /**

@@ -62,12 +62,12 @@ public class CarController
     }
     
     @PostMapping("/lock")
-    @ApiOperation(value="锁定车辆", notes="通过上传行驶证照片，锁定车辆，同时强制解绑未上传行驶证的绑定关系,上传行驶证后，只有本人和管理员可以进行解绑")
+    @ApiOperation(value="上传行驶证锁定车辆", notes="通过上传行驶证照片，锁定车辆，同时强制解绑未上传行驶证的绑定关系,上传行驶证后，只有本人和管理员可以进行解绑")
     @ApiImplicitParam(name="Authorization", value="登录令牌",required=true, paramType="header")
     public RestResult<Car> lock(@ApiParam(name="车牌号码", type="string")@RequestParam String carNo, 
             @ApiParam(name="行驶证照片照片") @RequestParam MultipartFile licensePic, Authentication auth)
     {
-        //TODO:锁定车辆
+        //TODO:行驶证锁定车辆
         return null;
     }
     

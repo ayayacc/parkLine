@@ -1,7 +1,11 @@
 package com.kl.parkLine.vo;
 
+import com.kl.parkLine.enums.OrderStatus;
+import com.kl.parkLine.enums.OrderType;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
 @ApiModel("订单VO")
 public class OrderVo
 {
@@ -19,10 +24,10 @@ public class OrderVo
     private String code;
     
     @ApiModelProperty(name="订单类型", position=2)
-    private String type;
+    private OrderType type;
     
     @ApiModelProperty(name="订单状态", position=3)
-    private String status;
+    private OrderStatus status;
     
     /**
      * 停车场Id

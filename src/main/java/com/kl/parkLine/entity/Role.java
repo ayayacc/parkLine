@@ -6,6 +6,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -21,6 +23,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.enums.RoleType;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -45,6 +48,13 @@ public class Role extends AbstractEntity implements java.io.Serializable
     
     @Column(name="name", nullable=false, unique=true, length=255)
     private String name;
+    
+    /**
+     * 订单类型: 停车订单/月票订单/优惠券激活订单/钱包充值订单
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private RoleType type;
     
     @ManyToMany(fetch=FetchType.LAZY, cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.REFRESH}) 
     @JoinTable(name="tr_role_menu", joinColumns={ @JoinColumn(name ="roleId") }, inverseJoinColumns={ @JoinColumn(name="menuId") })  

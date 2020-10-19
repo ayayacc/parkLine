@@ -1,5 +1,8 @@
 package com.kl.parkLine.predicate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -14,6 +17,17 @@ import com.querydsl.core.types.Predicate;
 @Component
 public class CouponPredicates
 {
+    //可以访问说有优惠券的角色
+    private final List<String> allAccessRoleCodes = new ArrayList<String>();
+    
+    public CouponPredicates()
+    {
+        //系统管理员
+        allAccessRoleCodes.add(RoleCode.SYS_ADMIN);
+        //运营
+        allAccessRoleCodes.add(RoleCode.BIZ_OPERATE);
+    }
+    
     public Predicate fuzzy(CouponVo couponVo, User user) 
     {
         QCoupon qCoupon = QCoupon.coupon;
@@ -38,27 +52,30 @@ public class CouponPredicates
         }
         
         //区分用户权限
-        where.and(roleFilter(user));
+        where.and(userFilter(user));
         
         return where;
     }
     
     /**
-     * 区分用户权限
+     * 普通用户只能访问自己的优惠券
+     * 产品运营，系统管理员和运营可以看所有优惠券,其他用户只能看自己的优惠券
      * @param user
      * @return
      */
-    private Predicate roleFilter(User user) 
+    private Predicate userFilter(User user) 
     {
-        //TODO: 角色过滤，普通用户只能看自己的优惠券
+        //用户过滤，系统管理员和运营可以看所有优惠券,其他用户只能看自己的优惠券
         QCoupon qCoupon = QCoupon.coupon;
         BooleanBuilder where = new BooleanBuilder();
         
-        //普通用户只能看自己车辆
-        if (user.hasRole(RoleCode.END_USER))
+        //系统管理员和运营可以看所有优惠券
+        if (user.hasAnyRole(allAccessRoleCodes))
         {
-            where.and(qCoupon.owner.name.eq(user.getName()));
+            return where;
         }
+        //其他用户只能看自己的优惠券
+        where.and(qCoupon.owner.name.equalsIgnoreCase(user.getName()));
         
         return where;
     }

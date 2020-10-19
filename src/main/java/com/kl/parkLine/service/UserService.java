@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -166,9 +165,9 @@ public class UserService
      * @return 是否有权限
      */
     @Transactional(readOnly = true)
-    public boolean hasPermission(User reqData, Authentication auth, String permission) 
+    public boolean hasPermission(User reqData, User user, String permission) 
     {
         //TODO: 实现用户访问权限控制
-        return reqData.getUsername().equals(auth.getPrincipal());
+        return reqData.getUsername().equals(user.getName());
     }
 }

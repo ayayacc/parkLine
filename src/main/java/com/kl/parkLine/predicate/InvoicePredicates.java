@@ -1,5 +1,8 @@
 package com.kl.parkLine.predicate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -13,6 +16,19 @@ import com.querydsl.core.types.Predicate;
 @Component
 public class InvoicePredicates
 {
+    //可以访问说有优惠券的角色
+    private final List<String> allAccessRoleCodes = new ArrayList<String>();
+    
+    public InvoicePredicates()
+    {
+        //系统管理员
+        allAccessRoleCodes.add(RoleCode.SYS_ADMIN);
+        //运营
+        allAccessRoleCodes.add(RoleCode.BIZ_OPERATE);
+        //财务
+        allAccessRoleCodes.add(RoleCode.BIZ_FINANCIAL);
+    }
+    
     public Predicate fuzzy(InvoiceVo invoiceVo, User user) 
     {
         QInvoice qInvoice = QInvoice.invoice;
@@ -35,12 +51,13 @@ public class InvoicePredicates
     {
         QInvoice qInvoice = QInvoice.invoice;
         BooleanBuilder where = new BooleanBuilder();
-        //TODO: 进行数据隔离
-        //普通用户只能看自己发票
-        if (user.hasRole(RoleCode.END_USER))
+        
+        if (user.hasAnyRole(allAccessRoleCodes))
         {
-            where.and(qInvoice.createdBy.eq(user.getName()));
+            return where;
         }
+        //其他用户只能看自己数据
+        where.and(qInvoice.createdBy.eq(user.getName()));
         
         return where;
     }

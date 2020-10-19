@@ -30,6 +30,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.enums.Gender;
+import com.kl.parkLine.enums.RoleType;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -101,7 +102,7 @@ public class User extends AbstractEntity implements UserDetails
     /**
      * 用户绑定的车辆
      */
-    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}) 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = {CascadeType.MERGE, CascadeType.PERSIST}) 
     private Set<Car> cars;
     
     @Column(name = "is_enabled")
@@ -111,6 +112,40 @@ public class User extends AbstractEntity implements UserDetails
     @JoinTable(name = "tr_user_role", joinColumns = { @JoinColumn(name="user_id") }, inverseJoinColumns={ @JoinColumn(name="role_id") })  
     private Set<Role> roles;
     
+    public boolean hasRoleType(RoleType type)
+    {
+        for (Role role : roles)
+        {
+            if (role.getType().getValue().equals(type.getValue()))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 是否有任一角色
+     * @param roleCodes
+     * @return
+     */
+    public boolean hasAnyRole(List<String> roleCodes)
+    {
+        for (String roleCode : roleCodes)
+        {
+            if (this.hasRole(roleCode))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 是否有指定
+     * @param roleCodes
+     * @return
+     */
     public boolean hasRole(String roleCode)
     {
         for (Role role : roles)

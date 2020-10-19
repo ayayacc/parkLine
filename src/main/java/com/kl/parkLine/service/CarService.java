@@ -14,6 +14,7 @@ import com.kl.parkLine.dao.ICarDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.QCar;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.RoleType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.CarPredicates;
 import com.kl.parkLine.vo.CarVo;
@@ -146,5 +147,29 @@ public class CarService
                         )
                 .collect(Collectors.toList());
         return new PageImpl<>(carVos, pageable, queryResults.getTotal());
+    }
+    
+    /**
+     * 校验当前登录用户是否可以访问data 数据
+     * 公司类型的账户可以看所有车辆
+     * 其他用户只能看自己车辆
+     * @param data 期待访问的数据
+     * @param auth 当前登录的用户
+     * @param permission 需要的权限
+     * @return 是否有权限
+     */
+    @Transactional(readOnly = true)
+    public boolean hasPermission(Car reqData, User logonUser, String permission) 
+    {
+        //公司类型的账户可以看所有车辆
+        if (logonUser.hasRoleType(RoleType.company))
+        {
+            return true;
+            
+        }
+        else //其他用户只能看自己车辆
+        {
+            return reqData.getUser().getName().equalsIgnoreCase(logonUser.getName());
+        }
     }
 }

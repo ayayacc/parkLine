@@ -92,7 +92,7 @@ public class Invoice extends AbstractEntity implements java.io.Serializable
     /**
      * 操作记录
      */
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "couponDef", cascade = {CascadeType.ALL})  
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "invoice", cascade = {CascadeType.ALL})  
     @OrderBy(value = "createdDate desc")
     @JsonIgnore
     @ApiModelProperty(hidden = true)

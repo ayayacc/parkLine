@@ -9,12 +9,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.CouponDef;
-import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.RestResult;
@@ -66,25 +64,6 @@ public class CouponController
         {
             return RestResult.failed(e.getMessage());
         }
-    }
-    
-    /**
-     * 根据订单查询可用优惠券清单
-     * @param car 查询条件
-     * @param pageable 分页条件
-     * @param auth 当前登录用户
-     * @return 适用于订单的优惠券清单
-     */
-    @GetMapping("/find")
-    @ApiOperation(value="根据订单查询可用优惠券清单")
-    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Page<CouponVo>> find(
-            @ApiParam(name="订单Id", type="query") @RequestParam(required=true)Integer orderId,
-            @ApiIgnore @RequestParam(required=true) Order order,
-            @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
-    {
-        //TODO:根据订单查询可用优惠券清单
-        return null;
     }
     
     /**

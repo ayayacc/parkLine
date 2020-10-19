@@ -5,7 +5,7 @@ import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.entity.QCar;
 import com.kl.parkLine.entity.User;
-import com.kl.parkLine.util.RoleCode;
+import com.kl.parkLine.enums.RoleType;
 import com.kl.parkLine.vo.CarVo;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
@@ -25,19 +25,23 @@ public class CarPredicates
         }
         
         //区分用户权限
-        where.and(roleFilter(user));
+        where.and(userFilter(user));
         
         return where;
     }
     
-    //角色过滤，普通用户只能看自己车辆
-    private Predicate roleFilter(User user) 
+    //角色过滤，公司类型的账户可以看所有车辆,其他用户只能看自己车辆
+    private Predicate userFilter(User user) 
     {
         QCar qCar = QCar.car;
         BooleanBuilder where = new BooleanBuilder();
         
-        //普通用户只能看自己车辆
-        if (user.hasRole(RoleCode.END_USER))
+        //公司类型的账户可以看所有车辆
+        if (user.hasRoleType(RoleType.company))
+        {
+            return where;
+        }
+        else //其他用户只能看自己车辆
         {
             where.and(qCar.user.name.eq(user.getName()));
         }

@@ -74,6 +74,10 @@ public class OrderService
                         qOrder.orderId,
                         qOrder.code,
                         qOrder.status,
+                        qOrder.park.name,
+                        qOrder.park.parkId,
+                        qOrder.car.carId,
+                        qOrder.car.carNo,
                         qOrder.type
                 )
                 .from(qOrder)
@@ -89,8 +93,12 @@ public class OrderService
                 .map(tuple -> OrderVo.builder()
                         .orderId(tuple.get(qOrder.orderId))
                         .code(tuple.get(qOrder.code))
-                        .type(tuple.get(qOrder.type).getText())
-                        .status(tuple.get(qOrder.status).getText())
+                        .type(tuple.get(qOrder.type))
+                        .parkId(tuple.get(qOrder.park.parkId))
+                        .parkName(tuple.get(qOrder.park.name))
+                        .carId(tuple.get(qOrder.car.carId))
+                        .carNo(tuple.get(qOrder.car.carNo))
+                        .status(tuple.get(qOrder.status))
                         .build()
                         )
                 .collect(Collectors.toList());
@@ -211,6 +219,12 @@ public class OrderService
         //计算并且设置价格
         this.calAmt(order);
         
+        //如果订单价格是0，则直接变成已经支付状态
+        if (order.getAmt().equals(BigDecimal.ZERO))
+        {
+            order.setStatus(OrderStatus.noNeedToPay);
+        }
+        
         //停车场空位+1
         Park park = order.getPark();
         park.setAvailableCnt(park.getAvailableCnt() + 1);
@@ -322,6 +336,30 @@ public class OrderService
         }
         //最多不超过x元
         order.setAmt(amt.min(park.getMaxAmt()));
+    }
+    
+    /**
+     * 找到指定用户可以开票的订单
+     * @param userName
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public Page<OrderVo> needToPay(String userName, Pageable pageable)
+    {
+        OrderVo orderVo = OrderVo.builder().status(OrderStatus.needToPay).build();
+        return fuzzyFindPage(orderVo, pageable, userName);
+    }
+    
+    /**
+     * 找到指定用户可以开票的订单
+     * @param userName
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public Page<OrderVo> invoiceable(String userName, Pageable pageable)
+    {
+        OrderVo orderVo = OrderVo.builder().status(OrderStatus.payed).build();
+        return fuzzyFindPage(orderVo, pageable, userName);
     }
     
 }

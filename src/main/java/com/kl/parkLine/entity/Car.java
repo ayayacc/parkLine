@@ -50,7 +50,7 @@ public class Car extends AbstractEntity implements java.io.Serializable
     @Column(name = "car_no", length = 16, unique = true, nullable = false)
     private String carNo;
     
-    @ManyToOne(optional = false, fetch = FetchType.LAZY) 
+    @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "user_id")
     @JsonIgnore
     private User user;

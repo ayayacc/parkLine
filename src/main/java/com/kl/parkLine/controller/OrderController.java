@@ -69,8 +69,12 @@ public class OrderController
             OrderVo orderVo = OrderVo.builder()
                     .code(order.getCode())
                     .orderId(order.getOrderId())
-                    .status(order.getStatus().getText())
-                    .type(order.getStatus().getText())
+                    .status(order.getStatus())
+                    .parkId(order.getPark().getParkId())
+                    .parkName(order.getPark().getName())
+                    .carNo(order.getCar().getCarNo())
+                    .carId(order.getCar().getCarId())
+                    .type(order.getType())
                     .build();
             return RestResult.success(orderVo);
         }
@@ -86,8 +90,7 @@ public class OrderController
     public RestResult<Page<OrderVo>> getNeedToPay(@ApiParam(name="分页信息",type="query") Pageable pageable,
             Authentication auth)
     {
-        //TODO: 实现找到等待支付的订单
-        return null;
+        return RestResult.success(orderService.needToPay(auth.getName(), pageable));
     }
     
     /**
@@ -112,8 +115,7 @@ public class OrderController
     public RestResult<Page<OrderVo>> invoiceable(@ApiParam(name="分页信息",type="query") Pageable pageable,
             Authentication auth)
     {
-        //TODO: 找到可以开票的订单
-        return null;
+        return RestResult.success(orderService.invoiceable(auth.getName(), pageable));
     }
     
 }

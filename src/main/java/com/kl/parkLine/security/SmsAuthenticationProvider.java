@@ -64,6 +64,12 @@ public class SmsAuthenticationProvider implements AuthenticationProvider
             user = userService.createUser(mobile);
         }
         
+        //用户被禁用
+        if (!user.isEnabled())
+        {
+            throw new SmsAuthenticationException("您的帐号已被禁用");
+        }
+        
         SmsAuthenticationToken token = new SmsAuthenticationToken(user.getUsername(), user.getAuthorities());
         token.setDetails(authentication.getDetails());
         return token;

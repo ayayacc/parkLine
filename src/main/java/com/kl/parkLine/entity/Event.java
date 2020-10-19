@@ -72,13 +72,13 @@ public class Event extends AbstractEntity implements java.io.Serializable
     /**
      * 事件唯一标识符
      */
-    @Column(name = "guid", length = 48, nullable = false, unique = true)
+    @Column(name = "guid", length = 48, nullable = false)
     private String guid;
     
     /**
      * 行为唯一标识符
      */
-    @Column(name = "act_id", length = 48, unique = true)
+    @Column(name = "act_id", length = 48)
     private String actId;
     
     
