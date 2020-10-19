@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
@@ -60,14 +61,15 @@ public class OrderService
     
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
-    
-    @Transactional(readOnly = true)
-    public Page<OrderVo> fuzzyFindPage(OrderVo orderVo, Pageable pageable, String userName)
+
+    /**
+     * 分页查询
+     * @param searchPred
+     * @param pageable
+     * @return
+     */
+    private Page<OrderVo> fuzzyFindPage(Predicate searchPred, Pageable pageable)
     {
-        User user = userService.findByName(userName);
-        
-        Predicate searchPred = orderPredicates.fuzzy(orderVo, user);
-        
         QOrder qOrder = QOrder.order;
         QueryResults<Tuple> queryResults = jpaQueryFactory
                 .select(
@@ -94,16 +96,50 @@ public class OrderService
                         .orderId(tuple.get(qOrder.orderId))
                         .code(tuple.get(qOrder.code))
                         .type(tuple.get(qOrder.type))
-                        .parkId(tuple.get(qOrder.park.parkId))
+                        .parkParkId(tuple.get(qOrder.park.parkId))
                         .parkName(tuple.get(qOrder.park.name))
-                        .carId(tuple.get(qOrder.car.carId))
-                        .carNo(tuple.get(qOrder.car.carNo))
+                        .carCarId(tuple.get(qOrder.car.carId))
+                        .carCarNo(tuple.get(qOrder.car.carNo))
                         .status(tuple.get(qOrder.status))
                         .build()
                         )
                 .collect(Collectors.toList());
         
         return new PageImpl<>(orderVos, pageable, queryResults.getTotal());
+    }
+    
+    /**
+     * 作为终端用户分页查询
+     * @param orderVo
+     * @param pageable
+     * @param userName
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public Page<OrderVo> fuzzyFindPageAsUser(OrderVo orderVo, Pageable pageable, String userName)
+    {
+        User user = userService.findByName(userName);
+        
+        Predicate searchPred = orderPredicates.fuzzyAsEndUser(orderVo, user);
+        
+        return fuzzyFindPage(searchPred, pageable);
+    }
+    
+    /**
+     * 作为后台管理(停车场/管理员)分页查询
+     * @param orderVo
+     * @param pageable
+     * @param userName
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public Page<OrderVo> fuzzyFindPageAsManager(OrderVo orderVo, Pageable pageable, String userName)
+    {
+        User user = userService.findByName(userName);
+        
+        Predicate searchPred = orderPredicates.fuzzyAsManager(orderVo, user);
+        
+        return fuzzyFindPage(searchPred, pageable);
     }
     
     @Transactional
@@ -346,8 +382,8 @@ public class OrderService
     @Transactional(readOnly = true)
     public Page<OrderVo> needToPay(String userName, Pageable pageable)
     {
-        OrderVo orderVo = OrderVo.builder().status(OrderStatus.needToPay).build();
-        return fuzzyFindPage(orderVo, pageable, userName);
+        User user = userService.findByName(userName);
+        return orderDao.findByStatusAndOwnerAndAmtGreaterThan(OrderStatus.needToPay, user, BigDecimal.ZERO, pageable);
     }
     
     /**
@@ -358,8 +394,28 @@ public class OrderService
     @Transactional(readOnly = true)
     public Page<OrderVo> invoiceable(String userName, Pageable pageable)
     {
-        OrderVo orderVo = OrderVo.builder().status(OrderStatus.payed).build();
-        return fuzzyFindPage(orderVo, pageable, userName);
+        User user = userService.findByName(userName);
+        return orderDao.findByStatusAndOwnerAndAmtGreaterThan(OrderStatus.payed, user, BigDecimal.ZERO, pageable);
+    }
+    
+    /**
+     * 将车辆涉及的无主订单设置拥有者
+     * @param car 被绑定用户的车辆
+     */
+    @Transactional
+    public void setOrderOwnerByCar(Car car) 
+    {
+        //找到指定车牌号的无主订单
+        Set<Order> orders = orderDao.findByCarAndOwnerIsNull(car);
+        
+        //设置拥有者
+        for (Order order : orders)
+        {
+            order.setOwner(car.getUser());
+        }
+        
+        //保存订单
+        orderDao.saveAll(orders);
     }
     
 }

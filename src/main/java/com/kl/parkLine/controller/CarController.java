@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,7 +47,7 @@ public class CarController
     @ApiImplicitParams({
         @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     })
-    public RestResult<Car> bind(@ApiParam(name="车牌号码") BindCarParam bindCarParam, 
+    public RestResult<Car> bind(@ApiParam(name="车牌号码") @RequestBody(required=true) BindCarParam bindCarParam, 
             Authentication auth)
     {
         try

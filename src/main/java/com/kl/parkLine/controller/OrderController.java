@@ -33,19 +33,35 @@ public class OrderController
     private OrderService orderService;  
     
     /**
-     * 分页查询订单
+     * 终端用户分页查询订单
      * @param order 查询条件
      * @param pageable 分页条件
      * @param auth 当前登录用户
      * @return 订单查询结果
      */
-    @GetMapping("/find")
+    @GetMapping("/findAsUser")
     @ApiOperation(value="分页查询订单", notes="分页批量查询订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Page<OrderVo>> find(@ApiParam(name="查询条件",type="query")OrderVo orderVo, 
+    public RestResult<Page<OrderVo>> findAsUser(@ApiParam(name="查询条件",type="query")OrderVo orderVo, 
             @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
-        return RestResult.success(orderService.fuzzyFindPage(orderVo, pageable, auth.getName()));
+        return RestResult.success(orderService.fuzzyFindPageAsUser(orderVo, pageable, auth.getName()));
+    }
+    
+    /**
+     * 停车场/公司管理分页查询订单
+     * @param order 查询条件
+     * @param pageable 分页条件
+     * @param auth 当前登录用户
+     * @return 订单查询结果
+     */
+    @GetMapping("/findAsManager")
+    @ApiOperation(value="分页查询订单", notes="分页批量查询订单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<OrderVo>> findAsManager(@ApiParam(name="查询条件",type="query")OrderVo orderVo, 
+            @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
+    {
+        return RestResult.success(orderService.fuzzyFindPageAsManager(orderVo, pageable, auth.getName()));
     }
     
     /**
@@ -70,10 +86,10 @@ public class OrderController
                     .code(order.getCode())
                     .orderId(order.getOrderId())
                     .status(order.getStatus())
-                    .parkId(order.getPark().getParkId())
+                    .parkParkId(order.getPark().getParkId())
                     .parkName(order.getPark().getName())
-                    .carNo(order.getCar().getCarNo())
-                    .carId(order.getCar().getCarId())
+                    .carCarNo(order.getCar().getCarNo())
+                    .carCarId(order.getCar().getCarId())
                     .type(order.getType())
                     .build();
             return RestResult.success(orderVo);

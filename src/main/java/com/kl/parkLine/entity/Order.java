@@ -155,12 +155,12 @@ public class Order extends AbstractEntity implements java.io.Serializable
     private OrderStatus status;
     
     /**
-     * 付款人
+     * 拥有者
      */
     @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "payer_id")
+    @JoinColumn(name = "owner_id")
     @JsonIgnore
-    private User payer;
+    private User owner;
     
     /**
      * 付款时间

@@ -26,7 +26,13 @@ public class OrderPredicates
         parkRoles.add(RoleCode.PARK_GUARD);
     }
     
-    public Predicate fuzzy(OrderVo orderVo, User user) 
+    /**
+     * 模糊匹配订单
+     * @param orderVo
+     * @param user
+     * @return
+     */
+    private Predicate fuzzy(OrderVo orderVo, User user) 
     {
         QOrder qOrder = QOrder.order;
         BooleanBuilder where = new BooleanBuilder();
@@ -44,35 +50,35 @@ public class OrderPredicates
         }
         
         //停车场
-        if (!StringUtils.isEmpty(orderVo.getCarNo()))
+        if (!StringUtils.isEmpty(orderVo.getCarCarNo()))
         {
-            where.and(qOrder.car.carNo.containsIgnoreCase(orderVo.getCarNo()));
+            where.and(qOrder.car.carNo.containsIgnoreCase(orderVo.getCarCarNo()));
         }
-        
-        //区分用户权限
-        where.and(roleFilter(user));
         
         return where;
     }
     
-    //角色过
-    private Predicate roleFilter(User user) 
+    public Predicate fuzzyAsEndUser(OrderVo orderVo, User user) 
     {
         QOrder qOrder = QOrder.order;
         BooleanBuilder where = new BooleanBuilder();
+        where.and(fuzzy(orderVo, user));
         
-        //普通用户只能看自己车辆的订单(payer是自己 以及 车辆是自己的并且payer是空)
-        if (user.hasRole(RoleCode.END_USER))
-        {
-            where.and(qOrder.payer.eq(user)
-                    .or(qOrder.payer.isNull().and(qOrder.car.in(user.getCars()))));
-        }
+        //区分用户权限
+        where.and(qOrder.owner.eq(user)
+                .or(qOrder.owner.isNull().and(qOrder.car.in(user.getCars()))));
         
-        //停车场用户只能看自己的场地
-        if (user.hasAnyRole(parkRoles))
-        {
-            where.or(qOrder.park.in(user.getParks()));
-        }
+        return where;
+    }
+    
+    public Predicate fuzzyAsManager(OrderVo orderVo, User user) 
+    {
+        QOrder qOrder = QOrder.order;
+        BooleanBuilder where = new BooleanBuilder();
+        where.and(fuzzy(orderVo, user));
+        
+        //区分用户权限
+        where.and(qOrder.park.in(user.getParks()));
         
         return where;
     }

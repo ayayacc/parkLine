@@ -34,6 +34,9 @@ public class CarService
     private UserService userService;
     
     @Autowired
+    private OrderService orderService;
+    
+    @Autowired
     private ICarDao carDao;
     
     @Autowired
@@ -78,12 +81,22 @@ public class CarService
         }
         else if (null != car.getUser()) //车辆已经绑定到其他用户
         {
-            String mobile = car.getUser().getMobile();
-            String right = mobile.substring(mobile.length()-4); //取手机尾号后四位
-            throw new BusinessException(String.format("% 已经被手机尾号: %s 用户绑定，请联系TA解绑后再进行绑定", carNo, right));
+            if (user.equals(car.getUser()))
+            {
+                throw new BusinessException(String.format("%s 已经绑定到您的账户下，请勿重复绑定", carNo));
+            }
+            else 
+            {
+                String mobile = car.getUser().getMobile();
+                String right = mobile.substring(mobile.length()-4); //取手机尾号后四位
+                throw new BusinessException(String.format("%s 已经被手机尾号: %s 用户绑定，请联系TA解绑后再进行绑定", carNo, right));
+            }
         }
         car.setUser(user);
         carDao.save(car);
+        
+        //将涉及到此车辆的无主订单绑定到该用户
+        orderService.setOrderOwnerByCar(car);
         return;
     }
     

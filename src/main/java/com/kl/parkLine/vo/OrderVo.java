@@ -1,5 +1,6 @@
 package com.kl.parkLine.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 
@@ -32,8 +33,9 @@ public class OrderVo
     /**
      * 停车场Id
      */
-    @ApiModelProperty(name="停车场Id")
-    private Integer parkId;
+    @ApiModelProperty(name="停车场Id", value="parkId")
+    @JsonProperty(value = "parkId")
+    private Integer parkParkId;
     
     /**
      * 停车场名称
@@ -44,12 +46,14 @@ public class OrderVo
     /**
      * 车辆Id
      */
-    @ApiModelProperty(name="车辆Id")
-    private Integer carId;
+    @ApiModelProperty(name="车辆Id", value="carId")
+    @JsonProperty(value = "carId")
+    private Integer carCarId;
     
     /**
      * 车牌号码
      */
-    @ApiModelProperty(name="车牌号码")
-    private String carNo;
+    @ApiModelProperty(name="车牌号码", value="carNo")
+    @JsonProperty(value = "carNo")
+    private String carCarNo;
 }
