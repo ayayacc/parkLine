@@ -13,7 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @ApiModel("购买月票参数")
-public class MonthlyTktParam
+public class CreateMonthlyTktParam
 {
     @ApiModelProperty("停车场Id")
     private Integer parkId;

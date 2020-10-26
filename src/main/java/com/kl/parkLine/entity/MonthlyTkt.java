@@ -32,7 +32,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.enums.MonthlyStatus;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -52,6 +55,9 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MonthlyTkt extends AbstractEntity implements java.io.Serializable
 {
     @Id

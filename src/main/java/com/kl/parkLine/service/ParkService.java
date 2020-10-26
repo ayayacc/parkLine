@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kl.parkLine.component.CompareUtil;
+import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IParkDao;
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.ParkLog;
@@ -42,7 +42,7 @@ public class ParkService
     private UserService userService;
     
     @Autowired
-    private CompareUtil compareUtil;
+    private Utils util;
     
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
@@ -58,6 +58,17 @@ public class ParkService
     public Park findOneByCode(String code)
     {
         return parkDao.findOneByCode(code);
+    }
+    
+    @Transactional
+    public Park findOneById(Integer parkId) throws BusinessException
+    {
+        Optional<Park> park = parkDao.findById(parkId);
+        if (false == park.isPresent())
+        {
+            throw new BusinessException(String.format("无效的停车场Id: %d", parkId));
+        }
+        return park.get();
     }
     
     /**
@@ -84,9 +95,9 @@ public class ParkService
             }
             
             //记录不同点
-            diff = compareUtil.difference(parkDst.get(), park);
+            diff = util.difference(parkDst.get(), park);
             
-            BeanUtils.copyProperties(park, parkDst.get(), compareUtil.getNullPropertyNames(park));
+            BeanUtils.copyProperties(park, parkDst.get(), util.getNullPropertyNames(park));
             
             park = parkDst.get();
         }

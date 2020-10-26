@@ -181,6 +181,10 @@ public class Park extends AbstractEntity implements java.io.Serializable
     @Column(name = "max_amt", precision = 8 ,scale = 2, columnDefinition ="int default 999999") 
     private BigDecimal maxAmt;
     
+    @NeedToCompare(name = "月票单价")
+    @Column(name = "monthly_price", precision = 8 ,scale = 2, columnDefinition ="int default 999999") 
+    private BigDecimal monthlyPrice;
+    
     /**
      * 操作记录
      */

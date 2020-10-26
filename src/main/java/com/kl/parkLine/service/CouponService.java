@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kl.parkLine.component.CompareUtil;
+import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.component.WxCmpt;
 import com.kl.parkLine.dao.ICouponDao;
 import com.kl.parkLine.entity.Coupon;
@@ -50,7 +50,7 @@ public class CouponService
     private UserService userService;
     
     @Autowired
-    private CompareUtil compareUtil;
+    private Utils util;
     
     @Autowired
     private CouponPredicates couponPredicates;
@@ -144,9 +144,9 @@ public class CouponService
             }
             
             //记录不同点
-            diff = compareUtil.difference(couponDst.get(), coupon);
+            diff = util.difference(couponDst.get(), coupon);
             
-            BeanUtils.copyProperties(coupon, couponDst.get(), compareUtil.getNullPropertyNames(coupon));
+            BeanUtils.copyProperties(coupon, couponDst.get(), util.getNullPropertyNames(coupon));
             
             coupon = couponDst.get();
         }
@@ -205,10 +205,9 @@ public class CouponService
     {
         //TODO: 实现激活优惠券订单
         //生成激活订单
-        Order order = new Order();
+        Order order = Order.builder().build();
         
         //发起支付
-        
         return wxCmpt.unifiedOrder(order);
     }
 }

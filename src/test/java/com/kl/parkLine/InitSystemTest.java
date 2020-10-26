@@ -86,6 +86,7 @@ public class InitSystemTest
             //每半小时3块
             park.setTimeLev2(30); 
             park.setPriceLev2(new BigDecimal(3));
+            park.setMonthlyPrice(new BigDecimal(300)); //月票300元
             parkDao.save(park);
         }
     }

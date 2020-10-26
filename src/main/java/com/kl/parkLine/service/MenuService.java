@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kl.parkLine.component.CompareUtil;
+import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IMenuDao;
 import com.kl.parkLine.entity.Menu;
 import com.kl.parkLine.entity.QMenu;
@@ -39,7 +39,7 @@ public class MenuService
     private UserService userService;
     
     @Autowired
-    private CompareUtil compareUtil;
+    private Utils util;
     
     @Autowired
     private MenuPredicates menuPredicates;
@@ -64,7 +64,7 @@ public class MenuService
         }
         
         //记录不同点
-        BeanUtils.copyProperties(menu, menuDst.get(), compareUtil.getNullPropertyNames(menu));
+        BeanUtils.copyProperties(menu, menuDst.get(), util.getNullPropertyNames(menu));
         
         menu = menuDst.get();
         

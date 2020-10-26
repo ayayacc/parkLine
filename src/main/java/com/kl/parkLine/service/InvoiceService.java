@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kl.parkLine.component.CompareUtil;
+import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IInvoiceDao;
 import com.kl.parkLine.entity.Invoice;
 import com.kl.parkLine.entity.InvoiceLog;
@@ -42,7 +42,7 @@ public class InvoiceService
     private UserService userService;
     
     @Autowired
-    private CompareUtil compareUtil;
+    private Utils util;
     
     @Autowired
     private InvoicePredicates invoicePredicates;
@@ -74,9 +74,9 @@ public class InvoiceService
             }
             
             //记录不同点
-            diff = compareUtil.difference(invoiceDst.get(), invoice);
+            diff = util.difference(invoiceDst.get(), invoice);
             
-            BeanUtils.copyProperties(invoice, invoiceDst.get(), compareUtil.getNullPropertyNames(invoice));
+            BeanUtils.copyProperties(invoice, invoiceDst.get(), util.getNullPropertyNames(invoice));
             
             invoice = invoiceDst.get();
         }

@@ -36,7 +36,10 @@ import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PaymentType;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -55,6 +58,9 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @Table(name = "TT_ORDER")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners({AuditingEntityListener.class})
 public class Order extends AbstractEntity implements java.io.Serializable
 {
@@ -116,7 +122,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
     private String actId;
     
     /*月票订单*/
-    @ManyToOne(fetch = FetchType.LAZY) 
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL}) 
     @JoinColumn(name = "monthly_tkt_id")
     private MonthlyTkt monthlyTkt;
     

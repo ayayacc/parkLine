@@ -3,7 +3,6 @@ package com.kl.parkLine.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 
@@ -17,11 +16,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kl.parkLine.component.CompareUtil;
+import com.kl.parkLine.component.Utils;
+import com.kl.parkLine.component.WxCmpt;
 import com.kl.parkLine.dao.IOrderDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.Event;
+import com.kl.parkLine.entity.MonthlyTkt;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.OrderLog;
 import com.kl.parkLine.entity.Park;
@@ -33,7 +34,9 @@ import com.kl.parkLine.enums.MonthlyStatus;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.CreateMonthlyTktParam;
 import com.kl.parkLine.json.WxPayNotifyParam;
+import com.kl.parkLine.json.WxunifiedOrderResult;
 import com.kl.parkLine.predicate.OrderPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.OrderVo;
@@ -68,11 +71,16 @@ public class OrderService
     private OrderPredicates orderPredicates;
     
     @Autowired
-    private CompareUtil compareUtil;
+    private Utils util;
     
+    @Autowired
+    private WxCmpt wxCmpt;
     
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
+    
+    @Autowired
+    MonthlyTktService monthlyTktService;
 
     /**
      * 分页查询
@@ -164,9 +172,9 @@ public class OrderService
             }
             
             //记录不同点
-            diff = compareUtil.difference(orderDst.get(), order);
+            diff = util.difference(orderDst.get(), order);
             
-            BeanUtils.copyProperties(order, orderDst.get(), compareUtil.getNullPropertyNames(order));
+            BeanUtils.copyProperties(order, orderDst.get(), util.getNullPropertyNames(order));
             
             order = orderDst.get();
         }
@@ -208,35 +216,6 @@ public class OrderService
         return;
     }
     
-    /**
-     * 构建订单编码
-     * @param type
-     * @return 订单编码
-     */
-    private String makeCode(OrderType type)
-    {
-        Date now = new Date();
-        String prefix = "";
-        switch (type)
-        {
-            case parking:  //停车
-                prefix = "TC";
-                break;
-            case monthlyTicket: //月票
-                prefix = "YP";
-                break;
-            case coupon:  //优惠券
-                prefix = "YHQ";
-                break;
-            case walletIn: //钱包充值
-                prefix = "CZ";
-                break;
-            default:
-                break;
-        }
-        String code = prefix + String.valueOf(now.getTime());
-        return code;
-    }
     
     /**
      * 停车入场事件处理
@@ -245,24 +224,19 @@ public class OrderService
      */
     private void carIn(Event event) throws BusinessException 
     {
-        Order order = new Order();
-        //订单编码
-        order.setCode(makeCode(OrderType.parking));
-        //车辆信息
-        Car car = carService.getCar(event.getPlateNo());
-        order.setCar(car);
-        //停车订单类型
-        order.setType(OrderType.parking);
-        //入场状态
-        order.setStatus(OrderStatus.in);
         //停车场
         Park park = parkService.findOneByCode(event.getParkCode());
-        order.setPark(park);
-        //事件ID
-        order.setActId(event.getActId());
-        //入场时间
-        order.setInTime(event.getTimeIn());
         
+        //车辆信息
+        Order order = Order.builder()
+                .code(util.makeCode(OrderType.parking))
+                .car(carService.getCar(event.getPlateNo()))
+                .type(OrderType.parking)
+                .status(OrderStatus.in)
+                .park(park)
+                .actId(event.getActId())
+                .inTime(event.getTimeIn())
+                .build();
         //停车场空位-1
         park.setAvailableCnt(park.getAvailableCnt()-1);
         
@@ -510,4 +484,83 @@ public class OrderService
         orderDao.save(order);
     }
     
+    /**
+     * 检查月票订单参数有效性,开始结束日期是否在月头月尾,价格是否正确
+     * @param park
+     * @return
+     */
+    private void checkMonthlyTktParams(Park park, CreateMonthlyTktParam monthlyTktParam) throws BusinessException
+    {
+        //检查开始结束日期是否在月头月尾
+        DateTime dateTimeStart = new DateTime(monthlyTktParam.getStartDate());
+        if (1 != dateTimeStart.getDayOfMonth()) //不是月初第一天
+        {
+            throw new BusinessException("开始日期应该为月初第一天");
+        }
+        DateTime dateTimeEnd = new DateTime(monthlyTktParam.getEndDate());
+        if (1 != dateTimeEnd.plusDays(1).getDayOfMonth()) //不是月末最后一天
+        {
+            throw new BusinessException("结束日期应该为月末最后一天");
+        }
+        
+        //检查日期大小
+        if (dateTimeStart.isAfter(dateTimeEnd))
+        {
+            throw new BusinessException("开始日期必须小于结束日期");
+        }
+        
+        //检查价格
+        int month = (dateTimeEnd.getYear()-dateTimeStart.getYear())*12 + dateTimeEnd.getMonthOfYear()-dateTimeStart.getMonthOfYear() + 1;
+        if (monthlyTktParam.getAmt().equals(park.getMonthlyPrice().multiply(new BigDecimal(month))))
+        {
+            throw new BusinessException("月票价格不一致");
+        }
+    }
+    /**
+     * 创建一个新的月票订单
+     * @param monthlyTktParam
+     * @throws Exception 
+     */
+    @Transactional
+    public WxunifiedOrderResult createMonthlyTkt(CreateMonthlyTktParam monthlyTktParam, String userName) throws Exception
+    {
+        User owner = userService.findByName(userName);
+        Park park = parkService.findOneById(monthlyTktParam.getParkId());
+        
+        //检查月票订单参数
+        this.checkMonthlyTktParams(park, monthlyTktParam);
+        
+
+        Car car = carService.getCar(monthlyTktParam.getCarNo());
+        //检查是否有重复的月票订单
+        if (monthlyTktService.existingValid(car, park, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate()))
+        {
+            throw new BusinessException("请勿重复购买月票");
+        }
+        
+        String code = util.makeCode(OrderType.monthlyTicket);
+        
+        //创建月票
+        MonthlyTkt monthlyTkt = MonthlyTkt.builder()
+                .code(code).car(car).park(park)
+                .startDate(monthlyTktParam.getStartDate())
+                .endDate(monthlyTktParam.getEndDate())
+                .status(MonthlyStatus.needToPay).build();
+        
+        //创建订单
+        Order order = Order.builder()
+                .code(code).car(car).park(park).amt(monthlyTktParam.getAmt())
+                .type(OrderType.monthlyTicket)
+                .startDate(monthlyTktParam.getStartDate())
+                .endDate(monthlyTktParam.getEndDate())
+                .status(OrderStatus.needToPay)
+                .owner(owner)
+                .monthlyTkt(monthlyTkt).build();
+        
+        //保存订单
+        orderDao.save(order);
+        
+        //开始付款
+        return wxCmpt.unifiedOrder(order);
+    }
 }

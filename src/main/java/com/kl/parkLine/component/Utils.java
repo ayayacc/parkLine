@@ -17,9 +17,10 @@ import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.annotation.CompareValue;
 import com.kl.parkLine.annotation.NeedToCompare;
+import com.kl.parkLine.enums.OrderType;
 
 @Component
-public class CompareUtil
+public class Utils
 {
     private final String EMPTY = "空";
     
@@ -198,5 +199,35 @@ public class CompareUtil
         {
             return request.getRemoteAddr();
         }
+    }
+    
+    /**
+     * 构建订单编码
+     * @param type
+     * @return 订单编码
+     */
+    public String makeCode(OrderType type)
+    {
+        Date now = new Date();
+        String prefix = "";
+        switch (type)
+        {
+            case parking:  //停车
+                prefix = "TC";
+                break;
+            case monthlyTicket: //月票
+                prefix = "YP";
+                break;
+            case coupon:  //优惠券
+                prefix = "YHQ";
+                break;
+            case walletIn: //钱包充值
+                prefix = "CZ";
+                break;
+            default:
+                break;
+        }
+        String code = prefix + String.valueOf(now.getTime());
+        return code;
     }
 }

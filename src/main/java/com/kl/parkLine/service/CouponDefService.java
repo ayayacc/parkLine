@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kl.parkLine.component.CompareUtil;
+import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.ICouponDefDao;
 import com.kl.parkLine.entity.CouponDef;
 import com.kl.parkLine.entity.CouponDefLog;
@@ -42,7 +42,7 @@ public class CouponDefService
     private UserService userService;
     
     @Autowired
-    private CompareUtil compareUtil;
+    private Utils util;
     
     @Autowired
     private CouponDefPredicates couponDefPredicates;
@@ -74,9 +74,9 @@ public class CouponDefService
             }
             
             //记录不同点
-            diff = compareUtil.difference(couponDefDst.get(), couponDef);
+            diff = util.difference(couponDefDst.get(), couponDef);
             
-            BeanUtils.copyProperties(couponDef, couponDefDst.get(), compareUtil.getNullPropertyNames(couponDef));
+            BeanUtils.copyProperties(couponDef, couponDefDst.get(), util.getNullPropertyNames(couponDef));
             
             couponDef = couponDefDst.get();
         }

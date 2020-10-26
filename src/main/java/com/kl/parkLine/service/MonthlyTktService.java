@@ -1,6 +1,7 @@
 package com.kl.parkLine.service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -13,12 +14,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kl.parkLine.component.CompareUtil;
+import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IMonthlyTktDao;
+import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.MonthlyTkt;
 import com.kl.parkLine.entity.MonthlyTktLog;
+import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.QMonthlyTkt;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.MonthlyStatus;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.MonthlyTktPredicates;
 import com.kl.parkLine.util.Const;
@@ -42,7 +46,7 @@ public class MonthlyTktService
     private UserService userService;
     
     @Autowired
-    private CompareUtil compareUtil;
+    private Utils util;
     
     @Autowired
     private MonthlyTktPredicates monthlyTktPredicates;
@@ -74,9 +78,9 @@ public class MonthlyTktService
             }
             
             //记录不同点
-            diff = compareUtil.difference(monthlyTktDst.get(), monthlyTkt);
+            diff = util.difference(monthlyTktDst.get(), monthlyTkt);
             
-            BeanUtils.copyProperties(monthlyTkt, monthlyTktDst.get(), compareUtil.getNullPropertyNames(monthlyTkt));
+            BeanUtils.copyProperties(monthlyTkt, monthlyTktDst.get(), util.getNullPropertyNames(monthlyTkt));
             
             monthlyTkt = monthlyTktDst.get();
         }
@@ -139,5 +143,16 @@ public class MonthlyTktService
                         )
                 .collect(Collectors.toList());
         return new PageImpl<>(monthlyTktVos, pageable, queryResults.getTotal());
+    }
+    
+    /**
+     * 检查指定车辆在指定停车场是否已经有生效的月票
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public Boolean existingValid(Car car, Park park, Date startDate, Date endDate)
+    {
+        return monthlyTktDao.existsByCarCarNoAndParkParkIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                car.getCarNo(), park.getParkId(), MonthlyStatus.payed, endDate, startDate);
     }
 }

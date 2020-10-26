@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kl.parkLine.component.CompareUtil;
+import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IRoleDao;
 import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.Menu;
@@ -47,7 +47,7 @@ public class RoleService
     private JPAQueryFactory jpaQueryFactory;
     
     @Autowired
-    private CompareUtil compareUtil;
+    private Utils util;
     
     /**
      * 根据代码找到唯一角色
@@ -129,7 +129,7 @@ public class RoleService
         }
         
         //记录不同点
-        BeanUtils.copyProperties(role, roleDst.get(), compareUtil.getNullPropertyNames(role));
+        BeanUtils.copyProperties(role, roleDst.get(), util.getNullPropertyNames(role));
         
         role = roleDst.get();
         

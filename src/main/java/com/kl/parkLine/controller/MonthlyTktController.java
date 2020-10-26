@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.MonthlyTkt;
-import com.kl.parkLine.json.MonthlyTktParam;
+import com.kl.parkLine.json.CreateMonthlyTktParam;
 import com.kl.parkLine.json.RestResult;
+import com.kl.parkLine.json.WxunifiedOrderResult;
 import com.kl.parkLine.service.MonthlyTktService;
+import com.kl.parkLine.service.OrderService;
 import com.kl.parkLine.vo.MonthlyTktVo;
 
 import io.swagger.annotations.Api;
@@ -32,16 +34,26 @@ public class MonthlyTktController
     @Autowired
     private MonthlyTktService monthlyTktService;
     
+    @Autowired
+    private OrderService orderService;
+    
     /**
      * 购买月票
      */
-    @PostMapping("/monthlyTkt/create")
+    @PostMapping("/create")
     @ApiOperation(value="购买月票", notes="新建一张月票；")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Object> create(@ApiParam(name="月票参数", required=true) @RequestBody MonthlyTktParam payMonthlyTktParam)
+    public RestResult<WxunifiedOrderResult> create(@ApiParam(name="月票参数", required=true) @RequestBody CreateMonthlyTktParam monthlyTktParam
+            , Authentication auth)
     {
-        //TODO: 购买月票
-        return null;
+        try
+        {
+            return RestResult.success(orderService.createMonthlyTkt(monthlyTktParam, auth.getName()));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
     }
     
     /**
@@ -50,7 +62,7 @@ public class MonthlyTktController
     @PostMapping("/monthlyTkt/renew")
     @ApiOperation(value="续费月票", notes="对指定月票进行续费(时间连续)；则返回失败")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Object> renew(@ApiParam(name="月票参数", required=true) @RequestBody MonthlyTktParam payMonthlyTktParam)
+    public RestResult<Object> renew(@ApiParam(name="月票参数", required=true) @RequestBody CreateMonthlyTktParam payMonthlyTktParam)
     {
         //TODO: 续费月票
         return null;
