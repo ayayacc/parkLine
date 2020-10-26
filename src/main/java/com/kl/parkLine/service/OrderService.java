@@ -2,11 +2,14 @@ package com.kl.parkLine.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.joda.time.Minutes;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -14,18 +17,25 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kl.parkLine.component.CompareUtil;
 import com.kl.parkLine.dao.IOrderDao;
 import com.kl.parkLine.entity.Car;
+import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.Event;
 import com.kl.parkLine.entity.Order;
+import com.kl.parkLine.entity.OrderLog;
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.QOrder;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.enums.EventType;
+import com.kl.parkLine.enums.MonthlyStatus;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.WxPayNotifyParam;
 import com.kl.parkLine.predicate.OrderPredicates;
+import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.OrderVo;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Predicate;
@@ -36,7 +46,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
  * @author chenc
  *
  */
-@Service("orderService")
+@Service
 public class OrderService
 {
     @Autowired
@@ -56,6 +66,10 @@ public class OrderService
     
     @Autowired
     private OrderPredicates orderPredicates;
+    
+    @Autowired
+    private CompareUtil compareUtil;
+    
     
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
@@ -127,6 +141,46 @@ public class OrderService
     }
     
     /**
+     * 保存一个订单
+     * @param 被保存的优惠券
+     * @throws BusinessException 
+     */
+    @Transactional
+    public void save(Order order) throws BusinessException
+    {
+        String diff = Const.LOG_CREATE;
+        if (null == order.getOrderId()) //新增数据
+        {
+            order.setLogs(new ArrayList<OrderLog>());
+        }
+        else//编辑已有数据
+        {
+            //编辑订单，//合并字段
+            Optional<Order> orderDst = orderDao.findById(order.getOrderId());
+            
+            if (false == orderDst.isPresent())
+            {
+                throw new BusinessException(String.format("无效的订单 Id: %d", order.getOrderId()));
+            }
+            
+            //记录不同点
+            diff = compareUtil.difference(orderDst.get(), order);
+            
+            BeanUtils.copyProperties(order, orderDst.get(), compareUtil.getNullPropertyNames(order));
+            
+            order = orderDst.get();
+        }
+        
+        //保存数据
+        OrderLog log = new OrderLog();
+        log.setDiff(diff);
+        log.setRemark(order.getChangeRemark());
+        log.setOrder(order);
+        order.getLogs().add(log);
+        orderDao.save(order);
+    }
+    
+    /**
      * 处理出入场/停车完成事件
      * @param event 事件对象
      */
@@ -187,8 +241,9 @@ public class OrderService
     /**
      * 停车入场事件处理
      * @param event 事件对象
+     * @throws BusinessException 
      */
-    private void carIn(Event event) 
+    private void carIn(Event event) throws BusinessException 
     {
         Order order = new Order();
         //订单编码
@@ -394,6 +449,65 @@ public class OrderService
         
         //保存订单
         orderDao.saveAll(orders);
+    }
+    
+    /**
+     * 处理订单支付结果
+     * @param wxPayNotifyParam
+     * @throws BusinessException 
+     */
+    public void wxPaySuccess(WxPayNotifyParam wxPayNotifyParam) throws BusinessException
+    {
+        //找到付款订单
+        Order order = orderDao.findOneByCode(wxPayNotifyParam.getOutTradeNo());
+        if (null == order)
+        {
+            return;
+        }
+        if (null != order.getPaymentTime())  //已经处理过付款通知(微信会重复推送同一张订单的付款通知)
+        {
+            return;
+        }
+        //修改订单状态
+        order.setStatus(OrderStatus.payed);
+        //设置支付日期
+        order.setPaymentTime(wxPayNotifyParam.getTimeEnd());
+        
+        //设置付款银行
+        order.setBankType(wxPayNotifyParam.getBankType());
+        //微信订单号
+        order.setWxTransactionId(wxPayNotifyParam.getTransactionId());
+        //设置用户关注公众号情况
+        order.getOwner().setSubscribe(wxPayNotifyParam.getIsSubscribe());
+        
+        //设置使用的优惠券状态
+        if (null != order.getUsedCoupon())
+        {
+            order.getUsedCoupon().setStatus(CouponStatus.used);
+        }
+        
+        switch (order.getType())
+        {
+            case monthlyTicket: //月票订单：激活月票
+                order.getMonthlyTkt().setStatus(MonthlyStatus.payed);
+                break;
+            case walletIn: //钱包充值订单:增加钱包余额
+                User owner = order.getOwner();
+                owner.setBalance(owner.getBalance().add(order.getAmt()));
+                break;
+            case coupon:
+                Coupon coupon = order.getActivatedCoupon();
+                coupon.setStatus(CouponStatus.valid);
+                //默认激活七天
+                DateTime now = new DateTime();
+                coupon.setStartDate(now.toDate());
+                coupon.setEndDate(now.plusDays(Const.COUPON_ACTIVE_DAYS).toDate());
+                break;
+            default:
+                break;
+        }
+        
+        orderDao.save(order);
     }
     
 }

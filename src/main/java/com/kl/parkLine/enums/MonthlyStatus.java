@@ -10,7 +10,7 @@ import lombok.Getter;
 public enum MonthlyStatus implements BaseEnum
 {
     needToPay(1, "待支付"),
-    valid(2, "生效"),
+    payed(2, "已支付"),
     expired(3, "已过期"),
     invalid(4, "无效");
     

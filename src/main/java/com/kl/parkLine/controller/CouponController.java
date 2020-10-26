@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.CouponDef;
 import com.kl.parkLine.exception.BusinessException;
-import com.kl.parkLine.json.MonthlyTktParam;
+import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.CouponService;
 import com.kl.parkLine.vo.CouponVo;
@@ -53,7 +53,7 @@ public class CouponController
                     .code(coupon.getCode())
                     .amt(coupon.getCouponDef().getAmt())
                     .name(coupon.getCouponDef().getName())
-                    .status(coupon.getStatus().getText())
+                    .status(coupon.getStatus())
                     .startDate(coupon.getStartDate())
                     .endDate(coupon.getEndDate())
                     .endDate(coupon.getEndDate())
@@ -72,10 +72,16 @@ public class CouponController
     @PostMapping("/active")
     @ApiOperation(value="激活优惠券", notes="将优惠券的有效期延期一周")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Object> activeCoupon(@ApiParam(name="充值金额", required=true) @RequestBody MonthlyTktParam payMonthlyTktParam)
+    public RestResult<Object> activeCoupon(@ApiParam(name="优惠券参数", required=true) @RequestBody ActiveCouponParam activeCouponParam)
     {
-        //TODO: 激活优惠券
-        return null;
+        try
+        {
+            return RestResult.success(couponService.activeCoupon(activeCouponParam));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
     }
     
     /**

@@ -20,6 +20,7 @@ public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredic
 {
     public Order findOneByActId(String actId);
     public Order findOneByOrderId(Integer orderId);
+    public Order findOneByCode(String code);
     public Set<Order> findByCarAndOwnerIsNull(Car car);
     public Page<OrderVo> findByStatusAndOwnerAndAmtGreaterThan(OrderStatus status, User owner, BigDecimal amt, Pageable pageable);
 }

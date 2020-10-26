@@ -30,6 +30,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PaymentType;
@@ -115,6 +116,10 @@ public class Order extends AbstractEntity implements java.io.Serializable
     private String actId;
     
     /*月票订单*/
+    @ManyToOne(fetch = FetchType.LAZY) 
+    @JoinColumn(name = "monthly_tkt_id")
+    private MonthlyTkt monthlyTkt;
+    
     /**
      * 开始时间
      */
@@ -136,6 +141,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
     /**
      * 使用的优惠券
      */
+    @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "used_coupon")
     private Coupon usedCoupon;
     
@@ -143,6 +149,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
     /**
      * 被激活的优惠券
      */
+    @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "activated_coupon")
     private Coupon activatedCoupon;
     
@@ -152,6 +159,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
      */
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
+    @NeedToCompare(name = "状态")
     private OrderStatus status;
     
     /**
@@ -170,6 +178,18 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date paymentTime; 
+    
+    /**
+     * 付款银行代码
+     */
+    @Column(name = "bank_type", length = 48)
+    private String bankType;
+    
+    /**
+     * 微信支付订单号
+     */
+    @Column(name = "wx_transaction_id", length = 48)
+    private String wxTransactionId;
     
     /**
      * 支付方式: 微信/钱包
@@ -205,7 +225,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @ApiModelProperty("订单变动备注")
     @Transient
     private String changeRemark;
-
+    
     @Override
     public int hashCode()
     {

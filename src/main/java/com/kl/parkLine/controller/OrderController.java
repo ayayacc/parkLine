@@ -1,5 +1,13 @@
 package com.kl.parkLine.controller;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,10 +20,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.github.wxpay.sdk.WXPayUtil;
 import com.kl.parkLine.entity.Order;
+import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.RestResult;
+import com.kl.parkLine.json.WxPayNotifyParam;
 import com.kl.parkLine.service.OrderService;
+import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.OrderVo;
 
 import io.swagger.annotations.Api;
@@ -31,6 +43,9 @@ public class OrderController
 {
     @Autowired 
     private OrderService orderService;  
+    
+    @Autowired
+    private HttpServletRequest request;
     
     /**
      * 终端用户分页查询订单
@@ -119,6 +134,69 @@ public class OrderController
     {
         //TODO: 实现订单支付
         return null;
+    }
+    
+    /**
+     * 微信付款通知
+     */
+    @PostMapping("/wxpay/notify")
+    @ApiOperation(hidden = true, value = "")
+    public String wxpayNotify() throws IOException, Exception
+    {
+        Map<String, String> retMap = new HashMap<String, String>();
+        try
+        {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            BufferedReader reader = request.getReader();
+            while ((line = reader.readLine()) != null)
+            {
+                sb.append(line);
+            }
+            String notifyData = sb.toString();
+            Map<String, String> notifyMap = WXPayUtil.xmlToMap(notifyData);  // 转换成map
+            
+            //TODO: 打开校验
+            /*if (!wxPay.isPayResultNotifySignatureValid(notifyMap)) 
+            {
+                // 签名错误，如果数据里没有sign字段，也认为是签名错误
+                throw new Exception("签名错误");
+            }*/
+            
+            // 签名正确,进行处理
+            String return_code = (String) notifyMap.get("return_code");
+            if (!return_code.equalsIgnoreCase(Const.WX_SUCCESS))
+            {
+                throw new BusinessException((String) notifyMap.get("return_msg"));
+            }
+            
+            //交易标识
+            String result_code = (String) notifyMap.get("result_code");
+            if (!result_code.equalsIgnoreCase(Const.WX_SUCCESS))
+            {
+                throw new BusinessException((String)notifyMap.get("err_code_des"));
+            }
+            //读取支付结果参数
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+            WxPayNotifyParam wxPayNotifyParam = WxPayNotifyParam.builder()
+                    .openId(notifyMap.get("openid"))
+                    .attach(notifyMap.get("attach"))
+                    .bankType(notifyMap.get("bank_type"))
+                    .isSubscribe(notifyMap.get("is_subscribe"))
+                    .outTradeNo(notifyMap.get("out_trade_no"))
+                    .transactionId(notifyMap.get("transaction_id"))
+                    .timeEnd(simpleDateFormat.parse(notifyMap.get("time_end")))
+                    .build();
+            //处理订单状态,注意特殊情况：订单已经退款，但收到了支付结果成功的通知，不应把商户侧订单状态从退款改成支付成功
+            orderService.wxPaySuccess(wxPayNotifyParam);
+            retMap.put("return_code", "SUCCESS");
+        }
+        catch (Exception e)
+        {
+            retMap.put("return_code", "FAIL");
+            retMap.put("return_msg", e.getMessage());
+        }
+        return WXPayUtil.mapToXml(retMap);
     }
     
     /**

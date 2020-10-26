@@ -1,5 +1,6 @@
 package com.kl.parkLine.entity;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -107,6 +108,18 @@ public class User extends AbstractEntity implements UserDetails
     
     @Column(name = "is_enabled")
     private boolean isEnabled;
+    
+    /**
+     * 钱包余额
+     */
+    @Column(name = "balance", precision = 15 ,scale = 2, nullable = false, columnDefinition = "int default 0")
+    private BigDecimal balance;
+    
+    /**
+     * 是否订阅了公众号
+     */
+    @Column(name = "subscribe")
+    private String subscribe;
     
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "tr_user_role", joinColumns = { @JoinColumn(name="user_id") }, inverseJoinColumns={ @JoinColumn(name="role_id") })  

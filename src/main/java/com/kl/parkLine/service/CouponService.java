@@ -1,9 +1,7 @@
 package com.kl.parkLine.service;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
@@ -15,20 +13,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kl.parkLine.component.CompareUtil;
+import com.kl.parkLine.component.WxCmpt;
 import com.kl.parkLine.dao.ICouponDao;
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.CouponDef;
 import com.kl.parkLine.entity.CouponLog;
+import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.QCoupon;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.ActiveCouponParam;
+import com.kl.parkLine.json.WxunifiedOrderResult;
 import com.kl.parkLine.predicate.CouponPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.CouponVo;
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
@@ -52,6 +54,9 @@ public class CouponService
     
     @Autowired
     private CouponPredicates couponPredicates;
+    
+    @Autowired
+    private WxCmpt wxCmpt;
     
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
@@ -169,9 +174,8 @@ public class CouponService
         Predicate searchPred = couponPredicates.fuzzy(couponVo, user);
         
         QCoupon qCoupon = QCoupon.coupon;
-        QueryResults<Tuple> queryResults = jpaQueryFactory
-                .select(
-                        qCoupon.couponId,
+        QueryResults<CouponVo> queryResults = jpaQueryFactory
+                .select(Projections.bean(CouponVo.class, qCoupon.couponId,
                         qCoupon.code,
                         qCoupon.couponDef.couponDefId,
                         qCoupon.couponDef.code,
@@ -182,32 +186,29 @@ public class CouponService
                         qCoupon.owner.name,
                         qCoupon.status,
                         qCoupon.startDate,
-                        qCoupon.endDate
-                )
+                        qCoupon.endDate))
                 .from(qCoupon)
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
-        //转换成vo
-        List<CouponVo> couponVos = queryResults
-                .getResults()
-                .stream()
-                .map(tuple -> CouponVo.builder()
-                        .couponId(tuple.get(qCoupon.couponId))
-                        .code(tuple.get(qCoupon.code))
-                        .couponDefId(tuple.get(qCoupon.couponDef.couponDefId))
-                        .couponDefCode(tuple.get(qCoupon.couponDef.code))
-                        .name(tuple.get(qCoupon.couponDef.name))
-                        .amt(tuple.get(qCoupon.couponDef.amt))
-                        .minAmt(tuple.get(qCoupon.couponDef.minAmt))
-                        .owner(tuple.get(qCoupon.owner.name))
-                        .startDate(tuple.get(qCoupon.startDate))
-                        .endDate(tuple.get(qCoupon.endDate))
-                        .status(tuple.get(qCoupon.status).getText())
-                        .build()
-                        )
-                .collect(Collectors.toList());
-        return new PageImpl<>(couponVos, pageable, queryResults.getTotal());
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
+    }
+    
+    /**
+     * 激活优惠券
+     * @param activeCouponParam
+     * @return
+     * @throws Exception 
+     */
+    public WxunifiedOrderResult activeCoupon(ActiveCouponParam activeCouponParam) throws Exception 
+    {
+        //TODO: 实现激活优惠券订单
+        //生成激活订单
+        Order order = new Order();
+        
+        //发起支付
+        
+        return wxCmpt.unifiedOrder(order);
     }
 }

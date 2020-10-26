@@ -78,6 +78,7 @@ public class UserService
         Role role = roleService.findOneByCode(RoleCode.END_USER);
         roles.add(role);
         user.setRoles(roles);
+        user.setSubscribe("N");
         save(user);
         return user;
     }
@@ -90,6 +91,16 @@ public class UserService
     public User findByName(String name)
     {
         return userDao.findOneByName(name);
+    }
+    
+    /**
+     * 根据用户名称查找
+     * @param name 用户名称
+     */ 
+    @Transactional(readOnly = true)
+    public User findWxOpenId(String openId)
+    {
+        return userDao.findOneByWxOpenId(openId);
     }
     
     /**

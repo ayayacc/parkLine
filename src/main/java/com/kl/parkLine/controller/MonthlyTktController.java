@@ -36,11 +36,23 @@ public class MonthlyTktController
      * 购买月票
      */
     @PostMapping("/monthlyTkt/create")
-    @ApiOperation(value="购买月票", notes="如果指定车牌号在指定停车场已经有月票，则续费，否则新建；如果已经存在的月票处于待支付状态，则返回失败")
+    @ApiOperation(value="购买月票", notes="新建一张月票；")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<Object> create(@ApiParam(name="月票参数", required=true) @RequestBody MonthlyTktParam payMonthlyTktParam)
     {
         //TODO: 购买月票
+        return null;
+    }
+    
+    /**
+     * 续费月票
+     */
+    @PostMapping("/monthlyTkt/renew")
+    @ApiOperation(value="续费月票", notes="对指定月票进行续费(时间连续)；则返回失败")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Object> renew(@ApiParam(name="月票参数", required=true) @RequestBody MonthlyTktParam payMonthlyTktParam)
+    {
+        //TODO: 续费月票
         return null;
     }
     

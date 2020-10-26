@@ -8,7 +8,6 @@ import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.entity.QCoupon;
 import com.kl.parkLine.entity.User;
-import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.util.RoleCode;
 import com.kl.parkLine.vo.CouponVo;
 import com.querydsl.core.BooleanBuilder;
@@ -17,7 +16,7 @@ import com.querydsl.core.types.Predicate;
 @Component
 public class CouponPredicates
 {
-    //可以访问说有优惠券的角色
+    //可以访问所有优惠券的角色
     private final List<String> allAccessRoleCodes = new ArrayList<String>();
     
     public CouponPredicates()
@@ -48,7 +47,7 @@ public class CouponPredicates
         //状态
         if (!StringUtils.isEmpty(couponVo.getStatus()))
         {
-            where.and(qCoupon.status.eq(CouponStatus.valueOf(couponVo.getStatus())));
+            where.and(qCoupon.status.eq(couponVo.getStatus()));
         }
         
         //区分用户权限

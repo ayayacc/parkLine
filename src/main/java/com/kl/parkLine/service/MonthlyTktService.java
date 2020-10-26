@@ -51,7 +51,7 @@ public class MonthlyTktService
     private JPAQueryFactory jpaQueryFactory;
     
     /**
-     * 保存一个优惠券定义
+     * 保存一个月票
      * @param 被保存的优惠券
      * @throws BusinessException 
      */
@@ -65,12 +65,12 @@ public class MonthlyTktService
         }
         else//编辑已有数据
         {
-            //编辑优惠券定义，//合并字段
+            //编辑月票，//合并字段
             Optional<MonthlyTkt> monthlyTktDst = monthlyTktDao.findById(monthlyTkt.getMonthlyTktId());
             
             if (false == monthlyTktDst.isPresent())
             {
-                throw new BusinessException(String.format("无效的优惠券定义 Id: %d", monthlyTkt.getMonthlyTktId()));
+                throw new BusinessException(String.format("无效的月票 Id: %d", monthlyTkt.getMonthlyTktId()));
             }
             
             //记录不同点

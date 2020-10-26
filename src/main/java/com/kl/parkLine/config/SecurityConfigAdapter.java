@@ -128,7 +128,7 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         .headers().frameOptions().sameOrigin()
         .and()
         .authorizeRequests()
-        .antMatchers("/MchApi", "/MchApi/**", "/sms", "/sms/**").permitAll()
+        .antMatchers("/MchApi", "/MchApi/**", "/sms", "/sms/**", "/orders/wxpay/notify").permitAll()
         .and()
         .authorizeRequests()
         .anyRequest().authenticated()

@@ -46,7 +46,14 @@ public class LogAspect
             result = pdj.proceed();
 
             //返回通知方法
-            sb.append(String.format("Return: %s", result.toString()));
+            if (null == result)
+            {
+                sb.append(String.format("Return: null"));
+            }
+            else
+            {
+                sb.append(String.format("Return: %s", result.toString()));
+            }
             logger.info(sb.toString());
         } catch (Throwable e) {
             //异常

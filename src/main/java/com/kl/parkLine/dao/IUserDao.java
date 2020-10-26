@@ -10,4 +10,5 @@ public interface IUserDao extends JpaRepository<User, Integer>
 {
     public User findOneByName(String name);
     public User findOneByMobile(String mobile);
+    public User findOneByWxOpenId(String wxOpenId);
 }

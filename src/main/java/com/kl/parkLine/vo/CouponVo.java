@@ -6,6 +6,7 @@ import java.util.Date;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.kl.parkLine.enums.CouponStatus;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -53,7 +54,7 @@ public class CouponVo
     private BigDecimal minAmt;
     
     @ApiModelProperty("优惠券状态")
-    private String status;
+    private CouponStatus status;
     
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")

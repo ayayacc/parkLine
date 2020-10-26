@@ -21,4 +21,10 @@ public class Const
     
     //日志记录
     public final static String LOG_CREATE = "新增";
+    
+    //微信返回值，成功
+    public final static String WX_SUCCESS = "SUCCESS";
+    
+    //优惠券激活默认有效期(天)
+    public final static Integer COUPON_ACTIVE_DAYS = 7;
 }

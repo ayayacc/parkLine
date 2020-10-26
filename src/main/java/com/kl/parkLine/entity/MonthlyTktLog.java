@@ -44,7 +44,7 @@ public class MonthlyTktLog extends AbstractLog implements Serializable
     private MonthlyTkt monthlyTkt;
     
     /**
-     * 
+     * 购买月票的订单Id
      */
     @ManyToOne
     @JoinColumn(name = "order_id")
