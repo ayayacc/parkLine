@@ -3,9 +3,7 @@ package com.kl.parkLine.service;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,8 +22,8 @@ import com.kl.parkLine.predicate.UserPredicates;
 import com.kl.parkLine.util.RoleCode;
 import com.kl.parkLine.vo.UserVo;
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
@@ -139,30 +137,18 @@ public class UserService
         Predicate searchPred = userPredicates.fuzzy(userVo, user);
         
         QUser qUser = QUser.user;
-        QueryResults<Tuple> queryResults = jpaQueryFactory
-                .select(
+        QueryResults<UserVo> queryResults = jpaQueryFactory
+                .select(Projections.bean(UserVo.class, 
                         qUser.userId,
                         qUser.name,
                         qUser.mobile,
-                        qUser.nickName
-                )
+                        qUser.nickName))
                 .from(qUser)
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
-        //转换成vo
-        List<UserVo> userVos = queryResults
-                .getResults()
-                .stream()
-                .map(tuple -> UserVo.builder()
-                        .userId(tuple.get(qUser.userId))
-                        .name(tuple.get(qUser.name))
-                        .mobile(tuple.get(qUser.mobile))
-                        .build()
-                        )
-                .collect(Collectors.toList());
-        return new PageImpl<>(userVos, pageable, queryResults.getTotal());
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
     
     /**

@@ -113,7 +113,8 @@ public class CouponService
         
         //增加优惠券定义的已经领取数量
         couponDef.setAppliedCnt(couponDef.getAppliedCnt()+1);
-        couponDef.setChangeRemark(String.format("CouponCode: %s", coupon.getCode()));
+        couponDef.setChangeRemark(String.format("新发放一张优惠券, CouponCode: %s, 已经发放: %d 张",
+                coupon.getCode(), couponDef.getAppliedCnt()));
         couponDefService.save(couponDef);
         
         return coupon;

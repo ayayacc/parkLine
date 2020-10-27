@@ -1,9 +1,7 @@
 package com.kl.parkLine.service;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +22,8 @@ import com.kl.parkLine.predicate.CouponDefPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.CouponDefVo;
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
@@ -104,38 +102,20 @@ public class CouponDefService
         Predicate searchPred = couponDefPredicates.fuzzy(couponDefVo, user);
         
         QCouponDef qCouponDef = QCouponDef.couponDef;
-        QueryResults<Tuple> queryResults = jpaQueryFactory
-                .select(
-                        qCouponDef.couponDefId,
+        QueryResults<CouponDefVo> queryResults = jpaQueryFactory
+                .select(Projections.bean(CouponDefVo.class, qCouponDef.couponDefId,
                         qCouponDef.code,
-                        qCouponDef.name,
+                        qCouponDef.code,
                         qCouponDef.totalCnt,
                         qCouponDef.usedCnt,
                         qCouponDef.enabled,
                         qCouponDef.startDate,
-                        qCouponDef.endDate
-                )
+                        qCouponDef.endDate))
                 .from(qCouponDef)
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
-        //转换成vo
-        List<CouponDefVo> couponDefVos = queryResults
-                .getResults()
-                .stream()
-                .map(tuple -> CouponDefVo.builder()
-                        .couponDefId(tuple.get(qCouponDef.couponDefId))
-                        .code(tuple.get(qCouponDef.code))
-                        .name(tuple.get(qCouponDef.name))
-                        .totalCnt(tuple.get(qCouponDef.totalCnt))
-                        .usedCnt(tuple.get(qCouponDef.usedCnt))
-                        .enabled(tuple.get(qCouponDef.enabled))
-                        .startDate(tuple.get(qCouponDef.startDate))
-                        .endDate(tuple.get(qCouponDef.endDate))
-                        .build()
-                        )
-                .collect(Collectors.toList());
-        return new PageImpl<>(couponDefVos, pageable, queryResults.getTotal());
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
 }

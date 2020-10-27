@@ -1,8 +1,6 @@
 package com.kl.parkLine.service;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +19,8 @@ import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.MenuPredicates;
 import com.kl.parkLine.vo.MenuVo;
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
@@ -86,27 +84,16 @@ public class MenuService
         Predicate searchPred = menuPredicates.fuzzy(menuVo, user);
         
         QMenu qMenu = QMenu.menu;
-        QueryResults<Tuple> queryResults = jpaQueryFactory
-                .select(
+        QueryResults<MenuVo> queryResults = jpaQueryFactory
+                .select(Projections.bean(MenuVo.class, 
                         qMenu.menuId,
                         qMenu.name,
-                        qMenu.enabled
-                )
+                        qMenu.enabled))
                 .from(qMenu)
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
-        //转换成vo
-        List<MenuVo> menuVos = queryResults
-                .getResults()
-                .stream()
-                .map(tuple -> MenuVo.builder()
-                        .menuId(tuple.get(qMenu.menuId))
-                        .name(tuple.get(qMenu.name))
-                        .build()
-                        )
-                .collect(Collectors.toList());
-        return new PageImpl<>(menuVos, pageable, queryResults.getTotal());
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
 }

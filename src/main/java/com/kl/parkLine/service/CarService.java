@@ -1,8 +1,5 @@
 package com.kl.parkLine.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -19,8 +16,8 @@ import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.CarPredicates;
 import com.kl.parkLine.vo.CarVo;
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
@@ -139,27 +136,16 @@ public class CarService
         Predicate searchPred = carPredicates.fuzzy(carVo, user);
         
         QCar qCar = QCar.car;
-        QueryResults<Tuple> queryResults = jpaQueryFactory
-                .select(
+        QueryResults<CarVo> queryResults = jpaQueryFactory
+                .select(Projections.bean(CarVo.class, 
                         qCar.carId,
-                        qCar.carNo
-                )
+                        qCar.carNo))
                 .from(qCar)
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
-        //转换成vo
-        List<CarVo> carVos = queryResults
-                .getResults()
-                .stream()
-                .map(tuple -> CarVo.builder()
-                        .carId(tuple.get(qCar.carId))
-                        .carNo(tuple.get(qCar.carNo))
-                        .build()
-                        )
-                .collect(Collectors.toList());
-        return new PageImpl<>(carVos, pageable, queryResults.getTotal());
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
     
     /**

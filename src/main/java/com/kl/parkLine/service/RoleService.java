@@ -1,9 +1,7 @@
 package com.kl.parkLine.service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,16 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IRoleDao;
-import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.Menu;
 import com.kl.parkLine.entity.QRole;
+import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.RolePredicates;
 import com.kl.parkLine.vo.RoleVo;
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
@@ -87,29 +85,17 @@ public class RoleService
         Predicate searchPred = rolePredicates.fuzzy(roleVo, user);
         
         QRole qRole = QRole.role;
-        QueryResults<Tuple> queryResults = jpaQueryFactory
-                .select(
+        QueryResults<RoleVo> queryResults = jpaQueryFactory
+                .select(Projections.bean(RoleVo.class, 
                         qRole.roleId,
                         qRole.name,
-                        qRole.code
-                )
+                        qRole.code))
                 .from(qRole)
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
-        //转换成vo
-        List<RoleVo> roleVos = queryResults
-                .getResults()
-                .stream()
-                .map(tuple -> RoleVo.builder()
-                        .roleId(tuple.get(qRole.roleId))
-                        .name(tuple.get(qRole.name))
-                        .code(tuple.get(qRole.code))
-                        .build()
-                        )
-                .collect(Collectors.toList());
-        return new PageImpl<>(roleVos, pageable, queryResults.getTotal());
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
     
     /**

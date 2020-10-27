@@ -1,9 +1,7 @@
 package com.kl.parkLine.service;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +22,8 @@ import com.kl.parkLine.predicate.ParkPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.ParkVo;
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
@@ -118,8 +116,8 @@ public class ParkService
         Predicate searchPred = parkPredicates.fuzzy(parkVo, user);
         
         QPark qPark = QPark.park;
-        QueryResults<Tuple> queryResults = jpaQueryFactory
-                .select(
+        QueryResults<ParkVo> queryResults = jpaQueryFactory
+                .select(Projections.bean(ParkVo.class, 
                         qPark.parkId,
                         qPark.code,
                         qPark.name,
@@ -133,35 +131,12 @@ public class ParkService
                         qPark.priceLev1,
                         qPark.timeLev2,
                         qPark.priceLev2,
-                        qPark.maxAmt
-                )
+                        qPark.maxAmt))
                 .from(qPark)
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
-        //转换成vo
-        List<ParkVo> parkVos = queryResults
-                .getResults()
-                .stream()
-                .map(tuple -> ParkVo.builder()
-                        .parkId(tuple.get(qPark.parkId))
-                        .code(tuple.get(qPark.code))
-                        .name(tuple.get(qPark.name))
-                        .totalCnt(tuple.get(qPark.totalCnt))
-                        .availableCnt(tuple.get(qPark.availableCnt))
-                        .geo(tuple.get(qPark.geo))
-                        .contact(tuple.get(qPark.contact))
-                        .enabled(tuple.get(qPark.enabled))
-                        .freeTime(tuple.get(qPark.freeTime))
-                        .timeLev1(tuple.get(qPark.timeLev1))
-                        .priceLev1(tuple.get(qPark.priceLev1))
-                        .priceLev1(tuple.get(qPark.priceLev1))
-                        .timeLev2(tuple.get(qPark.timeLev2))
-                        .priceLev2(tuple.get(qPark.priceLev2))
-                        .build()
-                        )
-                .collect(Collectors.toList());
-        return new PageImpl<>(parkVos, pageable, queryResults.getTotal());
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
 }

@@ -1,9 +1,7 @@
 package com.kl.parkLine.service;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +22,8 @@ import com.kl.parkLine.predicate.InvoicePredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.InvoiceVo;
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
@@ -104,29 +102,17 @@ public class InvoiceService
         Predicate searchPred = invoicePredicates.fuzzy(invoiceVo, user);
         
         QInvoice qInvoice = QInvoice.invoice;
-        QueryResults<Tuple> queryResults = jpaQueryFactory
-                .select(
+        QueryResults<InvoiceVo> queryResults = jpaQueryFactory
+                .select(Projections.bean(InvoiceVo.class, 
                         qInvoice.invoiceId,
                         qInvoice.code,
                         qInvoice.amt,
-                        qInvoice.status
-                )
+                        qInvoice.status))
                 .from(qInvoice)
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
-        //转换成vo
-        List<InvoiceVo> invoiceVos = queryResults
-                .getResults()
-                .stream()
-                .map(tuple -> InvoiceVo.builder()
-                        .invoiceId(tuple.get(qInvoice.invoiceId))
-                        .code(tuple.get(qInvoice.code))
-                        .amt(tuple.get(qInvoice.amt))
-                        .status(tuple.get(qInvoice.status).getText())
-                        .build())
-                .collect(Collectors.toList());
-        return new PageImpl<>(invoiceVos, pageable, queryResults.getTotal());
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
 }
