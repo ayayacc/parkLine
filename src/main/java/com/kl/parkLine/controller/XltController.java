@@ -41,13 +41,10 @@ public class XltController
     {
         XltEvtResult result = new XltEvtResult();
         result.setErrorcode(Const.CLT_RET_CODE_OK);
-        result.setMessage("");
+        result.setMessage("");//转换事件对象
+        Event event = eventAdatper.xlt2Event(xltEvt);
         try
         {
-            //转换事件对象
-            Event event = eventAdatper.xlt2Event(xltEvt);
-            eventService.save(event);
-            
             //处理事件（创建订单或者更改订单状态）
             orderService.processEvent(event);
         }
@@ -56,7 +53,10 @@ public class XltController
             result.setErrorcode(Const.CLT_RET_CODE_FAILED);
             result.setMessage(e.getMessage());
         }
-        
+        finally
+        {
+            eventService.save(event);
+        }
         
         return result;
     }

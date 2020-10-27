@@ -178,4 +178,10 @@ public class Event extends AbstractEntity implements java.io.Serializable
      */
     @Column(name = "enabled", length = 4, nullable = false)
     private String enabled;
+    
+    /**
+     * 是否有效
+     */
+    @Column(name = "remark", length = 128)
+    private String remark;
 }

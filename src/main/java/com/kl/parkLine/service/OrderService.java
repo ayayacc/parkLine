@@ -286,7 +286,6 @@ public class OrderService
         {
             return;
         }
-        
         StringBuilder difference = new StringBuilder();
         //记录出场时间
         Field field = order.getClass().getDeclaredField("outTime");
@@ -358,8 +357,10 @@ public class OrderService
         //如果订单已经付款以及后续状态，返回失败
         if (OrderStatus.payed.getValue() <= order.getStatus().getValue())
         {
-            throw new BusinessException(String.format("停车订单【%s】处于【%s】状态, 无法撤销", 
-                    order.getCode(), order.getStatus().getText()));
+            String msg = String.format("停车订单【%s】处于【%s】状态, 无法撤销", 
+                    order.getCode(), order.getStatus().getText());
+            event.setRemark(msg);
+            throw new BusinessException(msg);
         }
 
         BigDecimal oldAmt = order.getAmt();
