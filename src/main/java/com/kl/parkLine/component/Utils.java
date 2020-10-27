@@ -128,7 +128,7 @@ public class Utils
      * @param value
      * @return
      */
-    private String formatValue(Object value, Field field)
+    public String formatValue(Object value, Field field)
     {
         //预先处理null
         value = formatEmpty(value);

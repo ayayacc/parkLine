@@ -2,6 +2,7 @@ package com.kl.parkLine.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
@@ -12,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kl.parkLine.entity.Order;
+import com.kl.parkLine.exception.BusinessException;
 
 @SpringBootTest
 public class OrderServiceTest
@@ -27,6 +29,14 @@ public class OrderServiceTest
         order.getPark();
         orderService.calAmt(order);
         assertEquals(20, order.getAmt().intValue());
+    }
+    
+    @Test
+    public void testSave() throws BusinessException
+    {
+        Order order = orderService.findOneByOrderId(5);
+        order.setAmt(new BigDecimal(5));
+        orderService.save(order);
     }
     
     @Test

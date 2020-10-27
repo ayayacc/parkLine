@@ -104,6 +104,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @Column(name = "in_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @NeedToCompare(name = "入场时间")
     private Date inTime; 
     
     /**
@@ -113,6 +114,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @Column(name = "out_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @NeedToCompare(name = "出场时间")
     private Date outTime; 
     
     /**
@@ -169,6 +171,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "owner_id")
     @JsonIgnore
+    @NeedToCompare(name = "拥有者")
     private User owner;
     
     /**
@@ -178,18 +181,21 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @Column(name = "payment_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @NeedToCompare(name = "付款时间")
     private Date paymentTime; 
     
     /**
      * 付款银行代码
      */
     @Column(name = "bank_type", length = 48)
+    @NeedToCompare(name = "银行代码")
     private String bankType;
     
     /**
      * 微信支付订单号
      */
     @Column(name = "wx_transaction_id", length = 48)
+    @NeedToCompare(name = "微信支付订单号")
     private String wxTransactionId;
     
     /**
@@ -197,12 +203,14 @@ public class Order extends AbstractEntity implements java.io.Serializable
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_type")
+    @NeedToCompare(name = "支付方式")
     private PaymentType paymentType;
     
     /**
      * 金额
      */
     @Column(name = "amt", precision = 15 ,scale = 2)
+    @NeedToCompare(name = "金额")
     private BigDecimal amt;
 
     /**
@@ -210,6 +218,7 @@ public class Order extends AbstractEntity implements java.io.Serializable
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "invoice_id")
+    @NeedToCompare(name = "发票")
     private Invoice invoice;
     
     /**
@@ -226,6 +235,10 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @ApiModelProperty("订单变动备注")
     @Transient
     private String changeRemark;
+    
+    @ApiModelProperty("订单变动点")
+    @Transient
+    private String diff;
     
     @Override
     public int hashCode()

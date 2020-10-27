@@ -1,5 +1,6 @@
 package com.kl.parkLine.service;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -17,7 +18,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.component.WxCmpt;
 import com.kl.parkLine.dao.IOrderDao;
@@ -162,6 +165,17 @@ public class OrderService
     @Transactional
     public void save(Order order) throws BusinessException
     {
+        this.save(order, null);
+    }
+    
+    /**
+     * 保存一个订单
+     * @param 被保存的优惠券
+     * @throws BusinessException 
+     */
+    @Transactional
+    public void save(Order order, Event event) throws BusinessException
+    {
         String diff = Const.LOG_CREATE;
         if (null == order.getOrderId()) //新增数据
         {
@@ -178,7 +192,14 @@ public class OrderService
             }
             
             //记录不同点
-            diff = util.difference(orderDst.get(), order);
+            if (!StringUtils.isEmpty(order.getDiff()))
+            {
+                diff = order.getDiff();
+            }
+            else
+            {
+                diff = util.difference(orderDst.get(), order);
+            }
             
             BeanUtils.copyProperties(order, orderDst.get(), util.getNullPropertyNames(order));
             
@@ -190,6 +211,7 @@ public class OrderService
         log.setDiff(diff);
         log.setRemark(order.getChangeRemark());
         log.setOrder(order);
+        log.setEvent(event);
         order.getLogs().add(log);
         orderDao.save(order);
     }
@@ -197,13 +219,12 @@ public class OrderService
     /**
      * 处理出入场/停车完成事件
      * @param event 事件对象
+     * @throws SecurityException 
+     * @throws NoSuchFieldException 
      */
     @Transactional
-    public void processEvent(Event event) throws BusinessException
+    public void processEvent(Event event) throws BusinessException, NoSuchFieldException, SecurityException
     {
-        //保存event
-        eventService.save(event);
-        
         switch (event.getType())
         {
             case in:  //入场事件,创建订单
@@ -247,46 +268,76 @@ public class OrderService
         park.setAvailableCnt(park.getAvailableCnt()-1);
         
         //保存 订单
-        orderDao.save(order);
+        this.save(order, event);
     }
     
     /**
      * 停车完成事件处理
      * @param event 事件对象
+     * @throws BusinessException 
+     * @throws SecurityException 
+     * @throws NoSuchFieldException 
      */
-    private void carComplete(Event event)
+    private void carComplete(Event event) throws BusinessException, NoSuchFieldException, SecurityException
     {
         //根据事件Id找入场时生成的的订单
         Order order = orderDao.findOneByActId(event.getActId());
+        if (null == order)
+        {
+            return;
+        }
         
-        //状态：等待支付ORDER_STATUS_NEED_TO_PAY
-        order.setStatus(OrderStatus.needToPay);
-        
-        //记录出厂时间
+        StringBuilder difference = new StringBuilder();
+        //记录出场时间
+        Field field = order.getClass().getDeclaredField("outTime");
+        NeedToCompare antNeedToCompare = field.getAnnotation(NeedToCompare.class); 
+        difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", antNeedToCompare.name(),
+                util.formatValue(order.getOutTime(), field),
+                util.formatValue(event.getTimeOut(), field)));
         order.setOutTime(event.getTimeOut());
         
         //计算并且设置价格
+        BigDecimal oldAmt = order.getAmt();
         this.calAmt(order);
+        field = order.getClass().getDeclaredField("amt");
+        antNeedToCompare = field.getAnnotation(NeedToCompare.class); 
+        difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", antNeedToCompare.name(),
+                util.formatValue(oldAmt, field),
+                util.formatValue(order.getAmt(), field)));
         
-        //如果订单价格是0，则直接变成已经支付状态
+        //如果订单价格是0，则直接变成无需支付状态
+        OrderStatus oldStatus = order.getStatus();
+        field = order.getClass().getDeclaredField("status");
+        antNeedToCompare = field.getAnnotation(NeedToCompare.class); 
         if (order.getAmt().equals(BigDecimal.ZERO))
         {
             order.setStatus(OrderStatus.noNeedToPay);
         }
+        else
+        {
+            order.setStatus(OrderStatus.needToPay);
+        }
+        difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", antNeedToCompare.name(),
+                util.formatValue(oldStatus, field),
+                util.formatValue(order.getStatus(), field)));
+        
+        order.setDiff(String.format("<ol>%s</ol>", difference.toString()));
         
         //停车场空位+1
         Park park = order.getPark();
         park.setAvailableCnt(park.getAvailableCnt() + 1);
 
         //保存
-        orderDao.save(order);
+        this.save(order, event);
     }
     
     /**
      * 事件取消事件（人工清理时触发）
      * @param event
+     * @throws SecurityException 
+     * @throws NoSuchFieldException 
      */
-    private void eventCancel(Event event) throws BusinessException
+    private void eventCancel(Event event) throws BusinessException, NoSuchFieldException, SecurityException
     {
         //涉及到的订单
         Order order = orderDao.findOneByActId(event.getActId());
@@ -303,6 +354,7 @@ public class OrderService
             return;
         }
         
+        StringBuilder difference = new StringBuilder();
         //如果订单已经付款以及后续状态，返回失败
         if (OrderStatus.payed.getValue() <= order.getStatus().getValue())
         {
@@ -310,11 +362,22 @@ public class OrderService
                     order.getCode(), order.getStatus().getText()));
         }
 
+        BigDecimal oldAmt = order.getAmt();
+        Field fAmt = order.getClass().getDeclaredField("amt");
+        OrderStatus oldStatus = order.getStatus();
+        Field fStatus = order.getClass().getDeclaredField("status");
+        Date oldOutTime = order.getOutTime();
+        Field fOutTime = order.getClass().getDeclaredField("outTime");
+        
         // 取消的是入场事件，取消订单
         if (EventType.in.getValue() == event.getTargetType().getValue())
         {
             //金额为0
             order.setAmt(BigDecimal.ZERO);
+            difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", 
+                    fAmt.getAnnotation(NeedToCompare.class).name(),
+                    util.formatValue(oldAmt, fAmt),
+                    util.formatValue(order.getAmt(), fAmt)));
             
             //当前订单状态是入场，停车场空位数量+1
             
@@ -325,21 +388,43 @@ public class OrderService
             
             //取消订单
             order.setStatus(OrderStatus.canceled);
+            difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", 
+                    fStatus.getAnnotation(NeedToCompare.class).name(),
+                    util.formatValue(oldStatus, fStatus),
+                    util.formatValue(order.getStatus(), fStatus)));
         }
         // 取消的是出场或者停车完成事件
         else if(EventType.complete.getValue() == event.getTargetType().getValue())
         {
             //将订单改成入场状态
             order.setStatus(OrderStatus.in);
+            difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", 
+                    fStatus.getAnnotation(NeedToCompare.class).name(),
+                    util.formatValue(oldStatus, fStatus),
+                    util.formatValue(order.getStatus(), fStatus)));
+            
             //金额为0
             order.setAmt(BigDecimal.ZERO);
+            difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", 
+                    fAmt.getAnnotation(NeedToCompare.class).name(),
+                    util.formatValue(oldAmt, fAmt),
+                    util.formatValue(order.getAmt(), fAmt)));
+            
+            //出场时间为空
+            order.setOutTime(null);
+            difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", 
+                    fOutTime.getAnnotation(NeedToCompare.class).name(),
+                    util.formatValue(oldOutTime, fOutTime),
+                    util.formatValue(order.getOutTime(), fOutTime)));
             
             //停车场空位数量-1
             park.setAvailableCnt(park.getAvailableCnt() - 1);
         }
         
+        order.setDiff(String.format("<ol>%s</ol>", difference.toString()));
+        
         //保存订单
-        orderDao.save(order);
+        this.save(order, event);
         
         //禁用目标事件
         targetEvent.setEnabled("N");
@@ -414,9 +499,10 @@ public class OrderService
     /**
      * 将车辆涉及的无主订单设置拥有者
      * @param car 被绑定用户的车辆
+     * @throws BusinessException 
      */
     @Transactional
-    public void setOrderOwnerByCar(Car car) 
+    public void setOrderOwnerByCar(Car car) throws BusinessException 
     {
         //找到指定车牌号的无主订单
         Set<Order> orders = orderDao.findByCarAndOwnerIsNull(car);
@@ -425,10 +511,8 @@ public class OrderService
         for (Order order : orders)
         {
             order.setOwner(car.getUser());
+            this.save(order);
         }
-        
-        //保存订单
-        orderDao.saveAll(orders);
     }
     
     /**
@@ -484,7 +568,7 @@ public class OrderService
                 break;
         }
         
-        orderDao.save(order);
+        this.save(order);
     }
     
     /**
@@ -560,7 +644,7 @@ public class OrderService
                 .owner(owner).build();
         
         //保存订单
-        orderDao.save(order);
+        this.save(order);
         
         //开始付款
         return wxCmpt.unifiedOrder(order);
