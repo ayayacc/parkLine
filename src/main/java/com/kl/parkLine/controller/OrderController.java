@@ -23,9 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.github.wxpay.sdk.WXPayUtil;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.CreateMonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.json.WxPayNotifyParam;
+import com.kl.parkLine.json.WxunifiedOrderResult;
 import com.kl.parkLine.service.OrderService;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.OrderVo;
@@ -46,6 +48,24 @@ public class OrderController
     
     @Autowired
     private HttpServletRequest request;
+    
+    /**
+     * 购买月票
+     */
+    @PostMapping("/monthlyTkt/create")
+    @ApiOperation(value="购买月票", notes="新建一张月票；")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<WxunifiedOrderResult> createMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody CreateMonthlyTktParam monthlyTktParam, Authentication auth)
+    {
+        try
+        {
+            return RestResult.success(orderService.createMonthlyTkt(monthlyTktParam, auth.getName()));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
+    }
     
     /**
      * 终端用户分页查询订单
@@ -135,7 +155,7 @@ public class OrderController
         //TODO: 实现订单支付
         return null;
     }
-    
+
     /**
      * 微信付款通知
      */

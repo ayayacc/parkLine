@@ -121,11 +121,6 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @Column(name = "act_id", length = 48, unique = true)
     private String actId;
     
-    /*月票订单*/
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.ALL}) 
-    @JoinColumn(name = "monthly_tkt_id")
-    private MonthlyTkt monthlyTkt;
-    
     /**
      * 开始时间
      */

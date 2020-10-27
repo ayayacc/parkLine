@@ -15,26 +15,26 @@ import lombok.Setter;
 @ApiModel("购买月票参数")
 public class CreateMonthlyTktParam
 {
-    @ApiModelProperty("停车场Id")
+    @ApiModelProperty(required = true, name = "停车场Id")
     private Integer parkId;
     
-    @ApiModelProperty(name="车牌号码")
+    @ApiModelProperty(required = true, name = "车牌号码")
     private String carNo;
     
     /**
      * 有效期开始时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @ApiModelProperty(name="有效期开始时间")
+    @ApiModelProperty(required = true, name = "有效期开始时间")
     private Date startDate;
     
     /**
      * 有效期结束时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @ApiModelProperty(name="有效期结束时间")
+    @ApiModelProperty(required = true, name = "有效期结束时间")
     private Date endDate;
     
-    @ApiModelProperty("金额(元)")
+    @ApiModelProperty(required = true, name = "金额(元)")
     private BigDecimal amt;
 }

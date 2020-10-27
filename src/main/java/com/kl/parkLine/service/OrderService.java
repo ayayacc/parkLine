@@ -3,6 +3,8 @@ package com.kl.parkLine.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,7 +24,6 @@ import com.kl.parkLine.dao.IOrderDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.Event;
-import com.kl.parkLine.entity.MonthlyTkt;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.OrderLog;
 import com.kl.parkLine.entity.Park;
@@ -30,7 +31,6 @@ import com.kl.parkLine.entity.QOrder;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.enums.EventType;
-import com.kl.parkLine.enums.MonthlyStatus;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.exception.BusinessException;
@@ -44,6 +44,7 @@ import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+
 
 /**
  * @author chenc
@@ -79,9 +80,14 @@ public class OrderService
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
     
-    @Autowired
-    MonthlyTktService monthlyTktService;
-
+    private final List<OrderStatus> checkedStatus = new ArrayList<OrderStatus>();
+    
+    public OrderService()
+    {
+        //检查重复订单包含的状态: 存在等待付款和已经付款的月票订单时，不能再次创建重复的月票
+        checkedStatus.add(OrderStatus.needToPay);
+        checkedStatus.add(OrderStatus.payed);
+    }  
     /**
      * 分页查询
      * @param searchPred
@@ -462,9 +468,6 @@ public class OrderService
         
         switch (order.getType())
         {
-            case monthlyTicket: //月票订单：激活月票
-                order.getMonthlyTkt().setStatus(MonthlyStatus.payed);
-                break;
             case walletIn: //钱包充值订单:增加钱包余额
                 User owner = order.getOwner();
                 owner.setBalance(owner.getBalance().add(order.getAmt()));
@@ -489,15 +492,15 @@ public class OrderService
      * @param park
      * @return
      */
-    private void checkMonthlyTktParams(Park park, CreateMonthlyTktParam monthlyTktParam) throws BusinessException
+    private void checkMonthlyTktParams(Park park, Date startDate, Date endDate, BigDecimal amt) throws BusinessException
     {
         //检查开始结束日期是否在月头月尾
-        DateTime dateTimeStart = new DateTime(monthlyTktParam.getStartDate());
+        DateTime dateTimeStart = new DateTime(startDate);
         if (1 != dateTimeStart.getDayOfMonth()) //不是月初第一天
         {
             throw new BusinessException("开始日期应该为月初第一天");
         }
-        DateTime dateTimeEnd = new DateTime(monthlyTktParam.getEndDate());
+        DateTime dateTimeEnd = new DateTime(endDate);
         if (1 != dateTimeEnd.plusDays(1).getDayOfMonth()) //不是月末最后一天
         {
             throw new BusinessException("结束日期应该为月末最后一天");
@@ -511,11 +514,18 @@ public class OrderService
         
         //检查价格
         int month = (dateTimeEnd.getYear()-dateTimeStart.getYear())*12 + dateTimeEnd.getMonthOfYear()-dateTimeStart.getMonthOfYear() + 1;
-        if (monthlyTktParam.getAmt().equals(park.getMonthlyPrice().multiply(new BigDecimal(month))))
+        if (!amt.equals(park.getMonthlyPrice().multiply(new BigDecimal(month))))
         {
-            throw new BusinessException("月票价格不一致");
+            throw new BusinessException("传递的月票价格不正确,请刷新价格后重试");
         }
     }
+    
+    private Boolean existingValid(Car car, Park park, Date startDate, Date endDate)
+    {
+        return orderDao.existsByTypeAndCarCarNoAndParkParkIdAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual
+                (OrderType.monthlyTicket, car.getCarNo(), park.getParkId(), checkedStatus, endDate, startDate);
+    }
+    
     /**
      * 创建一个新的月票订单
      * @param monthlyTktParam
@@ -528,24 +538,17 @@ public class OrderService
         Park park = parkService.findOneById(monthlyTktParam.getParkId());
         
         //检查月票订单参数
-        this.checkMonthlyTktParams(park, monthlyTktParam);
+        this.checkMonthlyTktParams(park, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate(), monthlyTktParam.getAmt());
         
 
         Car car = carService.getCar(monthlyTktParam.getCarNo());
         //检查是否有重复的月票订单
-        if (monthlyTktService.existingValid(car, park, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate()))
+        if (this.existingValid(car, park, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate()))
         {
             throw new BusinessException("请勿重复购买月票");
         }
         
         String code = util.makeCode(OrderType.monthlyTicket);
-        
-        //创建月票
-        MonthlyTkt monthlyTkt = MonthlyTkt.builder()
-                .code(code).car(car).park(park)
-                .startDate(monthlyTktParam.getStartDate())
-                .endDate(monthlyTktParam.getEndDate())
-                .status(MonthlyStatus.needToPay).build();
         
         //创建订单
         Order order = Order.builder()
@@ -554,8 +557,7 @@ public class OrderService
                 .startDate(monthlyTktParam.getStartDate())
                 .endDate(monthlyTktParam.getEndDate())
                 .status(OrderStatus.needToPay)
-                .owner(owner)
-                .monthlyTkt(monthlyTkt).build();
+                .owner(owner).build();
         
         //保存订单
         orderDao.save(order);
