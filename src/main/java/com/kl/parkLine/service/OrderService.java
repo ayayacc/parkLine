@@ -3,6 +3,8 @@ package com.kl.parkLine.service;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -221,9 +223,10 @@ public class OrderService
      * @param event 事件对象
      * @throws SecurityException 
      * @throws NoSuchFieldException 
+     * @throws ParseException 
      */
     @Transactional
-    public void processEvent(Event event) throws BusinessException, NoSuchFieldException, SecurityException
+    public void processEvent(Event event) throws BusinessException, NoSuchFieldException, SecurityException, ParseException
     {
         switch (event.getType())
         {
@@ -277,8 +280,9 @@ public class OrderService
      * @throws BusinessException 
      * @throws SecurityException 
      * @throws NoSuchFieldException 
+     * @throws ParseException 
      */
-    private void carComplete(Event event) throws BusinessException, NoSuchFieldException, SecurityException
+    private void carComplete(Event event) throws BusinessException, NoSuchFieldException, SecurityException, ParseException
     {
         //根据事件Id找入场时生成的的订单
         Order order = orderDao.findOneByActId(event.getActId());
@@ -437,14 +441,25 @@ public class OrderService
      * @param park
      * @param order
      * @return
+     * @throws ParseException 
      */
     @Transactional(readOnly = true)
-    public void calAmt(Order order)
+    public void calAmt(Order order) throws ParseException
     {
         Park park = order.getPark();
         BigDecimal amt = BigDecimal.ZERO;
-        //TODO:检查是否月票订单
-        
+        //按照出场时间检查是否有月票
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date outDate = sdf.parse(sdf.format(order.getOutTime())); // 去掉时分秒，只保留日期
+        Order monthlyTkt = orderDao.findByTypeAndCarCarNoAndParkParkIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                OrderType.monthlyTicket, order.getCar().getCarNo(), 
+                order.getPark().getParkId(), OrderStatus.payed, outDate, outDate);
+        if (null != monthlyTkt)
+        {
+            order.setUsedMonthlyTkt(monthlyTkt);
+            order.setAmt(BigDecimal.ZERO);
+            return;
+        }
         //根据停车场规则计算金额
         //计算时间差
         DateTime inTime = new DateTime(order.getInTime());
@@ -469,6 +484,7 @@ public class OrderService
                 }
             }
         }
+        
         //最多不超过x元
         order.setAmt(amt.min(park.getMaxAmt()));
     }
@@ -482,7 +498,7 @@ public class OrderService
     public Page<OrderVo> needToPay(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
-        return orderDao.findByStatusAndOwnerAndAmtGreaterThan(OrderStatus.needToPay, user, BigDecimal.ZERO, pageable);
+        return orderDao.findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus.needToPay, user, BigDecimal.ZERO, pageable);
     }
     
     /**
@@ -494,7 +510,7 @@ public class OrderService
     public Page<OrderVo> invoiceable(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
-        return orderDao.findByStatusAndOwnerAndAmtGreaterThan(OrderStatus.payed, user, BigDecimal.ZERO, pageable);
+        return orderDao.findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus.payed, user, BigDecimal.ZERO, pageable);
     }
     
     /**

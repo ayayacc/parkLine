@@ -35,7 +35,7 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
-public class EventPic extends AbstractEntity implements java.io.Serializable
+public class EventPic implements java.io.Serializable
 {
     @Id
     @Column(name = "event_pic_id")

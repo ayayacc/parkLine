@@ -108,6 +108,13 @@ public class Order extends AbstractEntity implements java.io.Serializable
     private Date inTime; 
     
     /**
+     * 车辆
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "monthly_tkt_id")
+    private Order usedMonthlyTkt;
+    
+    /**
      * 离开时间
      */
     @Temporal(TemporalType.TIMESTAMP)

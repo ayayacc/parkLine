@@ -21,6 +21,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -29,6 +30,7 @@ import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.ParkAbnormal;
 import com.kl.parkLine.enums.PlateColor;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -49,7 +51,7 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
-public class Event extends AbstractEntity implements java.io.Serializable
+public class Event implements java.io.Serializable
 {
     @Id
     @Column(name = "event_id")
@@ -184,4 +186,12 @@ public class Event extends AbstractEntity implements java.io.Serializable
      */
     @Column(name = "remark", length = 128)
     private String remark;
+    
+    @Temporal(TemporalType.TIMESTAMP)            
+    @Column(name="created_date", nullable=false)
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss" )
+    @CreatedDate
+    @ApiModelProperty(hidden = true)
+    private Date createdDate;
 }

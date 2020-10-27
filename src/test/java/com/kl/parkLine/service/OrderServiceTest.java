@@ -23,7 +23,7 @@ public class OrderServiceTest
      
     @Test
     @Transactional
-    public void testCalAmt()
+    public void testCalAmt() throws ParseException
     {
         Order order = orderService.findOneByOrderId(1);
         order.getPark();

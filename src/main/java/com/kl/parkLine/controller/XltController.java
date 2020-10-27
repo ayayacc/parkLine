@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.component.EventAdapter;
 import com.kl.parkLine.entity.Event;
-import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.service.EventService;
 import com.kl.parkLine.service.OrderService;
 import com.kl.parkLine.util.Const;
@@ -45,19 +44,18 @@ public class XltController
         Event event = eventAdatper.xlt2Event(xltEvt);
         try
         {
+            //保存事件
+            eventService.save(event);
+            
             //处理事件（创建订单或者更改订单状态）
             orderService.processEvent(event);
         }
-        catch (BusinessException e)
+        catch (Exception e)
         {
+           //eventService.save(event);
             result.setErrorcode(Const.CLT_RET_CODE_FAILED);
             result.setMessage(e.getMessage());
         }
-        finally
-        {
-            eventService.save(event);
-        }
-        
         return result;
     }
 }
