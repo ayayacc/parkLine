@@ -55,6 +55,12 @@ public class UserService
         userDao.save(user);
     }
     
+    @Transactional
+    public void edit(User user, String userName)
+    {
+        this.save(user);
+    }
+    
     /**
      * 创建新的用户
      * @param mobile 手机号码

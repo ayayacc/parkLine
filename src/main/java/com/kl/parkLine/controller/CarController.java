@@ -17,7 +17,6 @@ import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.BindCarParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.CarService;
-import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.CarVo;
 import com.kl.parkLine.vo.ParkPlaceVo;
 
@@ -81,14 +80,19 @@ public class CarController
     @PostMapping("/unbind")
     @ApiOperation(value="将车牌从绑定用户解绑", notes="若车牌号不存在，接口会自动创建车辆但是并不绑定到用户，返回成功；如果车辆当前并未绑定用户，接口直接返回成功")
     @ApiImplicitParam(name="Authorization", value="登录令牌",required=true, paramType="header")
-    public RestResult<Car> unbind(@ApiParam(name="车牌号码") BindCarParam bindCarParam, 
+    public RestResult<Car> unbind(@ApiParam(name="车牌号码") @RequestBody(required=true) BindCarParam bindCarParam, 
             Authentication auth)
     {
-        RestResult<Car> restResult = new RestResult<Car>();
-        //将车辆解绑
-        carService.unbind(bindCarParam.getCarNo());
-        restResult.setRetCode(Const.RET_OK);
-        return restResult;
+        try
+        {
+            //将车辆解绑
+            carService.unbind(bindCarParam.getCarNo());
+            return RestResult.success();
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
     }
     
     /**

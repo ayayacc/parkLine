@@ -24,30 +24,30 @@ import lombok.Setter;
 
 @SuppressWarnings("serial")
 @Entity
-@Table(name = "TT_COUPON_LOG")
+@Table(name = "TT_CAR_LOG")
 @Getter
 @Setter
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
-public class CouponLog extends AbstractLog implements Serializable
+public class CarLog extends AbstractLog implements Serializable
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "coupon_log_id")
+    @Column(name = "car_log_id")
     @JsonIgnore
-    private Integer couponLogId;
+    private Integer carLogId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
-    @JoinColumn(name = "coupon_id")
+    @JoinColumn(name = "car_id")
     @JsonIgnore
-    private Coupon coupon;
-
+    private Car car;
+    
     @Override
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("CouponLog [couponLogId=").append(couponLogId)
+        builder.append("CarLog [carLogId=").append(carLogId)
                 .append("]");
         return builder.toString();
     }
@@ -58,7 +58,7 @@ public class CouponLog extends AbstractLog implements Serializable
         final int prime = 31;
         int result = 1;
         result = prime * result
-                + ((couponLogId == null) ? 0 : couponLogId.hashCode());
+                + ((carLogId == null) ? 0 : carLogId.hashCode());
         return result;
     }
 
@@ -77,15 +77,15 @@ public class CouponLog extends AbstractLog implements Serializable
         {
             return false;
         }
-        CouponLog other = (CouponLog) obj;
-        if (couponLogId == null)
+        CarLog other = (CarLog) obj;
+        if (carLogId == null)
         {
-            if (other.couponLogId != null)
+            if (other.carLogId != null)
             {
                 return false;
             }
         }
-        else if (!couponLogId.equals(other.couponLogId))
+        else if (!carLogId.equals(other.carLogId))
         {
             return false;
         }

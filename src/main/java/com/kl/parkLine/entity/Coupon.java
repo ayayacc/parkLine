@@ -1,9 +1,7 @@
 package com.kl.parkLine.entity;
 
 import java.util.Date;
-import java.util.List;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -15,8 +13,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -32,7 +28,10 @@ import com.kl.parkLine.enums.CouponStatus;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -51,9 +50,12 @@ import lombok.Setter;
 @Table(name = "TT_COUPON")
 @DynamicUpdate
 @DynamicInsert
-@EntityListeners({AuditingEntityListener.class})
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @ApiModel("优惠券实例")
-public class Coupon extends AbstractEntity implements java.io.Serializable
+@EntityListeners({AuditingEntityListener.class})
+public class Coupon extends AbstractDateEntity implements java.io.Serializable
 {
     @Id
     @Column(name = "coupon_id")
@@ -106,6 +108,16 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     private Date endDate;
     
     /**
+     * 使用时间
+     */
+    @Temporal(TemporalType.TIMESTAMP)            
+    @Column(name = "used_date")
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @ApiModelProperty("使用时间")
+    private Date usedDate;
+    
+    /**
      * 拥有者
      */
     @JsonIgnore
@@ -113,15 +125,6 @@ public class Coupon extends AbstractEntity implements java.io.Serializable
     @JoinColumn(name = "owner", nullable = false)
     @ApiModelProperty("拥有者")
     private User owner;
-
-    /**
-     * 操作记录
-     */
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "coupon", cascade = {CascadeType.ALL})  
-    @OrderBy(value = "createdDate desc")
-    @JsonIgnore
-    @ApiModelProperty(hidden = true)
-    private List<CouponLog> logs;
 
     @Override
     public String toString()

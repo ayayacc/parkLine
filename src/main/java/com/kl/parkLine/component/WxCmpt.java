@@ -75,6 +75,7 @@ public class WxCmpt
         //out_trade_no
         reqData.put("out_trade_no", order.getCode());
         //total_fee, 将单位从元转换成分
+        //TODO: 改成使用优惠券后的实际金额
         reqData.put("total_fee", order.getAmt().multiply(new BigDecimal(100)).toString());
         //spbill_create_ip
         InetAddress address = InetAddress.getLocalHost();

@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.github.wxpay.sdk.WXPayUtil;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.ActiveCouponParam;
+import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.CreateMonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.RestResult;
@@ -55,11 +57,48 @@ public class OrderController
     @PostMapping("/monthlyTkt/create")
     @ApiOperation(value="购买月票", notes="新建一张月票；")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<WxunifiedOrderResult> createMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody CreateMonthlyTktParam monthlyTktParam, Authentication auth)
+    public RestResult<WxunifiedOrderResult> createMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody CreateMonthlyTktParam monthlyTktParam, 
+            Authentication auth)
     {
         try
         {
             return RestResult.success(orderService.createMonthlyTkt(monthlyTktParam, auth.getName()));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
+    }
+    
+    /**
+     * 购买月票
+     */
+    @PostMapping("/wallet/charge")
+    @ApiOperation(value="钱包充值", notes="钱包充值")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<WxunifiedOrderResult> chargeWallet(@ApiParam(name="充值参数", required=true) @RequestBody ChargeWalletParam walletChargeParam, Authentication auth)
+    {
+        try
+        {
+            return RestResult.success(orderService.createWalletChargeOrder(walletChargeParam, auth.getName()));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
+    }
+    
+    /**
+     * 激活优惠券
+     */
+    @PostMapping("/coupon/active")
+    @ApiOperation(value="激活优惠券", notes="将优惠券的有效期延期一周")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Object> activeCoupon(@ApiParam(name="优惠券参数", required=true) @RequestBody ActiveCouponParam activeCouponParam, Authentication auth)
+    {
+        try
+        {
+            return RestResult.success(orderService.createActiveCouponOrder(activeCouponParam, auth.getName()));
         }
         catch (Exception e)
         {

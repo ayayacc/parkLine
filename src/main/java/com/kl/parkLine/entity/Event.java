@@ -51,7 +51,7 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
-public class Event implements java.io.Serializable
+public class Event extends AbstractDateEntity implements java.io.Serializable
 {
     @Id
     @Column(name = "event_id")

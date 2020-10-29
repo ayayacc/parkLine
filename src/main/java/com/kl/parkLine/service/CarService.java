@@ -1,19 +1,27 @@
 package com.kl.parkLine.service;
 
+import java.util.ArrayList;
+import java.util.Optional;
+
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.ICarDao;
 import com.kl.parkLine.entity.Car;
+import com.kl.parkLine.entity.CarLog;
 import com.kl.parkLine.entity.QCar;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.RoleType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.CarPredicates;
+import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.CarVo;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Predicate;
@@ -40,21 +48,69 @@ public class CarService
     private CarPredicates carPredicates;
     
     @Autowired
+    private Utils util;
+    
+    @Autowired
     private JPAQueryFactory jpaQueryFactory;
+    
+    /**
+     * 保存一个订单
+     * @param 被保存的优惠券
+     * @throws BusinessException 
+     */
+    @Transactional
+    public void save(Car car) throws BusinessException
+    {
+        String diff = Const.LOG_CREATE;
+        if (null == car.getCarId()) //新增数据
+        {
+            car.setLogs(new ArrayList<CarLog>());
+        }
+        else//编辑已有数据
+        {
+            //编辑订单，//合并字段
+            Optional<Car> carDst = carDao.findById(car.getCarId());
+            
+            if (false == carDst.isPresent())
+            {
+                throw new BusinessException(String.format("无效的订单 Id: %d", car.getCarId()));
+            }
+            
+            //记录不同点
+            diff = util.difference(carDst.get(), car);
+            
+            BeanUtils.copyProperties(car, carDst.get(), util.getNullPropertyNames(car));
+            
+            car = carDst.get();
+        }
+        
+        //保存数据
+        CarLog log = new CarLog();
+        log.setDiff(diff);
+        log.setRemark(car.getChangeRemark());
+        if (!StringUtils.isEmpty(diff)  //至少有一项内容时才添加日志
+            || !StringUtils.isEmpty(car.getChangeRemark()))
+        {
+            log.setCar(car);
+            car.getLogs().add(log);
+        }
+        carDao.save(car);
+    }
     
     /**
      * 总是返回一个Car的数据库对象，如果数据库中没有，则新增车辆
      * @param carNo 车牌号码
+     * @throws BusinessException 
      */
     @Transactional(readOnly = true)
-    public Car getCar(String carNo)
+    public Car getCar(String carNo) throws BusinessException
     {
         Car car = carDao.findOneByCarNo(carNo);
         if (null == car)
         {
             car = new Car();
             car.setCarNo(carNo);
-            carDao.save(car);
+            this.save(car);
         }
         return car;
     }
@@ -90,7 +146,8 @@ public class CarService
             }
         }
         car.setUser(user);
-        carDao.save(car);
+        car.setChangeRemark(String.format("绑定到用户: %s", user.getName()));
+        this.save(car);
         
         //将涉及到此车辆的无主订单绑定到该用户
         orderService.setOrderOwnerByCar(car);
@@ -104,7 +161,7 @@ public class CarService
      * @throws BusinessException 
      */
     @Transactional
-    public void unbind(String carNo)
+    public void unbind(String carNo) throws BusinessException
     {
         //检查车辆是否已经存在
         Car car = carDao.findOneByCarNo(carNo);
@@ -117,8 +174,13 @@ public class CarService
         {
             return;
         }
-        car.setUser(null);
-        carDao.save(car);
+        else
+        {
+            car.setChangeRemark(String.format("从用户解绑: %s", car.getUser().getName()));
+            car.setUser(null);
+        }
+        
+        this.save(car);
         return;
     }
     

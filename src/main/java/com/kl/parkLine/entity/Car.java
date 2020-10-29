@@ -1,5 +1,8 @@
 package com.kl.parkLine.entity;
 
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -9,7 +12,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -17,6 +23,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -37,7 +44,7 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
-public class Car extends AbstractEntity implements java.io.Serializable
+public class Car extends AbstractDateEntity implements java.io.Serializable
 {
     @Id
     @Column(name = "car_id")
@@ -55,6 +62,22 @@ public class Car extends AbstractEntity implements java.io.Serializable
     @JsonIgnore
     private User user;
 
+    /**
+     * 变动备注
+     */
+    @ApiModelProperty("变动备注")
+    @Transient
+    private String changeRemark;
+    
+    /**
+     * 操作记录
+     */
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "car", cascade = {CascadeType.ALL})  
+    @OrderBy(value = "createdDate desc")
+    @JsonIgnore
+    @ApiModelProperty(hidden = true)
+    private List<CarLog> logs;
+    
     @Override
     public String toString()
     {

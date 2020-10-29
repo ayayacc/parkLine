@@ -27,4 +27,7 @@ public class Const
     
     //优惠券激活默认有效期(天)
     public final static Integer COUPON_ACTIVE_DAYS = 7;
+    
+    public final static String SYS_USER = "SYSTEM";
+    
 }

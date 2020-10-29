@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.exception.BusinessException;
-import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.UserService;
 import com.kl.parkLine.vo.UserVo;
@@ -92,28 +91,17 @@ public class UserController
     @PostMapping("/save")
     @ApiOperation(value="新增/编辑用户", notes="普通用户只能编辑自己的信息，管理员可以编辑所有用户，name，Id等系统生成的字段不能修改")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<UserVo> save(@ApiParam(name="用户信息") @RequestBody User user)
+    public RestResult<UserVo> edit(@ApiParam(name="用户信息") @RequestBody User user,
+            Authentication auth)
     {
         try
         {
-            userService.save(user);
+            userService.edit(user, auth.getName());
             return RestResult.success();
         }
         catch (Exception e)
         {
             return RestResult.failed(e.getMessage());
         }
-    }
-    
-    /**
-     * 钱包充值
-     */
-    @PostMapping("/wallet/charge")
-    @ApiOperation(value="钱包充值", notes="用户进行钱包充值操作")
-    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Object> chargeWallet(@ApiParam(name="充值参数", required=true) @RequestBody ChargeWalletParam walletChargeParam)
-    {
-        //TODO: 钱包充值
-        return null;
     }
 }

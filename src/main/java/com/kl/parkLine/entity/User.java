@@ -35,7 +35,9 @@ import com.kl.parkLine.enums.RoleType;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
@@ -45,9 +47,11 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @Table(name = "TT_USER")
-@EntityListeners({AuditingEntityListener.class})
 @ApiModel("用户")
-public class User extends AbstractEntity implements UserDetails
+@NoArgsConstructor
+@AllArgsConstructor
+@EntityListeners({AuditingEntityListener.class})
+public class User extends AbstractDateEntity implements UserDetails
 {
     @Id
     @Column(name = "user_id")
@@ -124,7 +128,6 @@ public class User extends AbstractEntity implements UserDetails
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "tr_user_role", joinColumns = { @JoinColumn(name="user_id") }, inverseJoinColumns={ @JoinColumn(name="role_id") })  
     private Set<Role> roles;
-    
     public boolean hasRoleType(RoleType type)
     {
         for (Role role : roles)
@@ -247,7 +250,7 @@ public class User extends AbstractEntity implements UserDetails
         {
             return false;
         }
-        if (getClass() != obj.getClass())
+        if (!(obj instanceof User))
         {
             return false;
         }

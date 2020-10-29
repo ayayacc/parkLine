@@ -12,13 +12,14 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.kl.parkLine.dao.IParkDao;
 import com.kl.parkLine.dao.IRoleDao;
-import com.kl.parkLine.dao.IUserDao;
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.RoleType;
+import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.service.ParkService;
+import com.kl.parkLine.service.UserService;
 import com.kl.parkLine.util.RoleCode;
 
 @SpringBootTest
@@ -28,13 +29,13 @@ public class InitSystemTest
     protected MockAuditorAwareTest mockAuditorAware; 
     
     @Autowired
-    private IParkDao parkDao;
+    private ParkService parkService;
     
     @Autowired
     private IRoleDao roleDao;
     
     @Autowired
-    private IUserDao userDao;
+    private UserService userService;
     
     @BeforeEach
     public void wireUpAuditor()
@@ -55,8 +56,9 @@ public class InitSystemTest
     
     /**
      * 初始化停车场
+     * @throws BusinessException 
      */
-    private void initPark()
+    private void initPark() throws BusinessException
     {
         String[][] parksStr = {
             {"parkCode01", "parkName01", "100", "108.2815 22.9033", "parkContact01"},
@@ -66,7 +68,7 @@ public class InitSystemTest
         for (String[] parkStr : parksStr)
         {
             String code = parkStr[0];
-            Park park = parkDao.findOneByCode(code);
+            Park park = parkService.findOneByCode(code);
             if (null == park)
             {
                 park = new Park();
@@ -87,7 +89,7 @@ public class InitSystemTest
             park.setTimeLev2(30); 
             park.setPriceLev2(new BigDecimal(3));
             park.setMonthlyPrice(new BigDecimal(300)); //月票300元
-            parkDao.save(park);
+            parkService.edit(park, "admin");
         }
     }
     
@@ -135,7 +137,7 @@ public class InitSystemTest
         for (String[] userStr : usersStr)
         {
             String name = userStr[0];
-            User user = userDao.findOneByName(name);
+            User user = userService.findByName(name);
             if (null == user)
             {
                 user = new User();
@@ -148,7 +150,7 @@ public class InitSystemTest
             String parkCode = userStr[2];
             if (!StringUtils.isEmpty(parkCode))
             {
-                Park park = parkDao.findOneByCode(parkCode);
+                Park park = parkService.findOneByCode(parkCode);
                 Set<Park> parks = new HashSet<>();
                 parks.add(park);
                 user.setParks(parks);
@@ -164,7 +166,7 @@ public class InitSystemTest
                 user.setRoles(roles);
             }
             
-            userDao.save(user);
+            userService.edit(user, "admin");
         }
     }
 }

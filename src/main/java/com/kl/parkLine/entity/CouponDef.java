@@ -49,9 +49,9 @@ import lombok.Setter;
 @Table(name = "TT_COUPON_DEF")
 @DynamicUpdate
 @DynamicInsert
-@EntityListeners({AuditingEntityListener.class})
 @ApiModel("优惠券定义")
-public class CouponDef extends AbstractEntity implements java.io.Serializable
+@EntityListeners({AuditingEntityListener.class})
+public class CouponDef extends AbstractDateEntity implements java.io.Serializable
 {
     @Id
     @Column(name = "coupon_def_id")

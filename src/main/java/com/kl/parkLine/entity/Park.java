@@ -44,7 +44,7 @@ import lombok.Setter;
 @DynamicInsert
 @Table(name = "TC_PARK")
 @EntityListeners({AuditingEntityListener.class})
-public class Park extends AbstractEntity implements java.io.Serializable
+public class Park extends AbstractDateEntity implements java.io.Serializable
 {
     @Id
     @Column(name = "park_id")

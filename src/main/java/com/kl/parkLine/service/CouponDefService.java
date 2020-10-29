@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.ICouponDefDao;
@@ -83,9 +84,24 @@ public class CouponDefService
         CouponDefLog log = new CouponDefLog();
         log.setDiff(diff);
         log.setRemark(couponDef.getChangeRemark());
-        log.setCouponDef(couponDef);
-        couponDef.getLogs().add(log);
+        if (!StringUtils.isEmpty(diff)  //至少有一项内容时才添加日志
+            || !StringUtils.isEmpty(couponDef.getChangeRemark()))
+        {
+            log.setCouponDef(couponDef);
+            couponDef.getLogs().add(log);
+        }
         couponDefDao.save(couponDef);
+    }
+    
+    /**
+     * 保存一个优惠券定义
+     * @param 被保存的优惠券
+     * @throws BusinessException 
+     */
+    @Transactional
+    public void edit(CouponDef couponDef, String userName) throws BusinessException
+    {
+        this.save(couponDef);
     }
     
     /**

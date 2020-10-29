@@ -20,7 +20,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @SuppressWarnings("serial")
@@ -30,6 +33,9 @@ import lombok.Setter;
 @Setter
 @DynamicUpdate
 @DynamicInsert
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners({AuditingEntityListener.class})
 public class OrderLog extends AbstractLog implements Serializable
 {

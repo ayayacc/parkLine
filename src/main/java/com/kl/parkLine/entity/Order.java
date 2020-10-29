@@ -62,7 +62,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners({AuditingEntityListener.class})
-public class Order extends AbstractEntity implements java.io.Serializable
+public class Order extends AbstractDateEntity implements java.io.Serializable, Cloneable
 {
     @Id
     @Column(name = "order_id")
@@ -178,7 +178,6 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "owner_id")
     @JsonIgnore
-    @NeedToCompare(name = "拥有者")
     private User owner;
     
     /**
@@ -214,11 +213,18 @@ public class Order extends AbstractEntity implements java.io.Serializable
     private PaymentType paymentType;
     
     /**
-     * 金额
+     * 金额（使用优惠券前）
      */
     @Column(name = "amt", precision = 15 ,scale = 2)
-    @NeedToCompare(name = "金额")
+    @NeedToCompare(name = "金额（使用优惠券前）")
     private BigDecimal amt;
+    
+    /**
+     * 实际金额（使用优惠券后）
+     */
+    @Column(name = "real_amt", precision = 15 ,scale = 2)
+    @NeedToCompare(name = "金额（使用优惠券前）")
+    private BigDecimal realAmt;
 
     /**
      * 开票ID
@@ -242,10 +248,6 @@ public class Order extends AbstractEntity implements java.io.Serializable
     @ApiModelProperty("订单变动备注")
     @Transient
     private String changeRemark;
-    
-    @ApiModelProperty("订单变动点")
-    @Transient
-    private String diff;
     
     @Override
     public int hashCode()

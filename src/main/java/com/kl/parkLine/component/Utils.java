@@ -1,6 +1,7 @@
 package com.kl.parkLine.component;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -142,7 +143,14 @@ public class Utils
         {
             CompareValue antCompareValue = (CompareValue)field.getType().getAnnotation(CompareValue.class); 
             final BeanWrapper bwValue = new BeanWrapperImpl(value);
-            value = (String) bwValue.getPropertyValue(antCompareValue.field());
+            if (BigDecimal.class.equals(bwValue.getPropertyType(antCompareValue.field())))
+            {
+                value = ((BigDecimal) bwValue.getPropertyValue(antCompareValue.field())).toString();
+            }
+            else
+            {
+                value = (String) bwValue.getPropertyValue(antCompareValue.field());
+            }
         }
         //日期格式化
         else if (field.isAnnotationPresent(DateTimeFormat.class))

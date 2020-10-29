@@ -1,6 +1,5 @@
 package com.kl.parkLine.service;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
@@ -22,12 +21,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.component.WxCmpt;
 import com.kl.parkLine.dao.IOrderDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Coupon;
+import com.kl.parkLine.entity.CouponDef;
 import com.kl.parkLine.entity.Event;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.OrderLog;
@@ -39,6 +38,8 @@ import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.ActiveCouponParam;
+import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.CreateMonthlyTktParam;
 import com.kl.parkLine.json.WxPayNotifyParam;
 import com.kl.parkLine.json.WxunifiedOrderResult;
@@ -83,8 +84,15 @@ public class OrderService
     private WxCmpt wxCmpt;
     
     @Autowired
+    private CouponDefService couponDefService;
+    
+    @Autowired
+    private CouponService couponService;
+    
+    @Autowired
     private JPAQueryFactory jpaQueryFactory;
     
+    private final Float ACTIVE_COUPON_FACTOR = 0.8f; //激活优惠券金额与券面金额系数
     private final List<OrderStatus> checkedStatus = new ArrayList<OrderStatus>();
     
     public OrderService()
@@ -171,6 +179,17 @@ public class OrderService
     }
     
     /**
+     * 编辑一个订单
+     * @param 被保存的优惠券
+     * @throws BusinessException 
+     */
+    @Transactional
+    public void edit(Order order, String userName) throws BusinessException
+    {
+        this.save(order, null);
+    }
+    
+    /**
      * 保存一个订单
      * @param 被保存的优惠券
      * @throws BusinessException 
@@ -194,14 +213,7 @@ public class OrderService
             }
             
             //记录不同点
-            if (!StringUtils.isEmpty(order.getDiff()))
-            {
-                diff = order.getDiff();
-            }
-            else
-            {
-                diff = util.difference(orderDst.get(), order);
-            }
+            diff = util.difference(orderDst.get(), order);
             
             BeanUtils.copyProperties(order, orderDst.get(), util.getNullPropertyNames(order));
             
@@ -212,9 +224,14 @@ public class OrderService
         OrderLog log = new OrderLog();
         log.setDiff(diff);
         log.setRemark(order.getChangeRemark());
-        log.setOrder(order);
         log.setEvent(event);
-        order.getLogs().add(log);
+        if (!StringUtils.isEmpty(diff)  //至少有一项内容时才添加日志
+            || !StringUtils.isEmpty(order.getChangeRemark())
+            || null != event)
+        {
+            log.setOrder(order);
+            order.getLogs().add(log);
+        }
         orderDao.save(order);
     }
     
@@ -258,17 +275,23 @@ public class OrderService
         Park park = parkService.findOneByCode(event.getParkCode());
         
         //车辆信息
+        Car car = carService.getCar(event.getPlateNo());
         Order order = Order.builder()
                 .code(util.makeCode(OrderType.parking))
-                .car(carService.getCar(event.getPlateNo()))
+                .car(car)
                 .type(OrderType.parking)
+                .owner(car.getUser())
                 .status(OrderStatus.in)
                 .park(park)
                 .actId(event.getActId())
                 .inTime(event.getTimeIn())
                 .build();
         //停车场空位-1
-        park.setAvailableCnt(park.getAvailableCnt()-1);
+        Integer newAvailableCnt = park.getAvailableCnt() - 1;
+        park.setChangeRemark(String.format("车辆入场, 停车场可用车位变化: %d --> %d, 事件: %s", 
+                park.getAvailableCnt(), newAvailableCnt, event.getGuid()));
+        park.setAvailableCnt(newAvailableCnt);
+        parkService.save(park);
         
         //保存 订单
         this.save(order, event);
@@ -290,28 +313,11 @@ public class OrderService
         {
             return;
         }
-        StringBuilder difference = new StringBuilder();
-        //记录出场时间
-        Field field = order.getClass().getDeclaredField("outTime");
-        NeedToCompare antNeedToCompare = field.getAnnotation(NeedToCompare.class); 
-        difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", antNeedToCompare.name(),
-                util.formatValue(order.getOutTime(), field),
-                util.formatValue(event.getTimeOut(), field)));
-        order.setOutTime(event.getTimeOut());
-        
         //计算并且设置价格
-        BigDecimal oldAmt = order.getAmt();
+        order.setOutTime(event.getTimeOut());
         this.calAmt(order);
-        field = order.getClass().getDeclaredField("amt");
-        antNeedToCompare = field.getAnnotation(NeedToCompare.class); 
-        difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", antNeedToCompare.name(),
-                util.formatValue(oldAmt, field),
-                util.formatValue(order.getAmt(), field)));
         
         //如果订单价格是0，则直接变成无需支付状态
-        OrderStatus oldStatus = order.getStatus();
-        field = order.getClass().getDeclaredField("status");
-        antNeedToCompare = field.getAnnotation(NeedToCompare.class); 
         if (order.getAmt().equals(BigDecimal.ZERO))
         {
             order.setStatus(OrderStatus.noNeedToPay);
@@ -320,15 +326,14 @@ public class OrderService
         {
             order.setStatus(OrderStatus.needToPay);
         }
-        difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", antNeedToCompare.name(),
-                util.formatValue(oldStatus, field),
-                util.formatValue(order.getStatus(), field)));
-        
-        order.setDiff(String.format("<ol>%s</ol>", difference.toString()));
         
         //停车场空位+1
         Park park = order.getPark();
-        park.setAvailableCnt(park.getAvailableCnt() + 1);
+        Integer newAvailableCnt = park.getAvailableCnt() + 1;
+        park.setChangeRemark(String.format("停车完成, 停车场可用车位变化: %d --> %d, 事件: %s", 
+                park.getAvailableCnt(), newAvailableCnt, event.getGuid()));
+        park.setAvailableCnt(newAvailableCnt);
+        parkService.save(park);
 
         //保存
         this.save(order, event);
@@ -357,7 +362,6 @@ public class OrderService
             return;
         }
         
-        StringBuilder difference = new StringBuilder();
         //如果订单已经付款以及后续状态，返回失败
         if (OrderStatus.payed.getValue() <= order.getStatus().getValue())
         {
@@ -366,67 +370,49 @@ public class OrderService
             event.setRemark(msg);
             throw new BusinessException(msg);
         }
-
-        BigDecimal oldAmt = order.getAmt();
-        Field fAmt = order.getClass().getDeclaredField("amt");
-        OrderStatus oldStatus = order.getStatus();
-        Field fStatus = order.getClass().getDeclaredField("status");
-        Date oldOutTime = order.getOutTime();
-        Field fOutTime = order.getClass().getDeclaredField("outTime");
         
         // 取消的是入场事件，取消订单
         if (EventType.in.getValue() == event.getTargetType().getValue())
         {
             //金额为0
             order.setAmt(BigDecimal.ZERO);
-            difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", 
-                    fAmt.getAnnotation(NeedToCompare.class).name(),
-                    util.formatValue(oldAmt, fAmt),
-                    util.formatValue(order.getAmt(), fAmt)));
             
             //当前订单状态是入场，停车场空位数量+1
             
             if (OrderStatus.in.getValue() == order.getStatus().getValue())
             {
-                park.setAvailableCnt(park.getAvailableCnt() + 1);
+                Integer newAvailableCnt = park.getAvailableCnt() + 1;
+                park.setChangeRemark(String.format("取消车辆入场, 停车场可用车位变化: %d --> %d, 事件: %s, 被取消事件: %s", 
+                        park.getAvailableCnt(), newAvailableCnt, 
+                        event.getGuid(), targetEvent.getGuid()));
+                park.setAvailableCnt(newAvailableCnt);
+                parkService.save(park);
             }
             
             //取消订单
             order.setStatus(OrderStatus.canceled);
-            difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", 
-                    fStatus.getAnnotation(NeedToCompare.class).name(),
-                    util.formatValue(oldStatus, fStatus),
-                    util.formatValue(order.getStatus(), fStatus)));
         }
-        // 取消的是出场或者停车完成事件
+        // 取消的是停车完成事件
         else if(EventType.complete.getValue() == event.getTargetType().getValue())
         {
             //将订单改成入场状态
             order.setStatus(OrderStatus.in);
-            difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", 
-                    fStatus.getAnnotation(NeedToCompare.class).name(),
-                    util.formatValue(oldStatus, fStatus),
-                    util.formatValue(order.getStatus(), fStatus)));
             
             //金额为0
             order.setAmt(BigDecimal.ZERO);
-            difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", 
-                    fAmt.getAnnotation(NeedToCompare.class).name(),
-                    util.formatValue(oldAmt, fAmt),
-                    util.formatValue(order.getAmt(), fAmt)));
             
-            //出场时间为空
-            order.setOutTime(null);
-            difference.append(String.format("<li><b>%s</b>: %s--->%s</li>", 
-                    fOutTime.getAnnotation(NeedToCompare.class).name(),
-                    util.formatValue(oldOutTime, fOutTime),
-                    util.formatValue(order.getOutTime(), fOutTime)));
+            //出场时间为无效时间
+            order.setOutTime(new Date(0));
             
             //停车场空位数量-1
-            park.setAvailableCnt(park.getAvailableCnt() - 1);
+            Integer newAvailableCnt = park.getAvailableCnt() - 1;
+            park.setChangeRemark(String.format("取消车停车完成, 停车场可用车位变化: %d --> %d, 事件: %s, 被取消事件: %s", 
+                    park.getAvailableCnt(), newAvailableCnt, 
+                    event.getGuid(), targetEvent.getGuid()));
+            park.setAvailableCnt(newAvailableCnt);
+            parkService.save(park);
+            park.setAvailableCnt(newAvailableCnt);
         }
-        
-        order.setDiff(String.format("<ol>%s</ol>", difference.toString()));
         
         //保存订单
         this.save(order, event);
@@ -528,6 +514,7 @@ public class OrderService
         for (Order order : orders)
         {
             order.setOwner(car.getUser());
+            order.setChangeRemark(String.format("随车辆绑定到用户: %s", car.getUser().getName()));
             this.save(order);
         }
     }
@@ -536,8 +523,11 @@ public class OrderService
      * 处理订单支付结果
      * @param wxPayNotifyParam
      * @throws BusinessException 
+     * @throws SecurityException 
+     * @throws NoSuchFieldException 
      */
-    public void wxPaySuccess(WxPayNotifyParam wxPayNotifyParam) throws BusinessException
+    @Transactional
+    public void wxPaySuccess(WxPayNotifyParam wxPayNotifyParam) throws BusinessException, NoSuchFieldException, SecurityException
     {
         //找到付款订单
         Order order = orderDao.findOneByCode(wxPayNotifyParam.getOutTradeNo());
@@ -565,6 +555,9 @@ public class OrderService
         if (null != order.getUsedCoupon())
         {
             order.getUsedCoupon().setStatus(CouponStatus.used);
+            CouponDef couponDef = order.getUsedCoupon().getCouponDef();
+            couponDef.setUsedCnt(couponDef.getUsedCnt() + 1);
+            couponDefService.save(couponDef);
         }
         
         switch (order.getType())
@@ -585,6 +578,7 @@ public class OrderService
                 break;
         }
         
+        order.setChangeRemark(String.format("微信付款成功: %s", wxPayNotifyParam));
         this.save(order);
     }
     
@@ -621,7 +615,8 @@ public class OrderService
         }
     }
     
-    private Boolean existingValid(Car car, Park park, Date startDate, Date endDate)
+    //检查是否存在重复的月票订单:车辆,停车场,时间段,状态：已经支付/待支付
+    private Boolean existsValidMonthlyTkt(Car car, Park park, Date startDate, Date endDate)
     {
         return orderDao.existsByTypeAndCarCarNoAndParkParkIdAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual
                 (OrderType.monthlyTicket, car.getCarNo(), park.getParkId(), checkedStatus, endDate, startDate);
@@ -644,7 +639,7 @@ public class OrderService
 
         Car car = carService.getCar(monthlyTktParam.getCarNo());
         //检查是否有重复的月票订单
-        if (this.existingValid(car, park, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate()))
+        if (this.existsValidMonthlyTkt(car, park, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate()))
         {
             throw new BusinessException("请勿重复购买月票");
         }
@@ -657,6 +652,83 @@ public class OrderService
                 .type(OrderType.monthlyTicket)
                 .startDate(monthlyTktParam.getStartDate())
                 .endDate(monthlyTktParam.getEndDate())
+                .status(OrderStatus.needToPay)
+                .owner(owner).build();
+        
+        //保存订单
+        this.save(order);
+        
+        //开始付款
+        return wxCmpt.unifiedOrder(order);
+    }
+    
+    /**
+     * 创建钱包充值订单
+     * @param walletChargeParam
+     * @throws Exception 
+     */
+    @Transactional
+    public WxunifiedOrderResult createWalletChargeOrder(ChargeWalletParam walletChargeParam, String userName) throws Exception
+    {
+        User owner = userService.findByName(userName);
+        
+        String code = util.makeCode(OrderType.walletIn);
+        
+        //创建订单
+        Order order = Order.builder()
+                .code(code)
+                .amt(walletChargeParam.getAmt())
+                .type(OrderType.walletIn)
+                .status(OrderStatus.needToPay)
+                .owner(owner).build();
+        
+        //保存订单
+        this.save(order);
+        
+        //开始付款
+        return wxCmpt.unifiedOrder(order);
+    }
+    
+    /**
+     * 激活优惠券订单
+     * @param activeCouponParam
+     * @return
+     * @throws Exception 
+     */
+    public WxunifiedOrderResult createActiveCouponOrder(ActiveCouponParam activeCouponParam, String userName) throws Exception 
+    {
+        User owner = userService.findByName(userName);
+        Coupon coupon = couponService.findOneById(activeCouponParam.getCouponId());
+        if (null == coupon)
+        {
+            throw new BusinessException(String.format("需要激活的优惠券不存在, Id: %d", 
+                    activeCouponParam.getCouponId()));
+        }
+        
+        //检查优惠券状态: 只能激活过期的优惠券
+        if (!coupon.getStatus().equals(CouponStatus.expired))
+        {
+            throw new BusinessException(String.format("优惠券在当前状态不能激活: %s", coupon.getStatus().getText()));
+        }
+        
+        //检查金额是否一致
+        //TODO: 暂定激活优惠券的金额面值的8折
+        if (!activeCouponParam.getAmt().setScale(2,BigDecimal.ROUND_HALF_UP).equals(
+                coupon.getCouponDef().getAmt().multiply(new BigDecimal(ACTIVE_COUPON_FACTOR))
+                .setScale(2,BigDecimal.ROUND_HALF_UP)))
+        {
+            throw new BusinessException("金额不正确");
+        }
+        
+        //检查优惠券金额
+        
+        String code = util.makeCode(OrderType.coupon);
+        
+        //创建订单
+        Order order = Order.builder()
+                .code(code).amt(activeCouponParam.getAmt())
+                .activatedCoupon(coupon)
+                .type(OrderType.coupon)
                 .status(OrderStatus.needToPay)
                 .owner(owner).build();
         

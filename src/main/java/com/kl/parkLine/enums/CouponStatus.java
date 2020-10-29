@@ -1,6 +1,5 @@
 package com.kl.parkLine.enums;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.kl.parkLine.annotation.SwaggerDisplayEnum;
 
 import lombok.AllArgsConstructor;
@@ -21,7 +20,6 @@ public enum CouponStatus implements BaseEnum
     
     expired(5, "已过期");
     
-    @JsonValue
     private Integer value;
     private String text;
 

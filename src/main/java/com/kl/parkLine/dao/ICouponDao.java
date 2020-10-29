@@ -9,4 +9,5 @@ import com.kl.parkLine.entity.Coupon;
 public interface ICouponDao extends JpaRepository<Coupon, Integer>
 {
     public boolean existsByCouponDefCouponDefId(Integer couponDefId);
+    public Coupon findOneByCouponId(Integer couponDefId);
 }

@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IParkDao;
@@ -70,6 +71,17 @@ public class ParkService
     }
     
     /**
+     * 编辑停车场
+     * @param park
+     * @throws BusinessException 
+     */
+    @Transactional
+    public void edit(Park park, String userName) throws BusinessException
+    {
+        this.save(park);
+    }
+    
+    /**
      * 保存停车场
      * @param park
      * @throws BusinessException 
@@ -103,9 +115,13 @@ public class ParkService
         //保存数据
         ParkLog log = new ParkLog();
         log.setDiff(diff);
-        log.setPark(park);
         log.setRemark(park.getChangeRemark());
-        park.getLogs().add(log);
+        if (!StringUtils.isEmpty(diff)  //至少有一项内容时才添加日志
+            || !StringUtils.isEmpty(park.getChangeRemark()))
+        {
+            log.setPark(park);
+            park.getLogs().add(log);
+        }
         parkDao.save(park);
     }
     
