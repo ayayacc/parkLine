@@ -1,5 +1,7 @@
 package com.kl.parkLine.service;
 
+import java.util.Date;
+
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kl.parkLine.dao.ICouponDao;
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.CouponDef;
+import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.QCoupon;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CouponStatus;
@@ -87,6 +90,9 @@ public class CouponService
         Coupon coupon = Coupon.builder()
                 .couponDef(couponDef)
                 .code(String.format("YHJ%s", String.valueOf(now.getMillis())))
+                .name(couponDef.getName())
+                .minAmt(couponDef.getMinAmt())
+                .amt(couponDef.getAmt())
                 .owner(user)
                 .startDate(couponDef.getStartDate())
                 .endDate(couponDef.getEndDate())
@@ -143,9 +149,56 @@ public class CouponService
      * @param couponId
      * @return
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public Coupon findOneById(Integer couponId)
     {
         return couponDao.findOneByCouponId(couponId);
+    }
+    
+    /**
+     * 根据订单找到最合适的优惠券,金额大到小,到期日小到大
+     * @param order
+     * @return
+     */
+    @Transactional(readOnly = true)
+    public Coupon findBest4Order(Order order)
+    {
+        return couponDao.findTopByOwnerAndStatusAndMinAmtLessThanEqualOrderByAmtDescEndDate(order.getOwner(), CouponStatus.valid, order.getAmt());
+    }
+    
+    /**
+     * 根据订单找到最合适的优惠券,金额大到小,到期日小到大
+     * @param order
+     * @return
+     * @throws BusinessException 
+     */
+    @Transactional
+    public void useCoupon(Coupon coupon, String orderCode) throws BusinessException
+    {
+        //检查优惠券状态
+        if (!coupon.getStatus().equals(CouponStatus.valid))
+        {
+            throw new BusinessException(String.format("优惠券: %s 处于: %状态,  不可用", 
+                    coupon.getCode(), coupon.getStatus().getText()));
+        }
+        
+        //设置优惠券状态
+        coupon.setStatus(CouponStatus.used);
+        
+        //优惠券使用时间
+        coupon.setUsedDate(new Date());
+         
+        //更新优惠券定义
+        CouponDef couponDef = coupon.getCouponDef();
+        Integer usedCnt = couponDef.getUsedCnt() + 1;
+        couponDef.setChangeRemark(String.format("优惠券: %s 被订单: %s 使用, 使用数量: %d --> %d",
+                coupon.getCode(), orderCode, couponDef.getUsedCnt(), usedCnt));
+        couponDef.setUsedCnt(usedCnt);
+        
+        couponDefService.save(couponDef);
+        
+        couponDao.save(coupon);
+        
+        return;
     }
 }

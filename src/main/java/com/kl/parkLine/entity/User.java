@@ -94,6 +94,12 @@ public class User extends AbstractDateEntity implements UserDetails
     @Enumerated(EnumType.STRING)
     private Gender gender;
     
+    /**
+     * 是否开通了免密支付
+     */
+    @Column(name = "is_quick_pay", nullable = false, columnDefinition="bool default false")
+    private Boolean isQuickPay;
+    
     @Column(name = "password", length = 16)
     @JsonIgnore
     @ApiModelProperty(hidden = true)

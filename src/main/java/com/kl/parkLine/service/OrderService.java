@@ -236,13 +236,12 @@ public class OrderService
     }
     
     /**
-     * 处理出入场/停车完成事件
+     * 处理出入场/停车完成事件, 此方法不加事务控制，因为钱包无感支付和订单生成不再一个事务
      * @param event 事件对象
      * @throws SecurityException 
      * @throws NoSuchFieldException 
      * @throws ParseException 
      */
-    @Transactional
     public void processEvent(Event event) throws BusinessException, NoSuchFieldException, SecurityException, ParseException
     {
         switch (event.getType())
@@ -251,7 +250,32 @@ public class OrderService
                 carIn(event);
                 break;
             case complete: //停车完成,订单计费,完成订单
-                carComplete(event);
+                Order order = carComplete(event);
+                if (null == order) //空订单
+                {
+                    break;
+                }
+                if (!order.getStatus().equals(OrderStatus.needToPay)) //无需支付
+                {
+                    break;
+                }
+                if (null == order.getOwner()) //拥有者为空
+                {
+                    break;
+                }
+                if (!order.getOwner().getIsQuickPay()) //用户未开通无感支付
+                {
+                    break;
+                }
+                try
+                {
+                    payByWallet(order); //无感支付, 钱包支付订单
+                }
+                catch (BusinessException e) //无感支付失败, 记录到订单中
+                {
+                    order.setChangeRemark(String.format("无感支付失败: %s", e.getMessage()));
+                    this.save(order);
+                }
                 break;
             case cancel:
                 eventCancel(event);
@@ -269,7 +293,8 @@ public class OrderService
      * @param event 事件对象
      * @throws BusinessException 
      */
-    private void carIn(Event event) throws BusinessException 
+    @Transactional
+    public void carIn(Event event) throws BusinessException 
     {
         //停车场
         Park park = parkService.findOneByCode(event.getParkCode());
@@ -305,13 +330,14 @@ public class OrderService
      * @throws NoSuchFieldException 
      * @throws ParseException 
      */
-    private void carComplete(Event event) throws BusinessException, NoSuchFieldException, SecurityException, ParseException
+    @Transactional
+    public Order carComplete(Event event) throws BusinessException, NoSuchFieldException, SecurityException, ParseException
     {
         //根据事件Id找入场时生成的的订单
         Order order = orderDao.findOneByActId(event.getActId());
         if (null == order)
         {
-            return;
+            return null;
         }
         //计算并且设置价格
         order.setOutTime(event.getTimeOut());
@@ -324,7 +350,7 @@ public class OrderService
         }
         else
         {
-            order.setStatus(OrderStatus.needToPay);
+            order.setStatus(OrderStatus.needToPay);//免密支付订单
         }
         
         //停车场空位+1
@@ -337,6 +363,8 @@ public class OrderService
 
         //保存
         this.save(order, event);
+        
+        return order;
     }
     
     /**
@@ -345,7 +373,8 @@ public class OrderService
      * @throws SecurityException 
      * @throws NoSuchFieldException 
      */
-    private void eventCancel(Event event) throws BusinessException, NoSuchFieldException, SecurityException
+    @Transactional
+    public void eventCancel(Event event) throws BusinessException, NoSuchFieldException, SecurityException
     {
         //涉及到的订单
         Order order = orderDao.findOneByActId(event.getActId());
@@ -714,7 +743,7 @@ public class OrderService
         //检查金额是否一致
         //TODO: 暂定激活优惠券的金额面值的8折
         if (!activeCouponParam.getAmt().setScale(2,BigDecimal.ROUND_HALF_UP).equals(
-                coupon.getCouponDef().getAmt().multiply(new BigDecimal(ACTIVE_COUPON_FACTOR))
+                coupon.getAmt().multiply(new BigDecimal(ACTIVE_COUPON_FACTOR))
                 .setScale(2,BigDecimal.ROUND_HALF_UP)))
         {
             throw new BusinessException("金额不正确");
@@ -738,4 +767,61 @@ public class OrderService
         //开始付款
         return wxCmpt.unifiedOrder(order);
     }
+    
+    /**
+     * 使用钱包余额付款
+     * @param order
+     */
+    @Transactional
+    public void payByWallet(Order order) throws BusinessException
+    {
+        //检查订单状态
+        if (!order.getStatus().equals(OrderStatus.needToPay))
+        {
+            throw new BusinessException(String.format("订单: %s 处于: %s 状态, 无需支付", 
+                    order.getCode(), order.getStatus().getText()));
+        }
+        
+        //检查拥有者
+        User owner = order.getOwner();
+        if (null == owner)
+        {
+            throw new BusinessException(String.format("订单: %s 是无主, 不能使用钱包支付", order.getCode()));
+        }
+        
+        StringBuffer sb = new StringBuffer();
+        //找到最合适的优惠券
+        Coupon coupon = couponService.findBest4Order(order);
+        order.setRealAmt(order.getAmt());
+        if (null != coupon)
+        {
+            //消耗优惠券
+            couponService.useCoupon(coupon, order.getCode());
+            order.setUsedCoupon(coupon);
+            //设置订单实付款金额
+            order.setRealAmt(order.getAmt().subtract(coupon.getAmt()));
+            
+            sb.append(String.format("使用优惠券: %s; ", coupon.getCode()));
+        }
+        
+        //余额不足
+        if (0 > owner.getBalance().compareTo(order.getRealAmt()))
+        {
+            throw new BusinessException(String.format("钱包余额: %.2f 元不足, 应付金额: %.2f 元",
+                    owner.getBalance().floatValue(), order.getRealAmt().floatValue()));
+        }
+        
+        //扣减钱包余额
+        BigDecimal newBlance = owner.getBalance().subtract(order.getRealAmt()).setScale(2, BigDecimal.ROUND_HALF_UP);
+        sb.append(String.format("余额: %.2f 元 --> %.2f 元",  owner.getBalance().floatValue(), newBlance.floatValue()));
+        order.setChangeRemark(sb.toString());
+        owner.setBalance(newBlance);
+        
+        //订单已经支付
+        order.setStatus(OrderStatus.payed);
+        
+        //记录备注
+        this.save(order);
+    }
+    
 }

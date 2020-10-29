@@ -52,7 +52,8 @@ public class XltController
         }
         catch (Exception e)
         {
-           //eventService.save(event);
+            event.setRemark(e.getMessage());
+            eventService.save(event);
             result.setErrorcode(Const.CLT_RET_CODE_FAILED);
             result.setMessage(e.getMessage());
         }

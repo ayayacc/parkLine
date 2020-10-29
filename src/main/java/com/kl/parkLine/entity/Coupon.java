@@ -1,5 +1,6 @@
 package com.kl.parkLine.entity;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -24,6 +25,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.CouponStatus;
 
 import io.swagger.annotations.ApiModel;
@@ -80,12 +82,36 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
     private String code;
     
     /**
+     * 优惠券名称
+     */
+    @NeedToCompare(name = "名称")
+    @Column(name = "name", nullable = false, length = 64)
+    @ApiModelProperty("优惠券名称")
+    private String name;
+    
+    /**
      * 状态
      */
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     @ApiModelProperty("优惠券状态")
     private CouponStatus status;
+    
+    /**
+     * 金额
+     */
+    @NeedToCompare(name = "金额")
+    @Column(name = "amt", precision = 15 ,scale = 2)
+    @ApiModelProperty("优惠券定义金额")
+    private BigDecimal amt;
+    
+    /**
+     *使用支付的最小金额（满xx使用）
+     */
+    @NeedToCompare(name = "使用支付的最小金额")
+    @Column(name = "min_amt", precision = 15 ,scale = 2)
+    @ApiModelProperty("使用支付的最小金额（满xx使用）")
+    private BigDecimal minAmt;
     
     /**
      * 有效期开始时间
