@@ -42,12 +42,11 @@ public class CouponDefController
     @PostMapping("/save")
     @ApiOperation(value="保存优惠券定义", notes="创建/修改一个优惠券定义")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<CouponDefVo> edit(@ApiParam(name="优惠券定义") @RequestBody CouponDef couponDef,
-            Authentication auth)
+    public RestResult<CouponDefVo> save(@ApiParam(name="优惠券定义") @RequestBody CouponDef couponDef)
     {
         try
         {
-            couponDefService.edit(couponDef, auth.getName());
+            couponDefService.save(couponDef);
             return RestResult.success();
         }
         catch (Exception e)

@@ -94,16 +94,6 @@ public class CouponDefService
     }
     
     /**
-     * 保存一个优惠券定义
-     * @param 被保存的优惠券
-     * @throws BusinessException 
-     */
-    public void edit(CouponDef couponDef, String userName) throws BusinessException
-    {
-        this.save(couponDef);
-    }
-    
-    /**
      * 模糊匹配优惠券定义
      * @param couponDef  
      * @param pageable

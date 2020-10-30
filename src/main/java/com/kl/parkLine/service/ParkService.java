@@ -70,16 +70,6 @@ public class ParkService
     }
     
     /**
-     * 编辑停车场
-     * @param park
-     * @throws BusinessException 
-     */
-    public void edit(Park park, String userName) throws BusinessException
-    {
-        this.save(park);
-    }
-    
-    /**
      * 保存停车场
      * @param park
      * @throws BusinessException 

@@ -91,12 +91,11 @@ public class UserController
     @PostMapping("/save")
     @ApiOperation(value="新增/编辑用户", notes="普通用户只能编辑自己的信息，管理员可以编辑所有用户，name，Id等系统生成的字段不能修改")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<UserVo> edit(@ApiParam(name="用户信息") @RequestBody User user,
-            Authentication auth)
+    public RestResult<UserVo> save(@ApiParam(name="用户信息") @RequestBody User user)
     {
         try
         {
-            userService.edit(user, auth.getName());
+            userService.save(user);
             return RestResult.success();
         }
         catch (Exception e)

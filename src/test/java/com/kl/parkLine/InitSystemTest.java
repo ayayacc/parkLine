@@ -89,7 +89,7 @@ public class InitSystemTest
             park.setTimeLev2(30); 
             park.setPriceLev2(new BigDecimal(3));
             park.setMonthlyPrice(new BigDecimal(300)); //月票300元
-            parkService.edit(park, "admin");
+            parkService.save(park);
         }
     }
     
@@ -166,7 +166,7 @@ public class InitSystemTest
                 user.setRoles(roles);
             }
             
-            userService.edit(user, "admin");
+            userService.save(user);
         }
     }
 }

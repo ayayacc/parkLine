@@ -179,16 +179,6 @@ public class OrderService
     }
     
     /**
-     * 编辑一个订单
-     * @param 被保存的优惠券
-     * @throws BusinessException 
-     */
-    public void edit(Order order, String userName) throws BusinessException
-    {
-        this.save(order, null);
-    }
-    
-    /**
      * 保存一个订单
      * @param 被保存的优惠券
      * @throws BusinessException 

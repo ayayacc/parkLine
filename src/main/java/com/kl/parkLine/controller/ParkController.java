@@ -41,12 +41,11 @@ public class ParkController
     @PostMapping("/save")
     @ApiOperation(value="保存停车场数据", notes="创建/修改停车场")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Park> eidt(@ApiParam(name="停车场信息") @RequestBody Park park,
-            Authentication auth)
+    public RestResult<Park> save(@ApiParam(name="停车场信息") @RequestBody Park park)
     {
         try
         {
-            parkService.edit(park, auth.getName());
+            parkService.save(park);
             return RestResult.success();
         }
         catch (Exception e)
