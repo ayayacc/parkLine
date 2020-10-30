@@ -11,7 +11,8 @@ import com.kl.parkLine.entity.Event;
  * @author chenc
  *
  */
-@Service("eventService")
+@Service
+@Transactional(rollbackFor = Exception.class)
 public class EventService
 {
     @Autowired
@@ -21,7 +22,6 @@ public class EventService
      * 保存用户
      * @param user
      */
-    @Transactional
     public void save(Event event)
     {
         eventDao.save(event);
@@ -34,7 +34,6 @@ public class EventService
      * @param parkCode
      * @return
      */
-    @Transactional(readOnly = true)
     public Event findOneByGuidAndParkCode(String guid, String parkCode)
     {
         return eventDao.findOneByGuidAndParkCode(guid, parkCode);

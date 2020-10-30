@@ -31,6 +31,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
  *
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class InvoiceService
 {
     @Autowired
@@ -53,7 +54,6 @@ public class InvoiceService
      * @param 被保存的优惠券
      * @throws BusinessException 
      */
-    @Transactional
     public void save(Invoice invoice) throws BusinessException
     {
         String diff = Const.LOG_CREATE;
@@ -95,7 +95,6 @@ public class InvoiceService
      * @param auth
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<InvoiceVo> fuzzyFindPage(InvoiceVo invoiceVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);

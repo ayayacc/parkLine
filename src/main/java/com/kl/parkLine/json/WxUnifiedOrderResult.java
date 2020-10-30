@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @Builder
 @ApiModel("微信uniorder成功参数")
-public class WxunifiedOrderResult
+public class WxUnifiedOrderResult
 {
     @ApiModelProperty("小程序ID")
     private String appId;

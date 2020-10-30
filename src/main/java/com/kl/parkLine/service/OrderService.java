@@ -37,12 +37,14 @@ import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
+import com.kl.parkLine.enums.PaymentType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.CreateMonthlyTktParam;
+import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.WxPayNotifyParam;
-import com.kl.parkLine.json.WxunifiedOrderResult;
+import com.kl.parkLine.json.WxUnifiedOrderResult;
 import com.kl.parkLine.predicate.OrderPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.OrderVo;
@@ -57,6 +59,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
  *
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class OrderService
 {
     @Autowired
@@ -79,6 +82,7 @@ public class OrderService
     
     @Autowired
     private Utils util;
+    
     
     @Autowired
     private WxCmpt wxCmpt;
@@ -134,7 +138,6 @@ public class OrderService
      * @param userName
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<OrderVo> fuzzyFindPageAsUser(OrderVo orderVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);
@@ -151,7 +154,6 @@ public class OrderService
      * @param userName
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<OrderVo> fuzzyFindPageAsManager(OrderVo orderVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);
@@ -161,7 +163,6 @@ public class OrderService
         return fuzzyFindPage(searchPred, pageable);
     }
     
-    @Transactional
     public Order findOneByOrderId(Integer orderId) 
     {
         return orderDao.findOneByOrderId(orderId);
@@ -172,7 +173,6 @@ public class OrderService
      * @param 被保存的优惠券
      * @throws BusinessException 
      */
-    @Transactional
     public void save(Order order) throws BusinessException
     {
         this.save(order, null);
@@ -183,7 +183,6 @@ public class OrderService
      * @param 被保存的优惠券
      * @throws BusinessException 
      */
-    @Transactional
     public void edit(Order order, String userName) throws BusinessException
     {
         this.save(order, null);
@@ -194,7 +193,6 @@ public class OrderService
      * @param 被保存的优惠券
      * @throws BusinessException 
      */
-    @Transactional
     public void save(Order order, Event event) throws BusinessException
     {
         String diff = Const.LOG_CREATE;
@@ -223,7 +221,7 @@ public class OrderService
         //保存数据
         OrderLog log = new OrderLog();
         log.setDiff(diff);
-        log.setRemark(order.getChangeRemark());
+        log.setRemark(order.getChangeRemark().toString());
         log.setEvent(event);
         if (!StringUtils.isEmpty(diff)  //至少有一项内容时才添加日志
             || !StringUtils.isEmpty(order.getChangeRemark())
@@ -236,55 +234,32 @@ public class OrderService
     }
     
     /**
-     * 处理出入场/停车完成事件, 此方法不加事务控制，因为钱包无感支付和订单生成不再一个事务
+     * 处理出入场/停车完成事件
      * @param event 事件对象
      * @throws SecurityException 
      * @throws NoSuchFieldException 
      * @throws ParseException 
+     * @throws BusinessException 
      */
-    public void processEvent(Event event) throws BusinessException, NoSuchFieldException, SecurityException, ParseException
+    public Order processEvent(Event event) throws NoSuchFieldException, SecurityException, ParseException, BusinessException
     {
+        Order order = null;
         switch (event.getType())
         {
             case in:  //入场事件,创建订单
-                carIn(event);
+                order = carIn(event);
                 break;
             case complete: //停车完成,订单计费,完成订单
-                Order order = carComplete(event);
-                if (null == order) //空订单
-                {
-                    break;
-                }
-                if (!order.getStatus().equals(OrderStatus.needToPay)) //无需支付
-                {
-                    break;
-                }
-                if (null == order.getOwner()) //拥有者为空
-                {
-                    break;
-                }
-                if (!order.getOwner().getIsQuickPay()) //用户未开通无感支付
-                {
-                    break;
-                }
-                try
-                {
-                    payByWallet(order); //无感支付, 钱包支付订单
-                }
-                catch (BusinessException e) //无感支付失败, 记录到订单中
-                {
-                    order.setChangeRemark(String.format("无感支付失败: %s", e.getMessage()));
-                    this.save(order);
-                }
+                order = carComplete(event);
                 break;
             case cancel:
-                eventCancel(event);
+                order = eventCancel(event);
                 break;
             default:
                 break;
         }
         
-        return;
+        return order;
     }
     
     
@@ -293,8 +268,7 @@ public class OrderService
      * @param event 事件对象
      * @throws BusinessException 
      */
-    @Transactional
-    public void carIn(Event event) throws BusinessException 
+    public Order carIn(Event event) throws BusinessException 
     {
         //停车场
         Park park = parkService.findOneByCode(event.getParkCode());
@@ -320,6 +294,7 @@ public class OrderService
         
         //保存 订单
         this.save(order, event);
+        return order;
     }
     
     /**
@@ -330,7 +305,6 @@ public class OrderService
      * @throws NoSuchFieldException 
      * @throws ParseException 
      */
-    @Transactional
     public Order carComplete(Event event) throws BusinessException, NoSuchFieldException, SecurityException, ParseException
     {
         //根据事件Id找入场时生成的的订单
@@ -373,14 +347,13 @@ public class OrderService
      * @throws SecurityException 
      * @throws NoSuchFieldException 
      */
-    @Transactional
-    public void eventCancel(Event event) throws BusinessException, NoSuchFieldException, SecurityException
+    public Order eventCancel(Event event) throws BusinessException, NoSuchFieldException, SecurityException
     {
         //涉及到的订单
         Order order = orderDao.findOneByActId(event.getActId());
         if (null == order)
         {
-            return;
+            return null;
         }
         
         //取消targetEvent
@@ -388,7 +361,7 @@ public class OrderService
         Event targetEvent = eventService.findOneByGuidAndParkCode(event.getTargetGuid(), park.getCode());
         if (null == targetEvent) //未找到被取消的事件
         {
-            return;
+            return null;
         }
         
         //如果订单已经付款以及后续状态，返回失败
@@ -449,6 +422,7 @@ public class OrderService
         //禁用目标事件
         targetEvent.setEnabled("N");
         eventService.save(targetEvent);
+        return order;
     }
     
     /**
@@ -458,7 +432,6 @@ public class OrderService
      * @return
      * @throws ParseException 
      */
-    @Transactional(readOnly = true)
     public void calAmt(Order order) throws ParseException
     {
         Park park = order.getPark();
@@ -509,7 +482,6 @@ public class OrderService
      * @param userName
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<OrderVo> needToPay(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
@@ -521,7 +493,6 @@ public class OrderService
      * @param userName
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<OrderVo> invoiceable(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
@@ -533,7 +504,6 @@ public class OrderService
      * @param car 被绑定用户的车辆
      * @throws BusinessException 
      */
-    @Transactional
     public void setOrderOwnerByCar(Car car) throws BusinessException 
     {
         //找到指定车牌号的无主订单
@@ -543,7 +513,7 @@ public class OrderService
         for (Order order : orders)
         {
             order.setOwner(car.getUser());
-            order.setChangeRemark(String.format("随车辆绑定到用户: %s", car.getUser().getName()));
+            order.appedChangeRemark(String.format("随车辆绑定到用户: %s", car.getUser().getName()));
             this.save(order);
         }
     }
@@ -555,7 +525,6 @@ public class OrderService
      * @throws SecurityException 
      * @throws NoSuchFieldException 
      */
-    @Transactional
     public void wxPaySuccess(WxPayNotifyParam wxPayNotifyParam) throws BusinessException, NoSuchFieldException, SecurityException
     {
         //找到付款订单
@@ -572,6 +541,7 @@ public class OrderService
         order.setStatus(OrderStatus.payed);
         //设置支付日期
         order.setPaymentTime(wxPayNotifyParam.getTimeEnd());
+        order.setPaymentType(PaymentType.wx);
         
         //设置付款银行
         order.setBankType(wxPayNotifyParam.getBankType());
@@ -607,7 +577,7 @@ public class OrderService
                 break;
         }
         
-        order.setChangeRemark(String.format("微信付款成功: %s", wxPayNotifyParam));
+        order.appedChangeRemark(String.format("微信付款成功: %s", wxPayNotifyParam));
         this.save(order);
     }
     
@@ -656,8 +626,7 @@ public class OrderService
      * @param monthlyTktParam
      * @throws Exception 
      */
-    @Transactional
-    public WxunifiedOrderResult createMonthlyTkt(CreateMonthlyTktParam monthlyTktParam, String userName) throws Exception
+    public WxUnifiedOrderResult createMonthlyTkt(CreateMonthlyTktParam monthlyTktParam, String userName) throws Exception
     {
         User owner = userService.findByName(userName);
         Park park = parkService.findOneById(monthlyTktParam.getParkId());
@@ -696,8 +665,7 @@ public class OrderService
      * @param walletChargeParam
      * @throws Exception 
      */
-    @Transactional
-    public WxunifiedOrderResult createWalletChargeOrder(ChargeWalletParam walletChargeParam, String userName) throws Exception
+    public WxUnifiedOrderResult createWalletChargeOrder(ChargeWalletParam walletChargeParam, String userName) throws Exception
     {
         User owner = userService.findByName(userName);
         
@@ -724,7 +692,7 @@ public class OrderService
      * @return
      * @throws Exception 
      */
-    public WxunifiedOrderResult createActiveCouponOrder(ActiveCouponParam activeCouponParam, String userName) throws Exception 
+    public WxUnifiedOrderResult createActiveCouponOrder(ActiveCouponParam activeCouponParam, String userName) throws Exception 
     {
         User owner = userService.findByName(userName);
         Coupon coupon = couponService.findOneById(activeCouponParam.getCouponId());
@@ -768,12 +736,10 @@ public class OrderService
         return wxCmpt.unifiedOrder(order);
     }
     
-    /**
-     * 使用钱包余额付款
-     * @param order
+    /*
+     * 准备支付, 设置优惠券, 不保存订单
      */
-    @Transactional
-    public void payByWallet(Order order) throws BusinessException
+    private void preparePay(Order order, Coupon coupon, String payerName) throws BusinessException 
     {
         //检查订单状态
         if (!order.getStatus().equals(OrderStatus.needToPay))
@@ -782,26 +748,141 @@ public class OrderService
                     order.getCode(), order.getStatus().getText()));
         }
         
-        //检查拥有者
-        User owner = order.getOwner();
-        if (null == owner)
+        //设置无优惠券初始值
+        order.setRealAmt(order.getAmt());
+        
+        if (order.getAutoCoupon()) //自动匹配优惠券
         {
-            throw new BusinessException(String.format("订单: %s 是无主, 不能使用钱包支付", order.getCode()));
+            //找到最合适的优惠券
+            coupon = couponService.findBest4Order(order);
         }
         
-        StringBuffer sb = new StringBuffer();
-        //找到最合适的优惠券
-        Coupon coupon = couponService.findBest4Order(order);
-        order.setRealAmt(order.getAmt());
+        //设置coupon
         if (null != coupon)
         {
+            //检查coupon状态
+            if (!coupon.getStatus().equals(CouponStatus.valid))
+            {
+                throw new BusinessException(String.format("优惠券处于: %s 状态, 不能使用", coupon.getStatus().getText()));
+            }
+            
+            //检查优惠券拥有者
+            if (!coupon.getOwner().getName().equalsIgnoreCase(payerName))
+            {
+                throw new BusinessException("优惠券在他人名下, 不能使用");
+            }
+            
             //消耗优惠券
             couponService.useCoupon(coupon, order.getCode());
             order.setUsedCoupon(coupon);
             //设置订单实付款金额
             order.setRealAmt(order.getAmt().subtract(coupon.getAmt()));
-            
-            sb.append(String.format("使用优惠券: %s; ", coupon.getCode()));
+            order.appedChangeRemark(String.format("使用优惠券: %s; ", coupon.getCode()));
+        }
+        save(order);
+    }
+    
+    /**
+     * 使用微信支付
+     * @param order
+     * @throws Exception 
+     */
+    public WxUnifiedOrderResult payByWx(PayOrderParam payParam, String payerName) throws Exception
+    {
+        //查找订单
+        Order order = this.findOneByOrderId(payParam.getOrderId());
+        if (null == order)
+        {
+            throw new BusinessException(String.format("无效的订单Id: %d", payParam.getOrderId()));
+        }
+        
+        //查找指定优惠券
+        Coupon coupon = null;
+        if (null != payParam.getCouponId())
+        {
+            //查找优惠券
+            coupon = couponService.findOneById(payParam.getCouponId());
+            if (null == coupon)
+            {
+                throw new BusinessException(String.format("无效的优惠券Id: %d", payParam.getCouponId()));
+            }
+        }
+
+        //微信无快捷支付
+        order.setPaymentType(PaymentType.wx);
+        order.setAutoCoupon(false);
+        
+        //准备支付，检查状态，设置优惠券
+        preparePay(order, coupon, payerName);
+        
+        return wxCmpt.unifiedOrder(order);
+    }
+    
+    /**
+     * 使用钱包余额付款
+     * @param order
+     * @throws Exception 
+     */
+    public void payByWallet(PayOrderParam payParam, String payerName) throws Exception
+    {
+        //查找订单
+        Order order = this.findOneByOrderId(payParam.getOrderId());
+        if (null == order)
+        {
+            throw new BusinessException(String.format("无效的订单Id: %d", payParam.getOrderId()));
+        }
+        
+        //查找指定优惠券
+        Coupon coupon = null;
+        if (null != payParam.getCouponId())
+        {
+            //查找优惠券
+            coupon = couponService.findOneById(payParam.getCouponId());
+            if (null == coupon)
+            {
+                throw new BusinessException(String.format("无效的优惠券Id: %d", payParam.getCouponId()));
+            }
+        }
+        
+        //钱包支付
+        order.setPaymentType(PaymentType.qb);
+        order.setAutoCoupon(false);
+        
+        //准备支付，检查状态，设置优惠券
+        this.preparePay(order, coupon, payerName);
+        
+        payByWallet(order);
+    }
+    
+    /**
+     * 使用钱包余额付款
+     * @param order
+     * @throws Exception 
+     */
+    public void quickPayByWallet(Order order) throws Exception
+    {
+        //钱包支付
+        order.setPaymentType(PaymentType.qb);
+        order.setAutoCoupon(true);
+        
+        //准备支付，检查状态，设置优惠券
+        this.preparePay(order, null, order.getOwner().getName());
+        
+        //使用钱包付款
+        this.payByWallet(order);
+    }
+    
+    /**
+     * 使用钱包余额付款
+     * @param order
+     */
+    public void payByWallet(Order order) throws BusinessException
+    {
+        //检查拥有者
+        User owner = order.getOwner();
+        if (null == owner)
+        {
+            throw new BusinessException(String.format("订单: %s 是无主, 不能使用钱包支付", order.getCode()));
         }
         
         //余额不足
@@ -813,15 +894,15 @@ public class OrderService
         
         //扣减钱包余额
         BigDecimal newBlance = owner.getBalance().subtract(order.getRealAmt()).setScale(2, BigDecimal.ROUND_HALF_UP);
-        sb.append(String.format("余额: %.2f 元 --> %.2f 元",  owner.getBalance().floatValue(), newBlance.floatValue()));
-        order.setChangeRemark(sb.toString());
+        order.appedChangeRemark(String.format("余额: %.2f 元 --> %.2f 元",  owner.getBalance().floatValue(), newBlance.floatValue()));
         owner.setBalance(newBlance);
         
         //订单已经支付
         order.setStatus(OrderStatus.payed);
+        order.setPaymentType(PaymentType.qb);
+        order.setPaymentTime(new Date());
         
         //记录备注
         this.save(order);
     }
-    
 }

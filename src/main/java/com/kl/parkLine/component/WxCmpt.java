@@ -16,7 +16,7 @@ import com.github.wxpay.sdk.WXPayUtil;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.WxCode2SessionResult;
-import com.kl.parkLine.json.WxunifiedOrderResult;
+import com.kl.parkLine.json.WxUnifiedOrderResult;
 import com.kl.parkLine.util.Const;
 
 /**
@@ -56,7 +56,7 @@ public class WxCmpt
         return result;
     }
     
-    public WxunifiedOrderResult unifiedOrder(Order order) throws Exception
+    public WxUnifiedOrderResult unifiedOrder(Order order) throws Exception
     {
         Map<String, String> reqData = new HashMap<String, String>();
         
@@ -122,7 +122,7 @@ public class WxCmpt
         String paySign = WXPayUtil.generateSignature(signParams, API_KEY);
         signParams.put("paySign", paySign);
         
-        return WxunifiedOrderResult.builder().nonceStr(nonceStr)
+        return WxUnifiedOrderResult.builder().nonceStr(nonceStr)
             .pack(pack).signType("MD5").appId(APP_ID).timeStamp(timeStamp.toString())
             .paySign(paySign).build();
     }

@@ -57,6 +57,7 @@ public class LogAspect
             logger.info(sb.toString());
         } catch (Throwable e) {
             //异常
+            e.printStackTrace();
             sb.append(String.format("Exception: %s", e));
             logger.error(sb.toString());
             throw new RuntimeException(e);

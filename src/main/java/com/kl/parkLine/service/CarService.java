@@ -17,6 +17,7 @@ import com.kl.parkLine.dao.ICarDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.CarLog;
 import com.kl.parkLine.entity.QCar;
+import com.kl.parkLine.entity.QUser;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.RoleType;
 import com.kl.parkLine.exception.BusinessException;
@@ -33,6 +34,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
  *
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class CarService
 {
     @Autowired
@@ -58,7 +60,6 @@ public class CarService
      * @param 被保存的优惠券
      * @throws BusinessException 
      */
-    @Transactional
     public void save(Car car) throws BusinessException
     {
         String diff = Const.LOG_CREATE;
@@ -73,7 +74,7 @@ public class CarService
             
             if (false == carDst.isPresent())
             {
-                throw new BusinessException(String.format("无效的订单 Id: %d", car.getCarId()));
+                throw new BusinessException(String.format("无效的车辆 Id: %d", car.getCarId()));
             }
             
             //记录不同点
@@ -102,7 +103,6 @@ public class CarService
      * @param carNo 车牌号码
      * @throws BusinessException 
      */
-    @Transactional(readOnly = true)
     public Car getCar(String carNo) throws BusinessException
     {
         Car car = carDao.findOneByCarNo(carNo);
@@ -121,7 +121,6 @@ public class CarService
      * @param carNo 添加的车牌号码
      * @throws BusinessException 
      */
-    @Transactional
     public void bind(String userName, String carNo) throws BusinessException
     {
         User user = userService.findByName(userName);
@@ -160,7 +159,6 @@ public class CarService
      * @param carNo 添加的车牌号码
      * @throws BusinessException 
      */
-    @Transactional
     public void unbind(String carNo) throws BusinessException
     {
         //检查车辆是否已经存在
@@ -191,18 +189,17 @@ public class CarService
      * @param auth
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<CarVo> fuzzyFindPage(CarVo carVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);
         Predicate searchPred = carPredicates.fuzzy(carVo, user);
         
-        QCar qCar = QCar.car;
         QueryResults<CarVo> queryResults = jpaQueryFactory
-                .select(Projections.bean(CarVo.class, 
-                        qCar.carId,
-                        qCar.carNo))
-                .from(qCar)
+                .select(Projections.constructor(CarVo.class, 
+                        QCar.car.carId,
+                        QCar.car.carNo,
+                        QUser.user.name))
+                .from(QCar.car).leftJoin(QUser.user).on(QCar.car.user.eq(QUser.user))
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -219,7 +216,6 @@ public class CarService
      * @param permission 需要的权限
      * @return 是否有权限
      */
-    @Transactional(readOnly = true)
     public boolean hasPermission(Car reqData, User logonUser, String permission) 
     {
         //公司类型的账户可以看所有车辆

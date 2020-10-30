@@ -7,13 +7,14 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kl.parkLine.enums.CouponStatus;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Value;
 
 /**
  * 
@@ -24,21 +25,25 @@ import lombok.Setter;
  * @see
  * @since 1.0
  */
-@Getter
-@Setter
 @Builder
-@ApiModel("优惠券实例VO")
+@Value
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@ApiModel("优惠券实例VO")
 public class CouponVo
 {
     @ApiModelProperty("优惠券实例id")
     private Integer couponId;
     
-    @ApiModelProperty("所属优惠券定义Id")
-    private Integer couponDefId;
+    @ApiModelProperty(name="所属优惠券定义Id", value="couponDefId")
+    @JsonProperty(value = "couponDefId")
+    private Integer couponDefCouponDefId;
     
     @ApiModelProperty("所属优惠券定义编号")
     private String couponDefCode;
+    
+    @ApiModelProperty("所属优惠券定义名称")
+    private String couponDefName;
     
     @ApiModelProperty("优惠券实例唯一编号")
     private String code;
@@ -46,8 +51,9 @@ public class CouponVo
     @ApiModelProperty("优惠券名称")
     private String name;
     
-    @ApiModelProperty("优惠券拥有者")
-    private String owner;
+    @ApiModelProperty(name="优惠券拥有者", value="couponDefCode")
+    @JsonProperty(value = "ownerName")
+    private String ownerName;
     
     @ApiModelProperty("优惠券实例金额")
     private BigDecimal amt;

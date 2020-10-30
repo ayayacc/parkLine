@@ -245,9 +245,39 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     /**
      * 订单变动备注
      */
-    @ApiModelProperty("订单变动备注")
+    @ApiModelProperty(hidden = true)
+    @JsonIgnore
     @Transient
-    private String changeRemark;
+    private StringBuilder changeRemark;
+    
+    public String getChangeRemark() 
+    {
+        if (null == changeRemark)
+        {
+            return "";
+        }
+        else
+        {
+            return changeRemark.toString();
+        }
+    }
+    
+    public void appedChangeRemark(String remark)
+    {
+        if (null == changeRemark)
+        {
+            changeRemark = new StringBuilder();
+        }
+        changeRemark.append(remark);
+    }
+    
+    /**
+     * 是否需要自动匹配优惠券
+     */
+    @ApiModelProperty(hidden = true)
+    @Transient
+    @JsonIgnore
+    private Boolean autoCoupon;
     
     @Override
     public int hashCode()

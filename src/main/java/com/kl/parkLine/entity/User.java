@@ -97,6 +97,7 @@ public class User extends AbstractDateEntity implements UserDetails
     /**
      * 是否开通了免密支付
      */
+    @ApiModelProperty("是否开通无感支付")
     @Column(name = "is_quick_pay", nullable = false, columnDefinition="bool default false")
     private Boolean isQuickPay;
     

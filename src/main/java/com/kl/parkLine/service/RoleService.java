@@ -29,7 +29,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
  * @author chenc
  *
  */
-@Service("roleService")
+@Service
+@Transactional(rollbackFor = Exception.class)
 public class RoleService
 {
     @Autowired
@@ -52,7 +53,6 @@ public class RoleService
      * @param code 角色编码
      * @return 角色对象
      */
-    @Transactional(readOnly = true)
     public Role findOneByCode(String code)
     {
         return roleDao.findOneByCode(code);
@@ -64,7 +64,6 @@ public class RoleService
      * @return
      * @throws BusinessException 
      */
-    @Transactional(readOnly = true)
     public Set<Menu> getRoleMenus(String roleCode)
     {
         Role role = findOneByCode(roleCode);
@@ -78,7 +77,6 @@ public class RoleService
      * @param auth
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<RoleVo> fuzzyFindPage(RoleVo roleVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);
@@ -103,7 +101,6 @@ public class RoleService
      * @param 被保存的角色
      * @throws BusinessException 
      */
-    @Transactional
     public void save(Role role) throws BusinessException
     {
         //编辑角色，//合并字段

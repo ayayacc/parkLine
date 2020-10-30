@@ -32,6 +32,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
  *
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class CouponDefService
 {
     @Autowired
@@ -54,7 +55,6 @@ public class CouponDefService
      * @param 被保存的优惠券
      * @throws BusinessException 
      */
-    @Transactional
     public void save(CouponDef couponDef) throws BusinessException
     {
         String diff = Const.LOG_CREATE;
@@ -98,7 +98,6 @@ public class CouponDefService
      * @param 被保存的优惠券
      * @throws BusinessException 
      */
-    @Transactional
     public void edit(CouponDef couponDef, String userName) throws BusinessException
     {
         this.save(couponDef);
@@ -111,7 +110,6 @@ public class CouponDefService
      * @param auth
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<CouponDefVo> fuzzyFindPage(CouponDefVo couponDefVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);

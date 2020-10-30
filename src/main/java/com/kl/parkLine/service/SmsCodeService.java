@@ -18,7 +18,8 @@ import com.kl.parkLine.util.Const;
  * @author chenc
  *
  */
-@Service("smsCodeService")
+@Service
+@Transactional(rollbackFor = Exception.class)
 public class SmsCodeService
 {
     @Autowired
@@ -36,7 +37,6 @@ public class SmsCodeService
      * @param mobile 手机号码
      * @return
      */
-    @Transactional
     public SmsCode sendSmsCode(String mobile) throws BusinessException
     {
         //找到最新发送的消息
@@ -78,7 +78,6 @@ public class SmsCodeService
         return newCode;
     }
     
-    @Transactional(readOnly = true)
     public SmsCode findLastByMobile(String mobile)
     {
         return smsCodeDao.findTop1ByMobileAndEnabledOrderByCreatedDateDesc(mobile, "Y");

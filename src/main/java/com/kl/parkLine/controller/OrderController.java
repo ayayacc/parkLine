@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.wxpay.sdk.WXPayUtil;
 import com.kl.parkLine.entity.Order;
+import com.kl.parkLine.enums.PaymentType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.ChargeWalletParam;
@@ -29,7 +30,7 @@ import com.kl.parkLine.json.CreateMonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.json.WxPayNotifyParam;
-import com.kl.parkLine.json.WxunifiedOrderResult;
+import com.kl.parkLine.json.WxUnifiedOrderResult;
 import com.kl.parkLine.service.OrderService;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.OrderVo;
@@ -57,7 +58,7 @@ public class OrderController
     @PostMapping("/monthlyTkt/create")
     @ApiOperation(value="购买月票", notes="新建一张月票；")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<WxunifiedOrderResult> createMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody CreateMonthlyTktParam monthlyTktParam, 
+    public RestResult<WxUnifiedOrderResult> createMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody CreateMonthlyTktParam monthlyTktParam, 
             Authentication auth)
     {
         try
@@ -76,7 +77,7 @@ public class OrderController
     @PostMapping("/wallet/charge")
     @ApiOperation(value="钱包充值", notes="钱包充值")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<WxunifiedOrderResult> chargeWallet(@ApiParam(name="充值参数", required=true) @RequestBody ChargeWalletParam walletChargeParam, Authentication auth)
+    public RestResult<WxUnifiedOrderResult> chargeWallet(@ApiParam(name="充值参数", required=true) @RequestBody ChargeWalletParam walletChargeParam, Authentication auth)
     {
         try
         {
@@ -177,22 +178,50 @@ public class OrderController
     @ApiOperation(value="找到等待支付的订单", 
         notes="1.订单拥有者是登录用户;2.订单拥有者为空，但是车辆绑定到登录用户的未支付订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Page<OrderVo>> getNeedToPay(@ApiParam(name="分页信息",type="query") Pageable pageable,
+    public RestResult<Page<OrderVo>> needToPay(@ApiParam(name="分页信息",type="query") Pageable pageable,
             Authentication auth)
     {
         return RestResult.success(orderService.needToPay(auth.getName(), pageable));
     }
     
     /**
-     * 支付订单
+     * 使用微信支付订单
      */
-    @PostMapping("/pay")
+    @PostMapping("/wxPay")
     @ApiOperation(value="支付订单", notes="发起订单支付")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Object> pay(@ApiParam(name="订单支付参数", required=true) @RequestBody PayOrderParam payParam)
+    public RestResult<WxUnifiedOrderResult> payByWx(@ApiParam(name="订单支付参数", required=true) @RequestBody PayOrderParam payParam,
+            Authentication auth)
     {
-        //TODO: 实现订单支付
-        return null;
+        try
+        {
+            payParam.setPaymentType(PaymentType.wx);
+            return RestResult.success(orderService.payByWx(payParam, auth.getName()));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
+    }
+    
+    /**
+     * 使用钱包支付订单
+     */
+    @PostMapping("/walletPay")
+    @ApiOperation(value="支付订单", notes="发起订单支付")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Object> payByWallet(@ApiParam(name="订单支付参数", required=true) @RequestBody PayOrderParam payParam,
+            Authentication auth)
+    {
+        try
+        {
+            orderService.payByWallet(payParam, auth.getName());
+            return RestResult.success();
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
     }
 
     /**
@@ -270,5 +299,4 @@ public class OrderController
     {
         return RestResult.success(orderService.invoiceable(auth.getName(), pageable));
     }
-    
 }

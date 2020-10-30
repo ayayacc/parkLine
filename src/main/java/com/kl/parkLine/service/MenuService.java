@@ -27,7 +27,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
  * @author chenc
  *
  */
-@Service("menuService")
+@Service
+@Transactional(rollbackFor = Exception.class)
 public class MenuService
 {
     @Autowired
@@ -50,7 +51,6 @@ public class MenuService
      * @param 被保存的菜单
      * @throws BusinessException 
      */
-    @Transactional
     public void save(Menu menu) throws BusinessException
     {
         //编辑菜单，//合并字段
@@ -77,7 +77,6 @@ public class MenuService
      * @param auth
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<MenuVo> fuzzyFindPage(MenuVo menuVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);

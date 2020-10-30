@@ -7,10 +7,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.CouponDef;
+import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.CouponService;
@@ -54,8 +56,8 @@ public class CouponController
                     .startDate(coupon.getStartDate())
                     .endDate(coupon.getEndDate())
                     .couponDefCode(couponDef.getCode())
-                    .couponDefId(couponDef.getCouponDefId())
-                    .owner(auth.getName())
+                    .couponDefCouponDefId(couponDef.getCouponDefId())
+                    .ownerName(auth.getName())
                     .minAmt(coupon.getMinAmt())
                     .build();
             return RestResult.success(couponVo);
@@ -67,18 +69,46 @@ public class CouponController
     }
     
     /**
-     * 分页查询车辆列表
+     * 分页查询优惠券列表
      * @param car 查询条件
      * @param pageable 分页条件
-     * @param auth 当前登录车辆
-     * @return 车辆查询结果
+     * @param auth 当前登录优惠券
+     * @return 优惠券查询结果
      */
     @GetMapping("/find")
-    @ApiOperation(value="查询车辆清单", notes="分页查询车辆清单")
+    @ApiOperation(value="查询优惠券清单", notes="分页查询优惠券清单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<Page<CouponVo>> find(@ApiParam(name="查询条件",type="query")CouponVo couponVo, 
             @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
         return RestResult.success(couponService.fuzzyFindPage(couponVo, pageable, auth.getName()));
+    }
+    
+    /**
+     * 查找订单可用的优惠券
+     * @param car 查询条件
+     * @param pageable 分页条件
+     * @param auth 当前登录优惠券
+     * @return 优惠券查询结果
+     */
+    @GetMapping("/available")
+    @ApiOperation(value="查询适用于订单的优惠券清单", notes="根据订单Id分页查询适用的优惠券清单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<CouponVo>> available4Order(@ApiParam(name="查询条件",type="query") @RequestParam("orderId") Integer orderId, 
+            @ApiIgnore @RequestParam("orderId") Order order,
+            @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
+    {
+        if (null == order)
+        {
+            return RestResult.failed(String.format("无效的订单Id: %d", orderId));
+        }
+        try
+        {
+            return RestResult.success(couponService.available4Order(order, pageable));
+        }
+        catch (BusinessException e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
     }
 }

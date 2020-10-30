@@ -31,7 +31,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
  * @author chenc
  *
  */
-@Service("parkService")
+@Service
+@Transactional(rollbackFor = Exception.class)
 public class ParkService
 {
     @Autowired
@@ -53,13 +54,11 @@ public class ParkService
      * 根据停车场编码找到停车场对象
      * @param code 停车场编码
      */
-    @Transactional
     public Park findOneByCode(String code)
     {
         return parkDao.findOneByCode(code);
     }
     
-    @Transactional
     public Park findOneById(Integer parkId) throws BusinessException
     {
         Optional<Park> park = parkDao.findById(parkId);
@@ -75,7 +74,6 @@ public class ParkService
      * @param park
      * @throws BusinessException 
      */
-    @Transactional
     public void edit(Park park, String userName) throws BusinessException
     {
         this.save(park);
@@ -86,7 +84,6 @@ public class ParkService
      * @param park
      * @throws BusinessException 
      */
-    @Transactional
     public void save(Park park) throws BusinessException
     {
         String diff = Const.LOG_CREATE;
@@ -125,7 +122,6 @@ public class ParkService
         parkDao.save(park);
     }
     
-    @Transactional(readOnly = true)
     public Page<ParkVo> fuzzyFindPage(ParkVo parkVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);

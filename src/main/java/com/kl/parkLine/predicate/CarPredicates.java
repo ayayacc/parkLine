@@ -43,7 +43,7 @@ public class CarPredicates
         }
         else //其他用户只能看自己车辆
         {
-            where.and(qCar.user.name.eq(user.getName()));
+            where.and(qCar.user.eq(user));
         }
         
         return where;

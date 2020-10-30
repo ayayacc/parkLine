@@ -17,6 +17,7 @@ import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.QCoupon;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CouponStatus;
+import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.CouponPredicates;
 import com.kl.parkLine.vo.CouponVo;
@@ -30,6 +31,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
  *
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class CouponService
 {
     @Autowired
@@ -53,7 +55,6 @@ public class CouponService
      * @param auth 当前登录用户
      * @return
      */
-    @Transactional
     public Coupon apply(CouponDef couponDef, String userName) throws BusinessException
     {
         User user = userService.findByName(userName);
@@ -116,7 +117,6 @@ public class CouponService
      * @param auth
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<CouponVo> fuzzyFindPage(CouponVo couponVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);
@@ -124,15 +124,15 @@ public class CouponService
         
         QCoupon qCoupon = QCoupon.coupon;
         QueryResults<CouponVo> queryResults = jpaQueryFactory
-                .select(Projections.bean(CouponVo.class, qCoupon.couponId,
-                        qCoupon.code,
+                .select(Projections.constructor(CouponVo.class, qCoupon.couponId,
                         qCoupon.couponDef.couponDefId,
-                        qCoupon.couponDef.code,
-                        qCoupon.couponDef.name,
-                        qCoupon.couponDef.amt,
-                        qCoupon.couponDef.minAmt,
-                        qCoupon.status,
-                        qCoupon.owner.name,
+                        qCoupon.couponDef.code.as("couponDefCode"),
+                        qCoupon.couponDef.name.as("couponDefName"),
+                        qCoupon.code,
+                        qCoupon.name,
+                        qCoupon.owner.name.as("ownerName"),
+                        qCoupon.amt,
+                        qCoupon.minAmt,
                         qCoupon.status,
                         qCoupon.startDate,
                         qCoupon.endDate))
@@ -149,7 +149,6 @@ public class CouponService
      * @param couponId
      * @return
      */
-    @Transactional(readOnly = true)
     public Coupon findOneById(Integer couponId)
     {
         return couponDao.findOneByCouponId(couponId);
@@ -160,7 +159,6 @@ public class CouponService
      * @param order
      * @return
      */
-    @Transactional(readOnly = true)
     public Coupon findBest4Order(Order order)
     {
         return couponDao.findTopByOwnerAndStatusAndMinAmtLessThanEqualOrderByAmtDescEndDate(order.getOwner(), CouponStatus.valid, order.getAmt());
@@ -172,7 +170,6 @@ public class CouponService
      * @return
      * @throws BusinessException 
      */
-    @Transactional
     public void useCoupon(Coupon coupon, String orderCode) throws BusinessException
     {
         //检查优惠券状态
@@ -200,5 +197,20 @@ public class CouponService
         couponDao.save(coupon);
         
         return;
+    }
+
+    /**
+     * 根据订单找到可用的优惠券
+     * @param order
+     * @return
+     */
+    public Page<CouponVo> available4Order(Order order, Pageable pageable) throws BusinessException
+    {
+        if (!order.getStatus().equals(OrderStatus.needToPay))
+        {
+            throw new BusinessException(String.format("不能查询 %s 状态订单的可用优惠券", order.getStatus().getText()));
+        }
+        
+        return couponDao.findByOwnerAndStatusAndMinAmtLessThanEqualOrderByAmtDescEndDate(order.getOwner(), CouponStatus.valid, order.getAmt(), pageable);
     }
 }

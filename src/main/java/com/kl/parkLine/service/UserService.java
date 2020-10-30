@@ -30,7 +30,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
  * @author chenc
  *
  */
-@Service("userService")
+@Service
+@Transactional(rollbackFor = Exception.class)
 public class UserService
 {
     @Autowired
@@ -49,13 +50,11 @@ public class UserService
      * 保存用户
      * @param user
      */
-    @Transactional
     public void save(User user)
     {
         userDao.save(user);
     }
     
-    @Transactional
     public void edit(User user, String userName)
     {
         this.save(user);
@@ -65,7 +64,6 @@ public class UserService
      * 创建新的用户
      * @param mobile 手机号码
      */
-    @Transactional
     public User createUser(String mobile)
     {
         User user = new User();
@@ -91,7 +89,6 @@ public class UserService
      * 根据用户名称查找
      * @param name 用户名称
      */ 
-    @Transactional(readOnly = true)
     public User findByName(String name)
     {
         return userDao.findOneByName(name);
@@ -101,7 +98,6 @@ public class UserService
      * 根据用户名称查找
      * @param name 用户名称
      */ 
-    @Transactional(readOnly = true)
     public User findWxOpenId(String openId)
     {
         return userDao.findOneByWxOpenId(openId);
@@ -111,7 +107,6 @@ public class UserService
      * 根据手机号查找
      * @param name 用户名称
      */ 
-    @Transactional(readOnly = true)
     public User findOneByMobile(String mobile)
     {
         return userDao.findOneByMobile(mobile);
@@ -121,7 +116,6 @@ public class UserService
      * 为用户添加车辆
      * @param car
      */
-    @Transactional
     public void addCar(String userName, Car car)
     {
         User user = this.findByName(userName);
@@ -136,7 +130,6 @@ public class UserService
      * @param auth
      * @return
      */
-    @Transactional(readOnly = true)
     public Page<UserVo> fuzzyFindPage(UserVo userVo, Pageable pageable, String userName)
     {
         User user = this.findByName(userName);
@@ -167,7 +160,6 @@ public class UserService
      * @param permission 需要的权限
      * @return 是否有权限
      */
-    @Transactional(readOnly = true)
     public boolean hasPermission(User reqData, User user, String permission) 
     {
         //TODO: 实现用户访问权限控制

@@ -1,14 +1,17 @@
 package com.kl.parkLine.vo;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Value;
 
-@Getter
-@Setter
 @Builder
+@Value
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("车辆VO")
 public class CarVo
 {
