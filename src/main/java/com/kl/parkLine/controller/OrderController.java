@@ -57,7 +57,7 @@ public class OrderController
     @PostMapping("/monthlyTkt/inquiry")
     @ApiOperation(value="查询月票价格", notes="根据停车场，起止时间，查询停车场月票价格")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Object> inquiryMMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody(required=true) MonthlyTktParam monthlyTktParam, 
+    public RestResult<Object> inquiryMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody(required=true) MonthlyTktParam monthlyTktParam, 
             Authentication auth)
     {
         try
@@ -190,32 +190,6 @@ public class OrderController
     }
     
     /**
-     * 根据车牌号查询等待付款的订单
-     */
-    @GetMapping("/needToPay")
-    @ApiOperation(value="找到等待支付的订单", 
-        notes="1.订单拥有者是登录用户;2.订单拥有者为空，但是车辆绑定到登录用户的未支付订单")
-    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Page<OrderVo>> needToPay(@ApiParam(name="分页信息",type="query") Pageable pageable,
-            Authentication auth)
-    {
-        return RestResult.success(orderService.needToPay(auth.getName(), pageable));
-    }
-    
-    /**
-     * 根据车牌号查询等待付款的订单
-     */
-    @GetMapping("/completed")
-    @ApiOperation(value="找到已经完成的订单", 
-        notes="1.订单拥有者是登录用户;2.订单拥有者为空，但是车辆绑定到登录用户的未支付订单;3.已经付款和不需要付款的订单")
-    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Page<OrderVo>> completed(@ApiParam(name="分页信息",type="query") Pageable pageable,
-            Authentication auth)
-    {
-        return RestResult.success(orderService.completed(auth.getName(), pageable));
-    }
-    
-    /**
      * 使用微信支付订单
      */
     @PostMapping("/wxPay")
@@ -259,7 +233,7 @@ public class OrderController
      */
     @PostMapping("/wxpay/notify")
     @ApiOperation(hidden = true, value = "")
-    public String wxpayNotify() throws IOException, Exception
+    public String wxPayNotify() throws IOException, Exception
     {
         Map<String, String> retMap = new HashMap<String, String>();
         try
@@ -320,13 +294,77 @@ public class OrderController
     /**
      * 找到可以开票的订单
      */
-    @GetMapping("/invoiceable")
+    @GetMapping("/my/invoiceable")
     @ApiOperation(value="找到可以开票的订单", 
         notes="已经付款，未取消，未进入开票申请")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Page<OrderVo>> invoiceable(@ApiParam(name="分页信息",type="query") Pageable pageable,
+    public RestResult<Page<OrderVo>> myInvoiceable(@ApiParam(name="分页信息",type="query") Pageable pageable,
             Authentication auth)
     {
         return RestResult.success(orderService.invoiceable(auth.getName(), pageable));
+    }
+    
+
+    /**
+     * 找到等待付款的停车订单
+     */
+    @GetMapping("/my/parking/needToPay")
+    @ApiOperation(value="找到等待付款的停车订单", 
+        notes="1.订单拥有者是登录用户;2.订单拥有者为空，但是车辆绑定到登录用户的未支付订单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<OrderVo>> myNeedToPayParking(@ApiParam(name="分页信息",type="query") Pageable pageable,
+            Authentication auth)
+    {
+        return RestResult.success(orderService.myNeedToPayParking(auth.getName(), pageable));
+    }
+    
+    /**
+     * 找到已经付款完成的停车订单
+     */
+    @GetMapping("/my/parking/payed")
+    @ApiOperation(value="找到已经付款完成的停车订单", 
+        notes="1.订单拥有者是登录用户;2.订单拥有者为空，但是车辆绑定到登录用户的未支付订单;3.已经付款和不需要付款的订单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<OrderVo>> myPayedParking(@ApiParam(name="分页信息",type="query") Pageable pageable,
+            Authentication auth)
+    {
+        return RestResult.success(orderService.myPayedParking(auth.getName(), pageable));
+    }
+    
+    /**
+     * 我的钱包
+     */
+    @GetMapping("/my/wallet")
+    @ApiOperation(value="我的钱包", notes="我的钱包变动记录")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<OrderVo>> myWalletLogs(@ApiParam(name="分页信息",type="query") Pageable pageable,
+            Authentication auth)
+    {
+        return RestResult.success(orderService.myWalletLogs(auth.getName(), pageable));
+    }
+    
+    /**
+     * 找到我已经付款的月票订单
+     */
+    @GetMapping("/my/monthlyTkt/payed")
+    @ApiOperation(value="找到我已经付款的月票订单", notes="找到我已经付款的月票订单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<OrderVo>> myPayedMonthlyTkt(@ApiParam(name="分页信息",type="query") Pageable pageable,
+            Authentication auth)
+    {
+        return RestResult.success(orderService.myPayedMonthlyTkt(auth.getName(), pageable));
+    }
+    
+    /**
+     * 找到等待付款的月票订单
+     */
+    @GetMapping("/my/monthlyTkt/needToPay")
+    @ApiOperation(value="找到等待付款的月票订单", 
+        notes="1.订单拥有者是登录用户;2.订单拥有者为空，但是车辆绑定到登录用户的未支付订单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<OrderVo>> myNeedToPayMonthlyTkt(@ApiParam(name="分页信息",type="query") Pageable pageable,
+            Authentication auth)
+    {
+        return RestResult.success(orderService.myNeedToPayMonthlyTkt(auth.getName(), pageable));
     }
 }

@@ -27,7 +27,7 @@ public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredic
     public Order findOneByCode(String code);
     public Boolean existsByTypeAndCarAndParkAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual(OrderType type, Car car, Park park, List<OrderStatus> status, Date endDate, Date startDate);
     public Set<Order> findByCarAndOwnerIsNull(Car car);
+    public Page<OrderVo> findByOwnerAndWalletBalanceIsNotNull(User owner, Pageable pageable);
     public Page<OrderVo> findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus status, User owner, BigDecimal amt, Pageable pageable);
-    public Page<OrderVo> findByStatusInAndOwner(List<OrderStatus> status, User owner, Pageable pageable);
-    
+    public Page<OrderVo> findByTypeAndStatusAndOwner(OrderType orderType, OrderStatus status, User owner, Pageable pageable);
 }

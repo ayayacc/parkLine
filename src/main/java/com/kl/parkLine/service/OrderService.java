@@ -546,25 +546,58 @@ public class OrderService
     }
     
     /**
-     * 找到指定用户可以开票的订单
+     * 找到需要支付的停车订单
      * @param userName
      * @return
      */
-    public Page<OrderVo> needToPay(String userName, Pageable pageable)
+    public Page<OrderVo> myNeedToPayParking(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
-        return orderDao.findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus.needToPay, user, BigDecimal.ZERO, pageable);
+        return orderDao.findByTypeAndStatusAndOwner(OrderType.parking, OrderStatus.needToPay, user, pageable);
     }
     
     /**
-     * 找到指定用户可以开票的订单
+     * 找到已经完成支付的停车订单
      * @param userName
      * @return
      */
-    public Page<OrderVo> completed(String userName, Pageable pageable)
+    public Page<OrderVo> myPayedParking(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
-        return orderDao.findByStatusInAndOwner(completedStauts, user, pageable);
+        return orderDao.findByTypeAndStatusAndOwner(OrderType.parking, OrderStatus.payed, user, pageable);
+    }
+    
+    /**
+     * 我的钱包变动记录
+     * @param userName
+     * @return
+     */
+    public Page<OrderVo> myWalletLogs(String userName, Pageable pageable)
+    {
+        User user = userService.findByName(userName);
+        return orderDao.findByOwnerAndWalletBalanceIsNotNull(user, pageable);
+    }
+    
+    /**
+     * 找到已经完成支付的月票订单
+     * @param userName
+     * @return
+     */
+    public Page<OrderVo> myPayedMonthlyTkt(String userName, Pageable pageable)
+    {
+        User user = userService.findByName(userName);
+        return orderDao.findByTypeAndStatusAndOwner(OrderType.monthlyTicket, OrderStatus.payed, user, pageable);
+    }
+    
+    /**
+     * 找到等待付款的月票订单
+     * @param userName
+     * @return
+     */
+    public Page<OrderVo> myNeedToPayMonthlyTkt(String userName, Pageable pageable)
+    {
+        User user = userService.findByName(userName);
+        return orderDao.findByTypeAndStatusAndOwner(OrderType.monthlyTicket, OrderStatus.needToPay, user, pageable);
     }
     
     /**
@@ -630,6 +663,7 @@ public class OrderService
             case walletIn: //钱包充值订单:增加钱包余额
                 User owner = order.getOwner();
                 owner.setBalance(owner.getBalance().add(order.getAmt()));
+                order.setWalletBalance(owner.getBalance()); //记录钱包余额
                 break;
             case coupon:
                 Coupon coupon = order.getActivatedCoupon();
@@ -1070,6 +1104,7 @@ public class OrderService
         order.setStatus(OrderStatus.payed);
         order.setPaymentType(PaymentType.qb);
         order.setPaymentTime(new Date());
+        order.setWalletBalance(newBlance);
         
         //记录备注
         this.save(order);

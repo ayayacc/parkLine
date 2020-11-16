@@ -1,7 +1,5 @@
 package com.kl.parkLine.json;
 
-import java.math.BigDecimal;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -17,7 +15,4 @@ public class PayOrderParam
     
     @ApiModelProperty("优惠券Id")
     private Integer couponId;
-    
-    @ApiModelProperty("付款金额")
-    private BigDecimal amt;
 }
