@@ -1,6 +1,5 @@
 package com.kl.parkLine.json;
 
-import java.math.BigDecimal;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -12,14 +11,14 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@ApiModel("购买月票参数")
-public class CreateMonthlyTktParam
+@ApiModel("月票参数")
+public class MonthlyTktParam
 {
     @ApiModelProperty(required = true, name = "停车场Id")
     private Integer parkId;
     
-    @ApiModelProperty(required = true, name = "车牌号码")
-    private String carNo;
+    @ApiModelProperty(required = true, name = "车辆Id")
+    private Integer carId;
     
     /**
      * 有效期开始时间
@@ -34,7 +33,4 @@ public class CreateMonthlyTktParam
     @JsonFormat(pattern = "yyyy-MM-dd")
     @ApiModelProperty(required = true, name = "有效期结束时间")
     private Date endDate;
-    
-    @ApiModelProperty(required = true, name = "金额(元)")
-    private BigDecimal amt;
 }

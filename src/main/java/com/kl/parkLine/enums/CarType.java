@@ -7,15 +7,13 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-@ApiModel("性别")
-public enum Gender implements BaseEnum
+@ApiModel("车辆类型")
+public enum CarType implements BaseEnum
 {
-    @ApiModelProperty("0:未知")
-    unkonwn(0, "未知"),
-    @ApiModelProperty("1:男")
-    male(1, "男"),
-    @ApiModelProperty("2:女")
-    femail(2, "女");
+    @ApiModelProperty("1: 燃油车")
+    fuel(1, "1: 燃油车"),
+    @ApiModelProperty("2: 新能源车")
+    newEnergy(2, "2: 新能源车");
     
     private Integer value;
     private String text;

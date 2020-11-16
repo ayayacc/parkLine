@@ -152,6 +152,22 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
     private Date endDate;
     
     /**
+     * 领取后N天有效
+     */
+    @NeedToCompare(name = "领取后N天有效")
+    @Column(name = "term", nullable = false)
+    @ApiModelProperty("领取后N天有效")
+    private Integer term;
+    
+    /**
+     * 适用的停车场
+     */
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "couponDef", cascade = {CascadeType.ALL})  
+    @JsonIgnore
+    @ApiModelProperty(hidden = true)
+    private List<CouponDefPark> couponDefParks;
+    
+    /**
      * 操作记录
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "couponDef", cascade = {CascadeType.ALL})  

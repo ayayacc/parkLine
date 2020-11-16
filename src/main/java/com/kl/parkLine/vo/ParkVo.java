@@ -1,7 +1,5 @@
 package com.kl.parkLine.vo;
 
-import java.math.BigDecimal;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.swagger.annotations.ApiModel;
@@ -37,24 +35,6 @@ public class ParkVo
     
     @ApiModelProperty("联系方式")
     private String contact;
-    
-    @ApiModelProperty("免费时长")
-    private Integer freeTime;
-    
-    @ApiModelProperty("第一计费阶段时长")
-    private Integer timeLev1;
-    
-    @ApiModelProperty("第一计费阶段单价")
-    private BigDecimal priceLev1;
-    
-    @ApiModelProperty("第二计费阶段时长")
-    private Integer timeLev2;
-    
-    @ApiModelProperty("第二计费阶段单价")
-    private BigDecimal priceLev2;
-    
-    @ApiModelProperty("计费最大金额")
-    private BigDecimal maxAmt;
     
     @ApiModelProperty("是否有效")
     private String enabled;

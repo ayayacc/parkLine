@@ -24,7 +24,7 @@ import lombok.Setter;
 
 @SuppressWarnings("serial")
 @Entity
-@Table(name = "TT_PARK_LOG")
+@Table(name = "TC_PARK_LOG")
 @Getter
 @Setter
 @DynamicUpdate

@@ -6,10 +6,10 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.entity.User;
-import com.kl.parkLine.enums.Gender;
 import com.kl.parkLine.feign.IWxFeignClient;
 import com.kl.parkLine.json.WxCode2SessionResult;
 import com.kl.parkLine.service.UserService;
@@ -34,6 +34,7 @@ public class WxAuthenticationProvider implements AuthenticationProvider
     private UserService userService;
     
     @Override
+    @Transactional
     public Authentication authenticate(Authentication authentication)
             throws AuthenticationException
     {
@@ -50,17 +51,7 @@ public class WxAuthenticationProvider implements AuthenticationProvider
         if (null == user)
         {
             //自动创建用户
-            user = new User();
-            user.setName(userName);
-            user.setNickName(wxAuthenticationToken.getWxUserInfo().getNickName());
-            user.setCountry(wxAuthenticationToken.getWxUserInfo().getCountry());
-            user.setProvince(wxAuthenticationToken.getWxUserInfo().getProvince());
-            user.setCity(wxAuthenticationToken.getWxUserInfo().getCity());
-            //TODO: 从微信读取性别
-            //Gender..valueOf(wxAuthenticationToken.getWxUserInfo().getGender());
-            user.setGender(Gender.male);
-            user.setEnabled(true);
-            userService.save(user);
+            user = userService.createEndUser(userName, wxAuthenticationToken.getWxUserInfo());
         }
         
         WxAuthenticationToken token = new WxAuthenticationToken(user.getUsername(), user.getAuthorities());

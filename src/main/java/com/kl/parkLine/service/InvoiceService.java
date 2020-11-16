@@ -102,7 +102,7 @@ public class InvoiceService
         
         QInvoice qInvoice = QInvoice.invoice;
         QueryResults<InvoiceVo> queryResults = jpaQueryFactory
-                .select(Projections.bean(InvoiceVo.class, 
+                .select(Projections.constructor(InvoiceVo.class, 
                         qInvoice.invoiceId,
                         qInvoice.code,
                         qInvoice.amt,

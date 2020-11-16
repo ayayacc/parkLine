@@ -33,4 +33,7 @@ public class WxUnifiedOrderResult
     @ApiModelProperty("签名")
     private String paySign ;
     
+    @ApiModelProperty("订单编号")
+    private String orderCode ;
+    
 }

@@ -3,7 +3,6 @@ package com.kl.parkLine.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -11,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.joda.time.DateTime;
+import org.joda.time.Days;
 import org.joda.time.Minutes;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,15 +24,21 @@ import org.springframework.util.StringUtils;
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.component.WxCmpt;
 import com.kl.parkLine.dao.IOrderDao;
+import com.kl.parkLine.dao.IParkStepFeeDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Coupon;
-import com.kl.parkLine.entity.CouponDef;
 import com.kl.parkLine.entity.Event;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.OrderLog;
 import com.kl.parkLine.entity.Park;
+import com.kl.parkLine.entity.ParkFixedFee;
+import com.kl.parkLine.entity.ParkStepFee;
+import com.kl.parkLine.entity.QCar;
 import com.kl.parkLine.entity.QOrder;
+import com.kl.parkLine.entity.QPark;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.CarType;
+import com.kl.parkLine.enums.ChargeType;
 import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.OrderStatus;
@@ -41,7 +47,7 @@ import com.kl.parkLine.enums.PaymentType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.ChargeWalletParam;
-import com.kl.parkLine.json.CreateMonthlyTktParam;
+import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.WxPayNotifyParam;
 import com.kl.parkLine.json.WxUnifiedOrderResult;
@@ -81,14 +87,14 @@ public class OrderService
     private OrderPredicates orderPredicates;
     
     @Autowired
+    private IParkStepFeeDao parkStepFeeDao;
+    
+    @Autowired
     private Utils util;
     
     
     @Autowired
     private WxCmpt wxCmpt;
-    
-    @Autowired
-    private CouponDefService couponDefService;
     
     @Autowired
     private CouponService couponService;
@@ -99,11 +105,18 @@ public class OrderService
     private final Float ACTIVE_COUPON_FACTOR = 0.8f; //激活优惠券金额与券面金额系数
     private final List<OrderStatus> checkedStatus = new ArrayList<OrderStatus>();
     
+    //已经完成的订单状态
+    private final List<OrderStatus> completedStauts = new ArrayList<OrderStatus>();
+    
     public OrderService()
     {
         //检查重复订单包含的状态: 存在等待付款和已经付款的月票订单时，不能再次创建重复的月票
         checkedStatus.add(OrderStatus.needToPay);
         checkedStatus.add(OrderStatus.payed);
+        
+        //已经完成的订单状态：已经付款的或者无需支付的
+        completedStauts.add(OrderStatus.payed);
+        completedStauts.add(OrderStatus.noNeedToPay);
     }  
     /**
      * 分页查询
@@ -114,16 +127,24 @@ public class OrderService
     private Page<OrderVo> fuzzyFindPage(Predicate searchPred, Pageable pageable)
     {
         QOrder qOrder = QOrder.order;
+        QPark qPark = QPark.park;
+        QCar qCar = QCar.car;
         QueryResults<OrderVo> queryResults = jpaQueryFactory
-                .select(Projections.bean(OrderVo.class, qOrder.orderId,
+                .select(Projections.constructor(OrderVo.class, qOrder.orderId,
                         qOrder.code,
+                        qOrder.type,
                         qOrder.status,
-                        qOrder.park.name.as("parkName"),
-                        qOrder.park.parkId.as("parkParkId"),
-                        qOrder.car.carId.as("carCarId"),
-                        qOrder.car.carNo.as("carCarNo"),
-                        qOrder.type))
-                .from(qOrder)
+                        qPark.parkId.as("parkParkId"),
+                        qPark.name.as("parkName"),
+                        qCar.carId.as("carCarId"),
+                        qCar.carNo.as("carCarNo"),
+                        qOrder.inTime,
+                        qOrder.outTime,
+                        qOrder.amt,
+                        qOrder.startDate,
+                        qOrder.endDate))
+                .from(qOrder).leftJoin(qPark).on(qOrder.park.eq(qPark))
+                .leftJoin(qCar).on(qOrder.car.eq(qCar))
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -264,7 +285,8 @@ public class OrderService
         Park park = parkService.findOneByCode(event.getParkCode());
         
         //车辆信息
-        Car car = carService.getCar(event.getPlateNo());
+        Car car = carService.getCar(event.getPlateNo(), event.getPlateColor());
+        
         Order order = Order.builder()
                 .code(util.makeCode(OrderType.parking))
                 .car(car)
@@ -421,9 +443,62 @@ public class OrderService
      * @param order
      * @return
      * @throws ParseException 
+     * @throws BusinessException 
      */
-    public void calAmt(Order order) throws ParseException
+    public void calAmt(Order order) throws ParseException, BusinessException
     {
+        BigDecimal amt = BigDecimal.ZERO;
+        //TODO: 计算费用
+        Park park = order.getPark();
+        Car car = order.getCar();
+        DateTime inTime = new DateTime(order.getInTime());
+        DateTime outTime = new DateTime(order.getOutTime());
+        Integer minutes = Minutes.minutesBetween(inTime, outTime).getMinutes();
+        
+        //阶梯计费
+        if (park.getChargeType().equals(ChargeType.step))
+        {
+            ParkStepFee parkStepFee = parkStepFeeDao.findOneByParkAndCarTypeAndStartMinLessThanEqualAndEndMinGreaterThan(
+                    park, car.getCarType(), minutes, minutes);
+            if (null == parkStepFee)
+            {
+                throw new BusinessException(String.format("停车场  %s 阶梯费用配置错误, 缺少: %s 车  %d 分钟收费配置", 
+                        park.getName(), car.getCarType().getText(), minutes));
+            }
+            amt = parkStepFee.getAmt();
+        }
+        //固定费率
+        else if (park.getChargeType().equals(ChargeType.fixed))
+        {
+            ParkFixedFee parkFixedFee = null;
+            if (car.getCarType().equals(CarType.newEnergy)) //新能源计费规则
+            {
+                parkFixedFee = park.getNewEnergyFixedFee();
+            }
+            else  //燃油车计费规则(默认)
+            {
+                parkFixedFee = park.getFuelFixedFee();
+            }
+            
+            //封顶次数
+            int maxCnt = minutes / (parkFixedFee.getMaxPeriod()*60); //最大计费周期以小时为单位
+            amt = parkFixedFee.getMaxAmt().multiply(new BigDecimal(maxCnt));
+            
+            //未满封顶的时间
+            int modMinutes = minutes % (parkFixedFee.getMaxPeriod()*60);
+            //免费时长
+            BigDecimal feeTimeTotal = new BigDecimal(modMinutes - parkFixedFee.getFreeTime()); //计算应该计费的时间
+            if (0 < feeTimeTotal.compareTo(BigDecimal.ZERO)) //超过免费时间(超过x分钟收费)
+            {
+                BigDecimal modAmt = feeTimeTotal.divide(new BigDecimal(parkFixedFee.getFeePeriod()), 
+                        RoundingMode.CEILING).multiply(parkFixedFee.getPrice());
+                modAmt = modAmt.min(parkFixedFee.getMaxAmt());
+                amt = amt.add(modAmt);
+            }
+        }
+        
+        /*
+        //月票
         Park park = order.getPark();
         BigDecimal amt = BigDecimal.ZERO;
         //按照出场时间检查是否有月票
@@ -465,6 +540,9 @@ public class OrderService
         
         //最多不超过x元
         order.setAmt(amt.min(park.getMaxAmt()));
+        order.setRealAmt(order.getAmt());*/
+        order.setAmt(amt);
+        order.setRealAmt(amt);
     }
     
     /**
@@ -476,6 +554,17 @@ public class OrderService
     {
         User user = userService.findByName(userName);
         return orderDao.findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus.needToPay, user, BigDecimal.ZERO, pageable);
+    }
+    
+    /**
+     * 找到指定用户可以开票的订单
+     * @param userName
+     * @return
+     */
+    public Page<OrderVo> completed(String userName, Pageable pageable)
+    {
+        User user = userService.findByName(userName);
+        return orderDao.findByStatusInAndOwner(completedStauts, user, pageable);
     }
     
     /**
@@ -509,13 +598,10 @@ public class OrderService
     }
     
     /**
-     * 处理订单支付结果
+     * 处理微信支付成功结果
      * @param wxPayNotifyParam
-     * @throws BusinessException 
-     * @throws SecurityException 
-     * @throws NoSuchFieldException 
      */
-    public void wxPaySuccess(WxPayNotifyParam wxPayNotifyParam) throws BusinessException, NoSuchFieldException, SecurityException
+    public void wxPaySuccess(WxPayNotifyParam wxPayNotifyParam) throws BusinessException
     {
         //找到付款订单
         Order order = orderDao.findOneByCode(wxPayNotifyParam.getOutTradeNo());
@@ -523,7 +609,7 @@ public class OrderService
         {
             return;
         }
-        if (null != order.getPaymentTime())  //已经处理过付款通知(微信会重复推送同一张订单的付款通知)
+        if (!order.getStatus().equals(OrderStatus.needToPay))  //已经处理过付款通知(微信会重复推送同一张订单的付款通知)
         {
             return;
         }
@@ -531,7 +617,6 @@ public class OrderService
         order.setStatus(OrderStatus.payed);
         //设置支付日期
         order.setPaymentTime(wxPayNotifyParam.getTimeEnd());
-        order.setPaymentType(PaymentType.wx);
         
         //设置付款银行
         order.setBankType(wxPayNotifyParam.getBankType());
@@ -539,15 +624,6 @@ public class OrderService
         order.setWxTransactionId(wxPayNotifyParam.getTransactionId());
         //设置用户关注公众号情况
         order.getOwner().setSubscribe(wxPayNotifyParam.getIsSubscribe());
-        
-        //设置使用的优惠券状态
-        if (null != order.getUsedCoupon())
-        {
-            order.getUsedCoupon().setStatus(CouponStatus.used);
-            CouponDef couponDef = order.getUsedCoupon().getCouponDef();
-            couponDef.setUsedCnt(couponDef.getUsedCnt() + 1);
-            couponDefService.save(couponDef);
-        }
         
         switch (order.getType())
         {
@@ -572,22 +648,48 @@ public class OrderService
     }
     
     /**
+     * 处理订单支付失败结果
+     * @param wxPayNotifyParam
+     * @throws BusinessException 
+     */
+    public void wxPayFail(WxPayNotifyParam wxPayNotifyParam) throws BusinessException
+    {
+      //找到付款订单
+        Order order = orderDao.findOneByCode(wxPayNotifyParam.getOutTradeNo());
+        if (null == order)
+        {
+            return;
+        }
+        if (!order.getStatus().equals(OrderStatus.needToPay))  //已经处理过付款通知(微信会重复推送同一张订单的付款通知)
+        {
+            return;
+        }
+        //修改订单状态
+        order.setStatus(OrderStatus.needToPay);
+        //设置支付日期
+        order.setPaymentTime(null);
+        
+        //TODO:恢复优惠券状态
+        
+        order.appedChangeRemark(String.format("微信付款失败: %s", wxPayNotifyParam));
+        this.save(order);
+    }
+
+    /**
      * 检查月票订单参数有效性,开始结束日期是否在月头月尾,价格是否正确
      * @param park
      * @return
      */
-    private void checkMonthlyTktParams(Park park, Date startDate, Date endDate, BigDecimal amt) throws BusinessException
+    private void checkMonthlyTktDate(Date startDate, Date endDate) throws BusinessException
     {
-        //检查开始结束日期是否在月头月尾
         DateTime dateTimeStart = new DateTime(startDate);
-        if (1 != dateTimeStart.getDayOfMonth()) //不是月初第一天
-        {
-            throw new BusinessException("开始日期应该为月初第一天");
-        }
         DateTime dateTimeEnd = new DateTime(endDate);
-        if (1 != dateTimeEnd.plusDays(1).getDayOfMonth()) //不是月末最后一天
+        DateTime today = new DateTime().withTimeAtStartOfDay();
+        
+        //开始日期不能早于今天
+        if (dateTimeStart.isBefore(today))
         {
-            throw new BusinessException("结束日期应该为月末最后一天");
+            throw new BusinessException("开始日期不能早于今天");
         }
         
         //检查日期大小
@@ -595,37 +697,106 @@ public class OrderService
         {
             throw new BusinessException("开始日期必须小于结束日期");
         }
-        
-        //检查价格
-        int month = (dateTimeEnd.getYear()-dateTimeStart.getYear())*12 + dateTimeEnd.getMonthOfYear()-dateTimeStart.getMonthOfYear() + 1;
-        if (!amt.equals(park.getMonthlyPrice().multiply(new BigDecimal(month))))
-        {
-            throw new BusinessException("传递的月票价格不正确,请刷新价格后重试");
-        }
     }
     
     //检查是否存在重复的月票订单:车辆,停车场,时间段,状态：已经支付/待支付
     private Boolean existsValidMonthlyTkt(Car car, Park park, Date startDate, Date endDate)
     {
-        return orderDao.existsByTypeAndCarCarNoAndParkParkIdAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual
-                (OrderType.monthlyTicket, car.getCarNo(), park.getParkId(), checkedStatus, endDate, startDate);
+        return orderDao.existsByTypeAndCarAndParkAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual
+                (OrderType.monthlyTicket, car, park, checkedStatus, endDate, startDate);
     }
+    
+    /**
+     * 计算月票价格
+     * @param park 停车场
+     * @param car 车辆
+     * @param dateTimeStart 开始时间
+     * @param dateTimeEnd 结束时间
+     * @return
+     */
+    private BigDecimal calMonthlyTktAmt(Park park, Car car, Date startDate, Date endDate)
+    {
+        BigDecimal amt = BigDecimal.ZERO;
+        BigDecimal price = park.getFuelMonthlyPrice(); //默认按照燃油车计费
+        if (car.getCarType().equals(CarType.newEnergy))
+        {
+            price = park.getNewEnergyMonthlyPrice();
+        }
+        
+        //开始结束时间
+        DateTime dateTimeStart = new DateTime(startDate);
+        DateTime dateTimeEnd = new DateTime(endDate);
+        
+        //取开始时间到月末最后一天计算
+        DateTime theEndDataOfMonth = dateTimeStart.dayOfMonth().withMaximumValue();
+        while (dateTimeEnd.isAfter(theEndDataOfMonth))
+        {
+            BigDecimal days = new BigDecimal(Days.daysBetween(dateTimeStart, theEndDataOfMonth).getDays() + 1); //包含当天
+            amt = amt.add(price.multiply(days).divide(new BigDecimal(dateTimeStart.dayOfMonth().getMaximumValue()), 2,RoundingMode.HALF_UP));
+            
+            //下个月第一天
+            dateTimeStart = theEndDataOfMonth.plusDays(1);
+            theEndDataOfMonth = dateTimeStart.dayOfMonth().withMaximumValue();
+        }
+        
+        //计算未到月末部分
+        BigDecimal days = new BigDecimal(Days.daysBetween(dateTimeStart, dateTimeEnd).getDays() + 1); //包含当天
+        amt = amt.add(price.multiply(days).divide(new BigDecimal(dateTimeStart.dayOfMonth().getMaximumValue()), 2,RoundingMode.HALF_UP));
+        return amt;
+    }
+    
+    /**
+     * 月票询价，月票固定价格，根据此价格，计算每月的日停车单价，（不同月份的包日停车单价不同），月票价格分月，分段计算
+     * @param monthlyTktParam
+     * @throws Exception 
+     */
+    public BigDecimal inqueryMonthlyTkt(MonthlyTktParam monthlyTktParam) throws Exception
+    {
+        //找到停车场
+        Park park = parkService.findOneById(monthlyTktParam.getParkId());
+        if (null == park)
+        {
+            throw new BusinessException(String.format("无效的停车场Id: %d", monthlyTktParam.getParkId()));
+        }
+        
+        //找到车辆
+        Car car = carService.findOneById(monthlyTktParam.getCarId());
+        if (null == car)
+        {
+            throw new BusinessException(String.format("无效的车辆Id: %d", monthlyTktParam.getCarId()));
+        }
+        
+        checkMonthlyTktDate(monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
+        
+        //检查是否有重复的月票订单
+        if (this.existsValidMonthlyTkt(car, park, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate()))
+        {
+            throw new BusinessException("请勿重复购买月票");
+        }
+        
+        return calMonthlyTktAmt(park, car, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
+    }    
     
     /**
      * 创建一个新的月票订单
      * @param monthlyTktParam
      * @throws Exception 
      */
-    public WxUnifiedOrderResult createMonthlyTkt(CreateMonthlyTktParam monthlyTktParam, String userName) throws Exception
+    public WxUnifiedOrderResult createMonthlyTkt(MonthlyTktParam monthlyTktParam, String userName) throws Exception
     {
         User owner = userService.findByName(userName);
         Park park = parkService.findOneById(monthlyTktParam.getParkId());
         
-        //检查月票订单参数
-        this.checkMonthlyTktParams(park, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate(), monthlyTktParam.getAmt());
+        //找到车辆
+        Car car = carService.findOneById(monthlyTktParam.getCarId());
+        if (null == car)
+        {
+            throw new BusinessException(String.format("无效的车辆Id: %d", monthlyTktParam.getCarId()));
+        }
         
-
-        Car car = carService.getCar(monthlyTktParam.getCarNo());
+        //检查月票订单参数
+        this.checkMonthlyTktDate(monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
+        
         //检查是否有重复的月票订单
         if (this.existsValidMonthlyTkt(car, park, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate()))
         {
@@ -633,10 +804,12 @@ public class OrderService
         }
         
         String code = util.makeCode(OrderType.monthlyTicket);
+        BigDecimal amt = this.calMonthlyTktAmt(park, car, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
         
         //创建订单
         Order order = Order.builder()
-                .code(code).car(car).park(park).amt(monthlyTktParam.getAmt())
+                .code(code).car(car).park(park).amt(amt)
+                .realAmt(amt)
                 .type(OrderType.monthlyTicket)
                 .startDate(monthlyTktParam.getStartDate())
                 .endDate(monthlyTktParam.getEndDate())
@@ -665,6 +838,7 @@ public class OrderService
         Order order = Order.builder()
                 .code(code)
                 .amt(walletChargeParam.getAmt())
+                .realAmt(walletChargeParam.getAmt())
                 .type(OrderType.walletIn)
                 .status(OrderStatus.needToPay)
                 .owner(owner).build();
@@ -713,7 +887,9 @@ public class OrderService
         
         //创建订单
         Order order = Order.builder()
-                .code(code).amt(activeCouponParam.getAmt())
+                .code(code)
+                .amt(activeCouponParam.getAmt())
+                .realAmt(activeCouponParam.getAmt())
                 .activatedCoupon(coupon)
                 .type(OrderType.coupon)
                 .status(OrderStatus.needToPay)
@@ -801,6 +977,7 @@ public class OrderService
         //微信无快捷支付
         order.setPaymentType(PaymentType.wx);
         order.setAutoCoupon(false);
+        order.setRealAmt(order.getAmt());
         
         //准备支付，检查状态，设置优惠券
         preparePay(order, coupon, payerName);
@@ -837,6 +1014,7 @@ public class OrderService
         //钱包支付
         order.setPaymentType(PaymentType.qb);
         order.setAutoCoupon(false);
+        order.setRealAmt(order.getAmt());
         
         //准备支付，检查状态，设置优惠券
         this.preparePay(order, coupon, payerName);
@@ -854,6 +1032,7 @@ public class OrderService
         //钱包支付
         order.setPaymentType(PaymentType.qb);
         order.setAutoCoupon(true);
+        order.setRealAmt(order.getAmt());
         
         //准备支付，检查状态，设置优惠券
         this.preparePay(order, null, order.getOwner().getName());

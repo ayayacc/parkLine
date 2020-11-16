@@ -119,7 +119,7 @@ public class ParkService
         
         QPark qPark = QPark.park;
         QueryResults<ParkVo> queryResults = jpaQueryFactory
-                .select(Projections.bean(ParkVo.class, 
+                .select(Projections.constructor(ParkVo.class, 
                         qPark.parkId,
                         qPark.code,
                         qPark.name,
@@ -127,13 +127,7 @@ public class ParkService
                         qPark.availableCnt,
                         qPark.geo,
                         qPark.contact,
-                        qPark.enabled,
-                        qPark.freeTime,
-                        qPark.timeLev1,
-                        qPark.priceLev1,
-                        qPark.timeLev2,
-                        qPark.priceLev2,
-                        qPark.maxAmt))
+                        qPark.enabled))
                 .from(qPark)
                 .where(searchPred)
                 .offset(pageable.getOffset())

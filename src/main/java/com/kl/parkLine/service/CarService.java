@@ -19,8 +19,11 @@ import com.kl.parkLine.entity.CarLog;
 import com.kl.parkLine.entity.QCar;
 import com.kl.parkLine.entity.QUser;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.CarType;
+import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.enums.RoleType;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.BindCarParam;
 import com.kl.parkLine.predicate.CarPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.CarVo;
@@ -103,16 +106,33 @@ public class CarService
      * @param carNo 车牌号码
      * @throws BusinessException 
      */
-    public Car getCar(String carNo) throws BusinessException
+    public Car getCar(String carNo, PlateColor plateColor) throws BusinessException
     {
-        Car car = carDao.findOneByCarNo(carNo);
+        Car car = carDao.findOneByCarNoAndPlateColor(carNo, plateColor);
         if (null == car)
         {
             car = new Car();
             car.setCarNo(carNo);
+            car.setPlateColor(plateColor);
+            car.setCarType(CarType.fuel);
+            if (plateColor.equals(PlateColor.green))
+            {
+                car.setCarType(CarType.newEnergy);
+            }
             this.save(car);
         }
         return car;
+    }
+    
+    /**
+     * 通过Id查找唯一车辆
+     * @param carId 车辆Id
+     * @throws BusinessException 
+     */
+    public Car findOneById(Integer carId)
+    {
+        Optional<Car> car = carDao.findById(carId);
+        return car.get();
     }
     
     /**
@@ -121,15 +141,18 @@ public class CarService
      * @param carNo 添加的车牌号码
      * @throws BusinessException 
      */
-    public void bind(String userName, String carNo) throws BusinessException
+    public void bind(String userName, BindCarParam bindCarParam) throws BusinessException
     {
         User user = userService.findByName(userName);
+        String carNo = bindCarParam.getCarNo();
+        PlateColor plateColor = bindCarParam.getPlateColor();
         //检查车辆是否已经存在
-        Car car = carDao.findOneByCarNo(carNo);
+        Car car = carDao.findOneByCarNoAndPlateColor(carNo, plateColor);
         if (null == car)
         {
             car = new Car();
             car.setCarNo(carNo);
+            car.setPlateColor(plateColor);
         }
         else if (null != car.getUser()) //车辆已经绑定到其他用户
         {
@@ -139,9 +162,7 @@ public class CarService
             }
             else 
             {
-                String mobile = car.getUser().getMobile();
-                String right = mobile.substring(mobile.length()-4); //取手机尾号后四位
-                throw new BusinessException(String.format("%s 已经被手机尾号: %s 用户绑定，请联系TA解绑后再进行绑定", carNo, right));
+                throw new BusinessException(String.format("%s 已经被其他用户绑定，请联系TA解绑后再进行绑定", carNo));
             }
         }
         car.setUser(user);
@@ -159,14 +180,13 @@ public class CarService
      * @param carNo 添加的车牌号码
      * @throws BusinessException 
      */
-    public void unbind(String carNo) throws BusinessException
+    public void unbind(Integer carId) throws BusinessException
     {
         //检查车辆是否已经存在
-        Car car = carDao.findOneByCarNo(carNo);
+        Car car = carDao.getOne(carId);
         if (null == car)
         {
-            car = new Car();
-            car.setCarNo(carNo);
+            throw new BusinessException(String.format("无效的车辆Id: %d", carId));
         }
         else if (null == car.getUser()) //如果车辆当前并未绑定到用户
         {

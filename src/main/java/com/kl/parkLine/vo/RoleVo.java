@@ -1,7 +1,5 @@
 package com.kl.parkLine.vo;
 
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.swagger.annotations.ApiModel;
@@ -25,7 +23,4 @@ public class RoleVo
     
     @ApiModelProperty("名称")
     private String name;
-    
-    @ApiModelProperty("菜单")
-    private Set<MenuVo> menuVos;
 }

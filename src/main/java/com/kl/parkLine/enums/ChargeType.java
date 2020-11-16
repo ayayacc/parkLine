@@ -7,15 +7,13 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-@ApiModel("性别")
-public enum Gender implements BaseEnum
+@ApiModel("计费类型")
+public enum ChargeType implements BaseEnum
 {
-    @ApiModelProperty("0:未知")
-    unkonwn(0, "未知"),
-    @ApiModelProperty("1:男")
-    male(1, "男"),
-    @ApiModelProperty("2:女")
-    femail(2, "女");
+    @ApiModelProperty("1: 固定计费")
+    fixed(1, "1: 固定费率"),
+    @ApiModelProperty("2: 阶梯计费")
+    step(2, "2: 阶梯计费");
     
     private Integer value;
     private String text;

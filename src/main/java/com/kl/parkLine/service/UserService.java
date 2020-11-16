@@ -18,6 +18,7 @@ import com.kl.parkLine.entity.QUser;
 import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.Gender;
+import com.kl.parkLine.json.WxUserInfo;
 import com.kl.parkLine.predicate.UserPredicates;
 import com.kl.parkLine.util.RoleCode;
 import com.kl.parkLine.vo.UserVo;
@@ -57,20 +58,52 @@ public class UserService
     
     /**
      * 创建新的用户
-     * @param mobile 手机号码
+     * @param userName 用户名
      */
-    public User createUser(String mobile)
+    public User createEndUser(String mobile)
     {
         User user = new User();
         //生成userName
         String right = mobile.substring(mobile.length()-4); //取手机尾号后四位
         SimpleDateFormat sdf = new SimpleDateFormat("mmss");
         String userName = String.format("SJ_%s_%s", sdf.format(new Date()), right);
-        user.setMobile(mobile);
         user.setName(userName);
-        //TODO: 获取真实性别
-        user.setGender(Gender.male);
+        user.setMobile(mobile);
         user.setEnabled(true);
+        Set<Role> roles = new HashSet<>();
+        Role role = roleService.findOneByCode(RoleCode.END_USER);
+        roles.add(role);
+        user.setRoles(roles);
+        user.setGender(Gender.unkonwn);
+        user.setSubscribe("N");
+        save(user);
+        return user;
+    }
+    
+    /**
+     * 创建新的用户
+     * @param wxUserInfo 微信登录信息
+     */
+    public User createEndUser(String name, WxUserInfo wxUserInfo)
+    {
+        User user = new User();
+        user.setName(name);
+        user.setNickName(wxUserInfo.getNickName());
+        user.setCountry(wxUserInfo.getCountry());
+        user.setProvince(wxUserInfo.getProvince());
+        user.setCity(wxUserInfo.getCity());
+        switch (wxUserInfo.getGender())
+        {
+            case 1:
+                user.setGender(Gender.male);
+                break;
+            case 2:
+                user.setGender(Gender.femail);
+            default:
+                user.setGender(Gender.unkonwn);
+                break;
+        }
+        
         Set<Role> roles = new HashSet<>();
         Role role = roleService.findOneByCode(RoleCode.END_USER);
         roles.add(role);

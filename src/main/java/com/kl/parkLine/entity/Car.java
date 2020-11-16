@@ -6,6 +6,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -16,12 +18,15 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.enums.CarType;
+import com.kl.parkLine.enums.PlateColor;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -40,7 +45,7 @@ import lombok.Setter;
 @Setter
 @SuppressWarnings("serial")
 @Entity
-@Table(name = "TT_CAR")
+@Table(name = "TT_CAR", uniqueConstraints={@UniqueConstraint(columnNames ={"car_no","palte_color"})})
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
@@ -54,8 +59,22 @@ public class Car extends AbstractDateEntity implements java.io.Serializable
     /**
      * 车牌号
      */
-    @Column(name = "car_no", length = 16, unique = true, nullable = false)
+    @Column(name = "car_no", length = 16, nullable = false)
     private String carNo;
+    
+    /**
+     *  车牌颜色
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "palte_color", nullable = false)
+    private PlateColor plateColor;
+    
+    /**
+     *  车辆类型:燃油车/新能源
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "car_type", nullable = false)
+    private CarType carType;
     
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "user_id")

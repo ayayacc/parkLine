@@ -1,8 +1,5 @@
 package com.kl.parkLine.controller;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,12 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kl.parkLine.entity.Menu;
 import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.RoleService;
-import com.kl.parkLine.vo.MenuVo;
 import com.kl.parkLine.vo.RoleVo;
 
 import io.swagger.annotations.Api;
@@ -60,15 +55,9 @@ public class RoleController
         }
         else
         {
-            Set<Menu> menus = roleService.getRoleMenus(role.getCode());
             RoleVo roleVo = RoleVo.builder()
                     .roleId(role.getRoleId())
                     .name(role.getName())
-                    .menuVos(menus.stream().map(menu -> MenuVo.builder()
-                            .menuId(menu.getMenuId())
-                            .name(menu.getName())
-                            .build())
-                            .collect(Collectors.toSet()))
                     .build();
             return RestResult.success(roleVo);
         }

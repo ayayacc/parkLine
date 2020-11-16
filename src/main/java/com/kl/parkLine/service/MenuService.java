@@ -83,12 +83,15 @@ public class MenuService
         Predicate searchPred = menuPredicates.fuzzy(menuVo, user);
         
         QMenu qMenu = QMenu.menu;
+        QMenu qParent = QMenu.menu;
         QueryResults<MenuVo> queryResults = jpaQueryFactory
-                .select(Projections.bean(MenuVo.class, 
+                .select(Projections.constructor(MenuVo.class, 
                         qMenu.menuId,
                         qMenu.name,
-                        qMenu.enabled))
-                .from(qMenu)
+                        qMenu.url,
+                        qMenu.sortIdx,
+                        qMenu.parentMenu.menuId))
+                .from(qMenu).leftJoin(qParent).on(qMenu.parentMenu.eq(qParent))
                 .where(searchPred)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())

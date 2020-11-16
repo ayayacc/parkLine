@@ -107,14 +107,17 @@ public class CouponDefService
         
         QCouponDef qCouponDef = QCouponDef.couponDef;
         QueryResults<CouponDefVo> queryResults = jpaQueryFactory
-                .select(Projections.bean(CouponDefVo.class, qCouponDef.couponDefId,
+                .select(Projections.constructor(CouponDefVo.class, qCouponDef.couponDefId,
                         qCouponDef.code,
-                        qCouponDef.code,
+                        qCouponDef.name,
+                        qCouponDef.amt,
+                        qCouponDef.minAmt,
                         qCouponDef.totalCnt,
+                        qCouponDef.appliedCnt,
                         qCouponDef.usedCnt,
-                        qCouponDef.enabled,
                         qCouponDef.startDate,
-                        qCouponDef.endDate))
+                        qCouponDef.endDate,
+                        qCouponDef.enabled))
                 .from(qCouponDef)
                 .where(searchPred)
                 .offset(pageable.getOffset())

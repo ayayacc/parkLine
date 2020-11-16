@@ -72,7 +72,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     /**
      * 订单编号
      */
-    @Column(name = "code", nullable = false, unique = true, length = 16)
+    @Column(name = "code", nullable = false, unique = true, length = 128)
     private String code;
     
     /**
@@ -223,8 +223,15 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      * 实际金额（使用优惠券后）
      */
     @Column(name = "real_amt", precision = 15 ,scale = 2)
-    @NeedToCompare(name = "金额（使用优惠券前）")
+    @NeedToCompare(name = "金额（使用优惠券后）")
     private BigDecimal realAmt;
+    
+    /**
+     * 涉及钱包操作后的钱包余额
+     */
+    @Column(name = "wallet_balance", precision = 15 ,scale = 2)
+    @NeedToCompare(name = "涉及钱包操作后的钱包余额")
+    private BigDecimal walletBalance;
 
     /**
      * 开票ID

@@ -61,7 +61,7 @@ public class SmsAuthenticationProvider implements AuthenticationProvider
         if (null == user)
         {
             //自动创建用户
-            user = userService.createUser(mobile);
+            user = userService.createEndUser(mobile);
         }
         
         //用户被禁用

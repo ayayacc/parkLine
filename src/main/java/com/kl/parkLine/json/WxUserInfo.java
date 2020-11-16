@@ -11,5 +11,5 @@ public class WxUserInfo
     private String country;
     private String province;
     private String city;
-    private int gender;
+    private Integer gender;
 }

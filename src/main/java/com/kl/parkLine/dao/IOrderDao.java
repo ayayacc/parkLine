@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Order;
+import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
@@ -24,8 +25,9 @@ public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredic
     public Order findOneByActId(String actId);
     public Order findOneByOrderId(Integer orderId);
     public Order findOneByCode(String code);
-    public Boolean existsByTypeAndCarCarNoAndParkParkIdAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual(OrderType type, String carNo, Integer parkId, List<OrderStatus> status, Date endDate, Date startDate);
-    public Order findByTypeAndCarCarNoAndParkParkIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(OrderType type, String carNo, Integer parkId, OrderStatus status, Date startDate, Date endDate);
+    public Boolean existsByTypeAndCarAndParkAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual(OrderType type, Car car, Park park, List<OrderStatus> status, Date endDate, Date startDate);
     public Set<Order> findByCarAndOwnerIsNull(Car car);
     public Page<OrderVo> findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus status, User owner, BigDecimal amt, Pageable pageable);
+    public Page<OrderVo> findByStatusInAndOwner(List<OrderStatus> status, User owner, Pageable pageable);
+    
 }

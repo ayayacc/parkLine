@@ -84,10 +84,10 @@ public class RoleService
         
         QRole qRole = QRole.role;
         QueryResults<RoleVo> queryResults = jpaQueryFactory
-                .select(Projections.bean(RoleVo.class, 
+                .select(Projections.constructor(RoleVo.class, 
                         qRole.roleId,
-                        qRole.name,
-                        qRole.code))
+                        qRole.code,
+                        qRole.name))
                 .from(qRole)
                 .where(searchPred)
                 .offset(pageable.getOffset())

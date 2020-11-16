@@ -77,7 +77,7 @@ public class User extends AbstractDateEntity implements UserDetails
     @ApiModelProperty("用户昵称")
     private String nickName;
     
-    @Column(name = "mobile", nullable = false, length = 16)
+    @Column(name = "mobile", length = 16)
     @ApiModelProperty("手机号码")
     private String mobile;
     

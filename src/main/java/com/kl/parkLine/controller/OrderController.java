@@ -22,11 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.wxpay.sdk.WXPayUtil;
 import com.kl.parkLine.entity.Order;
-import com.kl.parkLine.enums.PaymentType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.ChargeWalletParam;
-import com.kl.parkLine.json.CreateMonthlyTktParam;
+import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.json.WxPayNotifyParam;
@@ -53,12 +52,31 @@ public class OrderController
     private HttpServletRequest request;
     
     /**
+     * 查询月票价格
+     */
+    @PostMapping("/monthlyTkt/inquiry")
+    @ApiOperation(value="查询月票价格", notes="根据停车场，起止时间，查询停车场月票价格")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Object> inquiryMMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody(required=true) MonthlyTktParam monthlyTktParam, 
+            Authentication auth)
+    {
+        try
+        {
+            return RestResult.success(orderService.inqueryMonthlyTkt(monthlyTktParam));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
+    }
+    
+    /**
      * 购买月票
      */
     @PostMapping("/monthlyTkt/create")
     @ApiOperation(value="购买月票", notes="新建一张月票；")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<WxUnifiedOrderResult> createMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody CreateMonthlyTktParam monthlyTktParam, 
+    public RestResult<WxUnifiedOrderResult> createMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody(required=true) MonthlyTktParam monthlyTktParam, 
             Authentication auth)
     {
         try
@@ -185,6 +203,19 @@ public class OrderController
     }
     
     /**
+     * 根据车牌号查询等待付款的订单
+     */
+    @GetMapping("/completed")
+    @ApiOperation(value="找到已经完成的订单", 
+        notes="1.订单拥有者是登录用户;2.订单拥有者为空，但是车辆绑定到登录用户的未支付订单;3.已经付款和不需要付款的订单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Page<OrderVo>> completed(@ApiParam(name="分页信息",type="query") Pageable pageable,
+            Authentication auth)
+    {
+        return RestResult.success(orderService.completed(auth.getName(), pageable));
+    }
+    
+    /**
      * 使用微信支付订单
      */
     @PostMapping("/wxPay")
@@ -195,7 +226,6 @@ public class OrderController
     {
         try
         {
-            payParam.setPaymentType(PaymentType.wx);
             return RestResult.success(orderService.payByWx(payParam, auth.getName()));
         }
         catch (Exception e)

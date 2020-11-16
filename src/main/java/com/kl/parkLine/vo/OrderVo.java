@@ -1,5 +1,9 @@
 package com.kl.parkLine.vo;
 
+import java.math.BigDecimal;
+import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kl.parkLine.enums.OrderStatus;
@@ -56,4 +60,27 @@ public class OrderVo
     @ApiModelProperty(name="车牌号码", value="carNo")
     @JsonProperty(value = "carNo")
     private String carCarNo;
+    
+    @ApiModelProperty(name="车辆入场时间", value="inTime")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date inTime; 
+    
+    @ApiModelProperty(name="车辆出场时间", value="outTime")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date outTime; 
+    
+    @ApiModelProperty(name="金额", value="amt")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private BigDecimal amt; 
+    
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    @ApiModelProperty(name="月票开始时间", value="startDate")
+    private Date startDate; 
+    
+    /**
+     * 结束时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    @ApiModelProperty(name="结束时间", value="startDate")
+    private Date endDate; 
 }

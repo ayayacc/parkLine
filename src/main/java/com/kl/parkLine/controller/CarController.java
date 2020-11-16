@@ -22,7 +22,6 @@ import com.kl.parkLine.vo.ParkPlaceVo;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
@@ -43,16 +42,14 @@ public class CarController
      */
     @PostMapping("/bind")
     @ApiOperation(value="将车牌绑定到当前登录用户", notes="一个用户可以绑定多个车牌，但是一个车牌只能绑定到一个用户，必须先将车牌解绑后，才能绑定到新的用户")
-    @ApiImplicitParams({
-        @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    })
-    public RestResult<Car> bind(@ApiParam(name="车牌号码") @RequestBody(required=true) BindCarParam bindCarParam, 
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Car> bind(@ApiParam(name="车牌号码", required=true) @RequestBody(required=true) BindCarParam bindCarParam, 
             Authentication auth)
     {
         try
         {
             //将车辆绑定到当前用户
-            carService.bind(auth.getName(), bindCarParam.getCarNo());
+            carService.bind(auth.getName(), bindCarParam);
             return RestResult.success();
         }
         catch (BusinessException e)
@@ -80,13 +77,13 @@ public class CarController
     @PostMapping("/unbind")
     @ApiOperation(value="将车牌从绑定用户解绑", notes="若车牌号不存在，接口会自动创建车辆但是并不绑定到用户，返回成功；如果车辆当前并未绑定用户，接口直接返回成功")
     @ApiImplicitParam(name="Authorization", value="登录令牌",required=true, paramType="header")
-    public RestResult<Car> unbind(@ApiParam(name="车牌号码") @RequestBody(required=true) BindCarParam bindCarParam, 
+    public RestResult<Car> unbind(@ApiParam(name="车辆Id") @RequestBody(required=true) Integer carId, 
             Authentication auth)
     {
         try
         {
             //将车辆解绑
-            carService.unbind(bindCarParam.getCarNo());
+            carService.unbind(carId);
             return RestResult.success();
         }
         catch (Exception e)

@@ -50,7 +50,7 @@ public class Role extends AbstractEntity implements java.io.Serializable
     private String name;
     
     /**
-     * 订单类型: 停车订单/月票订单/优惠券激活订单/钱包充值订单
+     * 订单类型: 公司/停车场/终端用户
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "type")

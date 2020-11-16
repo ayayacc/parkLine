@@ -7,21 +7,27 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Where;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.annotation.NeedToCompare;
+import com.kl.parkLine.enums.ChargeType;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -122,14 +128,6 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     private String address;
     
     /**
-     * 停车位
-     */
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
-    @OrderBy(value = "createdDate desc")
-    @JsonIgnore
-    private List<Place> places;
-    
-    /**
      * 是否有效
      */
     @NeedToCompare(name = "是否有效")
@@ -137,53 +135,87 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     private String enabled;
     
     /**
-     * 计费逻辑: x分钟内免费，x小时起x元，每超过1小时加收x元，封顶x元
+     * 计费类型: 固定计费/阶梯计费
      */
-    /*
-     * 免费时长（分钟）
-     */
-    @NeedToCompare(name = "免费时长（分钟）")
-    @Column(name = "free_Time", nullable = false, columnDefinition ="int default 0") 
-    private Integer freeTime;
+    @Column(name = "charge_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ChargeType chargeType;
     
     /**
-     * 第一阶梯计价时长（分钟）
+     * 白名单
      */
-    @NeedToCompare(name = "第一阶梯计价时长（分钟）")
-    @Column(name = "time_lev1", columnDefinition ="int default 0") 
-    private Integer timeLev1;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
+    @OrderBy(value = "createdDate desc")
+    @JsonIgnore
+    private List<ParkWhiteItem> whiteList;
     
     /**
-     * 第一阶梯计价单价（元）
+     * 白色车牌是否免费
      */
-    @NeedToCompare(name = "第一阶梯计价单价（元）")
-    @Column(name = "price_lev1", precision = 8 ,scale = 2, columnDefinition ="int default 0")
-    private BigDecimal priceLev1;
+    @Column(name = "is_white_plate_free", nullable = false, columnDefinition="bool default true")
+    private Boolean isWhitePlateFree;
+
+    /**
+     * 燃油车固定计费规则
+     */
+    @OneToOne(fetch=FetchType.LAZY,cascade = CascadeType.ALL)
+    @JoinColumn(name="fuel_fixed_fee_id", referencedColumnName="park_fixed_fee_id")
+    private ParkFixedFee fuelFixedFee;
     
     /**
-     * 第二阶梯计价时长（分钟）
+     * 燃油车特殊时段计费规则
      */
-    @NeedToCompare(name = "第二阶梯计价时长（分钟）")
-    @Column(name = "time_lev2", columnDefinition ="int default 0") 
-    private Integer timeLev2;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
+    @Where(clause="carType='fuel'")
+    @OrderBy(value = "startMin asc")
+    @JsonIgnore
+    private List<ParkSpecialFee> fuelSpecialFees;
     
     /**
-     * 第二阶梯计价单价（元）
+     * 燃油车阶梯计费规则
      */
-    @NeedToCompare(name = "第二阶梯计价单价（元）")
-    @Column(name = "price_lev2", precision = 8 ,scale = 2, columnDefinition ="int default 0") 
-    private BigDecimal priceLev2;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
+    @Where(clause="carType='fuel'")
+    @OrderBy(value = "startMin asc")
+    @JsonIgnore
+    private List<ParkStepFee> fuelStepFees;
     
     /**
-     * 封顶x元
+     * 新能源车固定计费规则
      */
-    @NeedToCompare(name = "封顶x元")
-    @Column(name = "max_amt", precision = 8 ,scale = 2, columnDefinition ="int default 999999") 
-    private BigDecimal maxAmt;
+    @OneToOne(fetch=FetchType.LAZY,cascade = CascadeType.ALL)
+    @JoinColumn(name="new_energy_fixed_fee_id", referencedColumnName="park_fixed_fee_id")
+    private ParkFixedFee newEnergyFixedFee;
     
-    @NeedToCompare(name = "月票单价")
-    @Column(name = "monthly_price", precision = 8 ,scale = 2, columnDefinition ="int default 999999") 
-    private BigDecimal monthlyPrice;
+    /**
+     * 燃油车特殊时段计费规则
+     */
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
+    @Where(clause="carType='newEnergy'")
+    @OrderBy(value = "startMin asc")
+    @JsonIgnore
+    private List<ParkSpecialFee> newEnergySpecialFees;
+    
+    /**
+     * 新能源车阶梯计费规则
+     */
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
+    @Where(clause="carType='newEnergy'")
+    @OrderBy(value = "startMin asc")
+    @JsonIgnore
+    private List<ParkStepFee> newEnergyStepFees;
+    
+    @NeedToCompare(name = "月票说明")
+    @Column(name = "monthly_tkt_remark", length=1024) 
+    private String monthlyTktRemark;
+    
+    @NeedToCompare(name = "燃油车月票单价")
+    @Column(name = "fuel_monthly_price", precision = 8 ,scale = 2) 
+    private BigDecimal fuelMonthlyPrice;
+    
+    @NeedToCompare(name = "新能源车月票单价")
+    @Column(name = "new_energy_monthly_price", precision = 8 ,scale = 2) 
+    private BigDecimal newEnergyMonthlyPrice;
     
     /**
      * 操作记录
