@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +25,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import springfox.documentation.annotations.ApiIgnore;
 
 
 @RestController
@@ -74,16 +76,22 @@ public class CarController
      * @param carNo 车牌号码
      * @return
      */
-    @PostMapping("/unbind")
+    @GetMapping(value = "/unbind/{carId}")
     @ApiOperation(value="将车牌从绑定用户解绑", notes="若车牌号不存在，接口会自动创建车辆但是并不绑定到用户，返回成功；如果车辆当前并未绑定用户，接口直接返回成功")
     @ApiImplicitParam(name="Authorization", value="登录令牌",required=true, paramType="header")
-    public RestResult<Car> unbind(@ApiParam(name="车辆Id") @RequestBody(required=true) Integer carId, 
+    public RestResult<Car> unbind(@ApiParam(name="车辆Id") @PathVariable(name = "carId", required = true) Integer carId,
+            @ApiIgnore @PathVariable(name = "carId", required = true) Car car,
             Authentication auth)
     {
+        if (null == car)
+        {
+            return RestResult.failed(String.format("无效的车辆Id: %d", carId));
+        }
+        
         try
         {
             //将车辆解绑
-            carService.unbind(carId);
+            carService.unbind(car);
             return RestResult.success();
         }
         catch (Exception e)

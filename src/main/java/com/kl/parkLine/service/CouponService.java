@@ -60,16 +60,16 @@ public class CouponService
         User user = userService.findByName(userName);
         
         DateTime now = new DateTime();
+        DateTime today = now.withTimeAtStartOfDay();
         
         //检查优惠券定义是否已经开始
-        if (!couponDef.getStartDate().before(now.toDate()))
+        if (!couponDef.getStartDate().before(today.toDate()))
         {
             throw new BusinessException("领取失败，活动还未开始");
         }
         
-        now.minusDays(1); //日期加一天，使得优惠券过期当天有效
         //检查优惠券定义是否过期
-        if (couponDef.getEndDate().before(now.toDate()))
+        if (couponDef.getEndDate().before(today.toDate()))
         {
             throw new BusinessException("领取失败，活动已过期");
         }
@@ -87,6 +87,7 @@ public class CouponService
             throw new BusinessException("请勿重复领取");
         }
         
+        DateTime endDate = today.plusDays(couponDef.getTerm());
         //新增优惠券
         Coupon coupon = Coupon.builder()
                 .couponDef(couponDef)
@@ -95,8 +96,8 @@ public class CouponService
                 .minAmt(couponDef.getMinAmt())
                 .amt(couponDef.getAmt())
                 .owner(user)
-                .startDate(couponDef.getStartDate())
-                .endDate(couponDef.getEndDate())
+                .startDate(today.toDate())
+                .endDate(endDate.toDate())
                 .status(CouponStatus.valid)
                 .build();
         couponDao.save(coupon);

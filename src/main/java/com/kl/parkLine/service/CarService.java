@@ -146,15 +146,10 @@ public class CarService
         User user = userService.findByName(userName);
         String carNo = bindCarParam.getCarNo();
         PlateColor plateColor = bindCarParam.getPlateColor();
+        
         //检查车辆是否已经存在
-        Car car = carDao.findOneByCarNoAndPlateColor(carNo, plateColor);
-        if (null == car)
-        {
-            car = new Car();
-            car.setCarNo(carNo);
-            car.setPlateColor(plateColor);
-        }
-        else if (null != car.getUser()) //车辆已经绑定到其他用户
+        Car car = getCar(carNo, plateColor);
+        if (null != car.getUser()) //车辆已经绑定到其他用户
         {
             if (user.equals(car.getUser()))
             {
@@ -180,15 +175,10 @@ public class CarService
      * @param carNo 添加的车牌号码
      * @throws BusinessException 
      */
-    public void unbind(Integer carId) throws BusinessException
+    public void unbind(Car car) throws BusinessException
     {
         //检查车辆是否已经存在
-        Car car = carDao.getOne(carId);
-        if (null == car)
-        {
-            throw new BusinessException(String.format("无效的车辆Id: %d", carId));
-        }
-        else if (null == car.getUser()) //如果车辆当前并未绑定到用户
+        if (null == car.getUser()) //如果车辆当前并未绑定到用户
         {
             return;
         }
