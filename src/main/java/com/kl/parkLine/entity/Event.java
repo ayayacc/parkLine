@@ -68,13 +68,13 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
      * 事件类型
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "type")
+    @Column(name = "type", nullable = false)
     private EventType type; 
     
     /**
      * 事件唯一标识符
      */
-    @Column(name = "guid", length = 48, nullable = false)
+    @Column(name = "guid", length = 48)
     private String guid;
     
     /**
@@ -99,6 +99,12 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
     @Enumerated(EnumType.STRING)
     @Column(name = "plact_color")
     private PlateColor plateColor; 
+    
+    /**
+     * 博粤车牌Id
+     */
+    @Column(name = "plate_id")
+    private Integer plateId;
     
     /**
      * 鉴定图片集

@@ -27,6 +27,7 @@ import com.kl.parkLine.dao.IOrderDao;
 import com.kl.parkLine.dao.IParkStepFeeDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Coupon;
+import com.kl.parkLine.entity.Device;
 import com.kl.parkLine.entity.Event;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.OrderLog;
@@ -101,6 +102,9 @@ public class OrderService
     
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
+    
+    @Autowired
+    private DeviceService deviceService;
     
     private final Float ACTIVE_COUPON_FACTOR = 0.8f; //激活优惠券金额与券面金额系数
     private final List<OrderStatus> checkedStatus = new ArrayList<OrderStatus>();
@@ -187,6 +191,21 @@ public class OrderService
     public Order findOneByOrderId(Integer orderId) 
     {
         return orderDao.findOneByOrderId(orderId);
+    }
+    
+    public OrderVo findNeedToPayByCar(Car car) 
+    {
+        return orderDao.findTopByCarAndStatusOrderByInTimeDesc(car, OrderStatus.needToPay);
+    }
+    
+    /**
+     * 根据设备序列号找到最近识别的订单
+     * @param outDeviceSn
+     * @return
+     */
+    public Order findRecentByOutDeviceSn(String outDeviceSn) 
+    {
+        return orderDao.findTopByOutDeviceSnOrderByOutTimeDesc(outDeviceSn);
     }
     
     /**
@@ -282,7 +301,17 @@ public class OrderService
     public Order carIn(Event event) throws BusinessException 
     {
         //停车场
-        Park park = parkService.findOneByCode(event.getParkCode());
+        Park park = null;
+        if (null != event.getParkCode())
+        {
+            park = parkService.findOneByCode(event.getParkCode());
+        }
+        else
+        {
+            Device device = deviceService.findOneBySerialNo(event.getDeviceSn());
+            park = device.getPark();
+        }
+        
         
         //车辆信息
         Car car = carService.getCar(event.getPlateNo(), event.getPlateColor());
@@ -294,7 +323,9 @@ public class OrderService
                 .owner(car.getUser())
                 .status(OrderStatus.in)
                 .park(park)
+                .inDeviceSn(event.getDeviceSn())
                 .actId(event.getActId())
+                .plateId(event.getPlateId())
                 .inTime(event.getTimeIn())
                 .build();
         //停车场空位-1
@@ -319,12 +350,26 @@ public class OrderService
      */
     public Order carComplete(Event event) throws BusinessException, NoSuchFieldException, SecurityException, ParseException
     {
-        //根据事件Id找入场时生成的的订单
-        Order order = orderDao.findOneByActId(event.getActId());
+        Order order = null;
+        if (null != event.getActId()) //有事件Id，高位摄像头停车场
+        {
+            //根据事件Id找入场时生成的的订单
+            order = orderDao.findOneByActId(event.getActId());
+            
+        }
+        else //无事件Id，道闸停车场
+        {
+            //找到最近的入场订单
+            order = orderDao.findTopByPlateIdAndStatusOrderByInTimeDesc(event.getPlateId(), OrderStatus.in);
+        }
         if (null == order)
         {
             return null;
         }
+
+        //设置出场抓拍设备
+        order.setOutDeviceSn(event.getDeviceSn());
+        
         //计算并且设置价格
         order.setOutTime(event.getTimeOut());
         this.calAmt(order);
@@ -816,7 +861,7 @@ public class OrderService
      * @param monthlyTktParam
      * @throws Exception 
      */
-    public WxUnifiedOrderResult createMonthlyTkt(MonthlyTktParam monthlyTktParam, String userName) throws Exception
+    public OrderVo createMonthlyTkt(MonthlyTktParam monthlyTktParam, String userName) throws Exception
     {
         User owner = userService.findByName(userName);
         Park park = parkService.findOneById(monthlyTktParam.getParkId());
@@ -853,8 +898,10 @@ public class OrderService
         //保存订单
         this.save(order);
         
+        OrderVo orderVo = OrderVo.builder().code(order.getCode()).orderId(order.getOrderId()).build();
+        
         //开始付款
-        return wxCmpt.unifiedOrder(order);
+        return orderVo;
     }
     
     /**

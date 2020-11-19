@@ -125,10 +125,38 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     private Date outTime; 
     
     /**
+     * 提前交费离开时间限制
+     */
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "out_time_limit")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @NeedToCompare(name = "提前交费离开时间限制")
+    private Date outTimeLimit; 
+    
+    /**
      * 行为唯一标识符
      */
     @Column(name = "act_id", length = 48, unique = true)
     private String actId;
+    
+    /**
+     * 博粤车牌Id
+     */
+    @Column(name = "plate_id")
+    private Integer plateId;
+    
+    /**
+     * 入场抓拍设备序列号(为了提高查询效率，不关联到设备表)
+     */
+    @Column(name = "in_device_sn")
+    private String inDeviceSn;
+    
+    /**
+     * 出场抓拍设备序列号(为了提高查询效率，不关联到设备表)
+     */
+    @Column(name = "out_device_sn")
+    private String outDeviceSn;
     
     /**
      * 开始时间

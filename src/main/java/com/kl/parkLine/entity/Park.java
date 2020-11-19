@@ -218,6 +218,14 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     private BigDecimal newEnergyMonthlyPrice;
     
     /**
+     * 停车场设备
+     */
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
+    @OrderBy(value = "name desc")
+    @JsonIgnore
+    private List<Device> devices;
+    
+    /**
      * 操作记录
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  

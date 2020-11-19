@@ -12,7 +12,7 @@ public class XltEvtResult
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("XltEvtResult [errorcode=").append(errorcode)
+        builder.append("BoyueResult [errorcode=").append(errorcode)
                 .append(", message=").append(message).append("]");
         return builder.toString();
     }

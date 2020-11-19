@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.dao.IRoleDao;
+import com.kl.parkLine.entity.Device;
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.ParkFixedFee;
 import com.kl.parkLine.entity.ParkSpecialFee;
@@ -25,6 +26,7 @@ import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CarType;
 import com.kl.parkLine.enums.ChargeType;
+import com.kl.parkLine.enums.DeviceUseage;
 import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.enums.RoleType;
 import com.kl.parkLine.exception.BusinessException;
@@ -132,6 +134,23 @@ public class InitSystemTest
             park.setAvailableCnt(100);
             park.setFuelMonthlyPrice(new BigDecimal(300)); //月票300元
             park.setNewEnergyMonthlyPrice(new BigDecimal(280)); //月票280元
+            //设备
+            List<Device> devices = new ArrayList<>();
+            //入场设备
+            Device deviceIn = new Device();
+            deviceIn.setPark(park);
+            deviceIn.setUseage(DeviceUseage.in);
+            deviceIn.setSerialNo(String.format("DeviceSn_%s_%s", park.getCode(), DeviceUseage.in.toString()));
+            deviceIn.setName(String.format("DeviceName_%s_%s", park.getName(), DeviceUseage.in.toString()));
+            devices.add(deviceIn);
+            //出设备
+            Device deviceOut = new Device();
+            deviceOut.setPark(park);
+            deviceOut.setUseage(DeviceUseage.out);
+            deviceOut.setSerialNo(String.format("DeviceSn_%s_%s", park.getCode(), DeviceUseage.out.toString()));
+            deviceOut.setName(String.format("DeviceName_%s_%s", park.getName(), DeviceUseage.out.toString()));
+            devices.add(deviceOut);
+            park.setDevices(devices);
             
             //固定计费
             if (park.getName().equalsIgnoreCase("parkNameFixed")

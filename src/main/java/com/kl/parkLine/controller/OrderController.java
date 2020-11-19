@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.wxpay.sdk.WXPayUtil;
+import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
@@ -76,7 +77,7 @@ public class OrderController
     @PostMapping("/monthlyTkt/create")
     @ApiOperation(value="购买月票", notes="新建一张月票；")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<WxUnifiedOrderResult> createMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody(required=true) MonthlyTktParam monthlyTktParam, 
+    public RestResult<OrderVo> createMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody(required=true) MonthlyTktParam monthlyTktParam, 
             Authentication auth)
     {
         try
@@ -187,6 +188,25 @@ public class OrderController
                     .build();
             return RestResult.success(orderVo);
         }
+    }
+    
+    /**
+     * 
+     * @param carId 车辆Id
+     * @param car 车辆对象
+     * @return
+     */
+    @GetMapping(value = "/needToPayByCar/{carId}")
+    @ApiOperation(value="根据车辆Id查询到需要付款的订单", notes="根据车辆Id查询到需要付款的订单")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<OrderVo> getNeedToPayByCar(@ApiParam(name="订单Id",type="path") @PathVariable("carId") Integer carId, 
+            @ApiIgnore @PathVariable("carId") Car car)
+    {
+        if (null == car)
+        {
+            return RestResult.failed(String.format("无效的车辆Id: %d", carId));
+        }
+        return RestResult.success(orderService.findNeedToPayByCar(car));
     }
     
     /**
