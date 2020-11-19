@@ -1042,26 +1042,16 @@ public class OrderService
         {
             throw new BusinessException(String.format("无效的订单Id: %d", payParam.getOrderId()));
         }
-        
-        //查找指定优惠券
-        Coupon coupon = null;
-        if (null != payParam.getCouponId())
+        //检查订单状态
+        if (!order.getStatus().equals(OrderStatus.needToPay))
         {
-            //查找优惠券
-            coupon = couponService.findOneById(payParam.getCouponId());
-            if (null == coupon)
-            {
-                throw new BusinessException(String.format("无效的优惠券Id: %d", payParam.getCouponId()));
-            }
+            throw new BusinessException(String.format("订单: %s 处于: %s 状态, 无需支付", 
+                    order.getCode(), order.getStatus().getText()));
         }
-
-        //微信无快捷支付
-        order.setPaymentType(PaymentType.wx);
-        order.setAutoCoupon(false);
-        order.setRealAmt(order.getAmt());
         
-        //准备支付，检查状态，设置优惠券
-        preparePay(order, coupon, payerName);
+        //微信支付不能使用优惠券
+        order.setPaymentType(PaymentType.wx);
+        order.setRealAmt(order.getAmt());
         
         return wxCmpt.unifiedOrder(order);
     }
