@@ -1,5 +1,6 @@
 package com.kl.parkLine.component;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -31,6 +32,9 @@ public class EventAdapter
 {
     @Autowired
     private DeviceService deviceService;
+    
+    @Autowired
+    private AliYunOssCmpt aliYunOssCmpt;
     
     private final  String DEVICE_COMPANY_XLT = "信路通";
     private final  String DEVICE_COMPANY_BY = "博粤";
@@ -195,8 +199,9 @@ public class EventAdapter
      * @param boyueEvt
      * @return
      * @throws BusinessException 
+     * @throws IOException 
      */
-    public Event boyue2Event(BoyueEvent boyueEvt) throws BusinessException
+    public Event boyue2Event(BoyueEvent boyueEvt) throws BusinessException, IOException
     {
         Event retEvent = new Event();
         //厂商
@@ -211,11 +216,20 @@ public class EventAdapter
         retEvent.setDeviceSn(serialNo);
 
         //发生时间
-        Date happenTime = new Date(boyueEvt.getAlarmInfoPlate().getTimeStamp().getTimeval().getSec());
+        Long timeStamp = boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().getSec();
+        Date happenTime = new Date(timeStamp);
         retEvent.setHappenTime(happenTime);
+
+        //车牌号
+        String carNo = boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo().trim().toUpperCase();
+        
+        //bse64图片处理
+        //code: carNo-timeStamp.jpg
+        String code = String.format("%s-%d.jpg", carNo, timeStamp);
+        aliYunOssCmpt.upload(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getImageFile(), code);
         
         //车牌识别Id 
-        retEvent.setPlateId(boyueEvt.getAlarmInfoPlate().getPlateId());
+        retEvent.setPlateId(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getPlateId());
         
         //事件类型
         switch (device.getUseage())
@@ -223,16 +237,18 @@ public class EventAdapter
             case in:
                 retEvent.setTimeIn(happenTime);
                 retEvent.setType(EventType.in);
+                retEvent.setPicUrlIn(code);  
                 break;
             case out:
                 retEvent.setTimeOut(happenTime);
                 retEvent.setType(EventType.complete); //道闸停车将出场当作完成处理
+                retEvent.setPicUrlOut(code);  
             default:
                 break;
         }
         
         //车牌号码
-        retEvent.setPlateNo(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo().trim().toUpperCase());
+        retEvent.setPlateNo(carNo);
         
         //车牌颜色
         retEvent.setPlateColor(mapByPalteColorToEnum.get(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getColorType()));

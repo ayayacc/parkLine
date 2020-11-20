@@ -21,10 +21,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.wxpay.sdk.WXPayUtil;
-import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
+import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
@@ -185,6 +185,8 @@ public class OrderController
                     .carCarNo(order.getCar().getCarNo())
                     .carCarId(order.getCar().getCarId())
                     .type(order.getType())
+                    .inImgCode(order.getInImgCode())
+                    .outImgCode(order.getOutImgCode())
                     .build();
             return RestResult.success(orderVo);
         }
@@ -196,17 +198,20 @@ public class OrderController
      * @param car 车辆对象
      * @return
      */
-    @GetMapping(value = "/needToPayByCar/{carId}")
+    @PostMapping(value = "/needToPayByCar")
     @ApiOperation(value="根据车辆Id查询到需要付款的订单", notes="根据车辆Id查询到需要付款的订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<OrderVo> getNeedToPayByCar(@ApiParam(name="订单Id",type="path") @PathVariable("carId") Integer carId, 
-            @ApiIgnore @PathVariable("carId") Car car)
+    public RestResult<OrderVo> getNeedToPayByCar(
+            @ApiParam(name="车牌号码", required=true) @RequestBody(required=true) CarParam carParam)
     {
-        if (null == car)
+        try
         {
-            return RestResult.failed(String.format("无效的车辆Id: %d", carId));
+            return RestResult.success(orderService.findNeedToPayByCar(carParam));
         }
-        return RestResult.success(orderService.findNeedToPayByCar(car));
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
     }
     
     /**

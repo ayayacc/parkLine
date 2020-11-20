@@ -27,6 +27,15 @@ public class PlateResult
     @JsonProperty("plateid")
     private Integer plateId;
     
+    //截图
+    private String imageFile;
+    
+    //截图图片大小
+    private Integer imageFileLen;
+    
     //设备离线状态，0：在线，1：离线
     private Integer isoffline;
+    
+    //识别结果对应帧的时间戳
+    private TimeStamp timeStamp;
 }

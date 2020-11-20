@@ -83,4 +83,14 @@ public class OrderVo
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     @ApiModelProperty(name="结束时间", value="startDate")
     private Date endDate; 
+    
+    /**
+     * 入场截图url
+     */
+    private String inImgCode;
+    
+    /**
+     * 出场截图url
+     */
+    private String outImgCode;
 }

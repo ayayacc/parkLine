@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @ApiModel("绑定或解绑车辆参数")
-public class BindCarParam
+public class CarParam
 {
     @ApiModelProperty(required = true, name="车牌号码")
     private String carNo;

@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.exception.BusinessException;
-import com.kl.parkLine.json.BindCarParam;
+import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.CarService;
 import com.kl.parkLine.vo.CarVo;
@@ -45,14 +45,14 @@ public class CarController
     @PostMapping("/bind")
     @ApiOperation(value="将车牌绑定到当前登录用户", notes="一个用户可以绑定多个车牌，但是一个车牌只能绑定到一个用户，必须先将车牌解绑后，才能绑定到新的用户")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Car> bind(@ApiParam(name="车牌号码", required=true) @RequestBody(required=true) BindCarParam bindCarParam, 
+    public RestResult<CarVo> bind(@ApiParam(name="车牌号码", required=true) @RequestBody(required=true) CarParam bindCarParam, 
             Authentication auth)
     {
         try
         {
             //将车辆绑定到当前用户
-            carService.bind(auth.getName(), bindCarParam);
-            return RestResult.success();
+            Car car = carService.bind(auth.getName(), bindCarParam);
+            return RestResult.success(CarVo.builder().carId(car.getCarId()).build());
         }
         catch (BusinessException e)
         {

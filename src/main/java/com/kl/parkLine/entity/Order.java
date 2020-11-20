@@ -141,6 +141,18 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     private String actId;
     
     /**
+     * 入场截图url
+     */
+    @Column(name = "in_img_code", length = 128)
+    private String inImgCode;
+    
+    /**
+     * 出场截图url
+     */
+    @Column(name = "out_img_code", length = 128)
+    private String outImgCode;
+    
+    /**
      * 博粤车牌Id
      */
     @Column(name = "plate_id")

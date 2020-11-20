@@ -23,7 +23,7 @@ import com.kl.parkLine.enums.CarType;
 import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.enums.RoleType;
 import com.kl.parkLine.exception.BusinessException;
-import com.kl.parkLine.json.BindCarParam;
+import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.predicate.CarPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.CarVo;
@@ -141,7 +141,7 @@ public class CarService
      * @param carNo 添加的车牌号码
      * @throws BusinessException 
      */
-    public void bind(String userName, BindCarParam bindCarParam) throws BusinessException
+    public Car bind(String userName, CarParam bindCarParam) throws BusinessException
     {
         User user = userService.findByName(userName);
         String carNo = bindCarParam.getCarNo();
@@ -166,7 +166,7 @@ public class CarService
         
         //将涉及到此车辆的无主订单绑定到该用户
         orderService.setOrderOwnerByCar(car);
-        return;
+        return car;
     }
     
     /**

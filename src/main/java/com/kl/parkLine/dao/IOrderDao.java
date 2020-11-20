@@ -32,5 +32,5 @@ public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredic
     public Set<Order> findByCarAndOwnerIsNull(Car car);
     public Page<OrderVo> findByOwnerAndWalletBalanceIsNotNull(User owner, Pageable pageable);
     public Page<OrderVo> findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus status, User owner, BigDecimal amt, Pageable pageable);
-    public Page<OrderVo> findByTypeAndStatusAndOwner(OrderType orderType, OrderStatus status, User owner, Pageable pageable);
+    public Page<OrderVo> findByTypeAndStatusAndOwnerOrderByCreatedDateDesc(OrderType orderType, OrderStatus status, User owner, Pageable pageable);
 }

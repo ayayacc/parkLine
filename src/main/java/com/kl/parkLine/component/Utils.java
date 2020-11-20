@@ -1,5 +1,7 @@
 package com.kl.parkLine.component;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -10,6 +12,7 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -237,5 +240,30 @@ public class Utils
         }
         String code = prefix + String.valueOf(now.getTime());
         return code;
+    }
+    
+    /**
+     * 将base64字符
+     * @param imgData
+     * @return
+     */
+    public InputStream decodeImg(String imgData) 
+    {
+        InputStream is = null;
+        if (imgData == null) // 图像数据为空
+        {
+            return null;
+        }
+            
+        byte[] b = Base64.decodeBase64(imgData);
+        for (int i = 0; i < b.length; ++i) 
+        {
+            if (b[i] < 0)  // 调整异常数据
+            {
+                b[i] += 256;
+            }
+        }
+        is = new ByteArrayInputStream(b); 
+        return is;
     }
 }

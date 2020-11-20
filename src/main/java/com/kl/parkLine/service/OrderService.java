@@ -47,6 +47,7 @@ import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PaymentType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
+import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
@@ -146,7 +147,9 @@ public class OrderService
                         qOrder.outTime,
                         qOrder.amt,
                         qOrder.startDate,
-                        qOrder.endDate))
+                        qOrder.endDate,
+                        qOrder.inImgCode,
+                        qOrder.outImgCode))
                 .from(qOrder).leftJoin(qPark).on(qOrder.park.eq(qPark))
                 .leftJoin(qCar).on(qOrder.car.eq(qCar))
                 .where(searchPred)
@@ -193,8 +196,9 @@ public class OrderService
         return orderDao.findOneByOrderId(orderId);
     }
     
-    public OrderVo findNeedToPayByCar(Car car) 
+    public OrderVo findNeedToPayByCar(CarParam carParam) throws BusinessException 
     {
+        Car car = carService.getCar(carParam.getCarNo(), carParam.getPlateColor());
         return orderDao.findTopByCarAndStatusOrderByInTimeDesc(car, OrderStatus.needToPay);
     }
     
@@ -327,6 +331,7 @@ public class OrderService
                 .actId(event.getActId())
                 .plateId(event.getPlateId())
                 .inTime(event.getTimeIn())
+                .inImgCode(event.getPicUrlIn())
                 .build();
         //停车场空位-1
         Integer newAvailableCnt = park.getAvailableCnt() - 1;
@@ -369,6 +374,9 @@ public class OrderService
 
         //设置出场抓拍设备
         order.setOutDeviceSn(event.getDeviceSn());
+        
+        //出场截图
+        order.setOutImgCode(event.getPicUrlOut());
         
         //计算并且设置价格
         order.setOutTime(event.getTimeOut());
@@ -598,7 +606,7 @@ public class OrderService
     public Page<OrderVo> myNeedToPayParking(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
-        return orderDao.findByTypeAndStatusAndOwner(OrderType.parking, OrderStatus.needToPay, user, pageable);
+        return orderDao.findByTypeAndStatusAndOwnerOrderByCreatedDateDesc(OrderType.parking, OrderStatus.needToPay, user, pageable);
     }
     
     /**
@@ -609,7 +617,7 @@ public class OrderService
     public Page<OrderVo> myPayedParking(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
-        return orderDao.findByTypeAndStatusAndOwner(OrderType.parking, OrderStatus.payed, user, pageable);
+        return orderDao.findByTypeAndStatusAndOwnerOrderByCreatedDateDesc(OrderType.parking, OrderStatus.payed, user, pageable);
     }
     
     /**
@@ -631,7 +639,7 @@ public class OrderService
     public Page<OrderVo> myPayedMonthlyTkt(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
-        return orderDao.findByTypeAndStatusAndOwner(OrderType.monthlyTicket, OrderStatus.payed, user, pageable);
+        return orderDao.findByTypeAndStatusAndOwnerOrderByCreatedDateDesc(OrderType.monthlyTicket, OrderStatus.payed, user, pageable);
     }
     
     /**
@@ -642,7 +650,7 @@ public class OrderService
     public Page<OrderVo> myNeedToPayMonthlyTkt(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
-        return orderDao.findByTypeAndStatusAndOwner(OrderType.monthlyTicket, OrderStatus.needToPay, user, pageable);
+        return orderDao.findByTypeAndStatusAndOwnerOrderByCreatedDateDesc(OrderType.monthlyTicket, OrderStatus.needToPay, user, pageable);
     }
     
     /**
