@@ -1,13 +1,17 @@
 package com.kl.parkLine.predicate;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.QCoupon;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.util.RoleCode;
 import com.kl.parkLine.vo.CouponVo;
 import com.querydsl.core.BooleanBuilder;
@@ -52,6 +56,20 @@ public class CouponPredicates
         
         //区分用户权限
         where.and(userFilter(user));
+        
+        return where;
+    }
+    
+    public Predicate applicable4Order(Order order) 
+    {
+        QCoupon qCoupon = QCoupon.coupon;
+        BooleanBuilder where = new BooleanBuilder();
+        Date today = new DateTime().withTimeAtStartOfDay().toDate();
+        where.and(qCoupon.status.eq(CouponStatus.valid))
+        .and(qCoupon.owner.eq(order.getOwner()))
+        .and(qCoupon.startDate.loe(today))
+        .and(qCoupon.endDate.goe(today))
+        .and(qCoupon.applicableParks.contains(order.getPark()).or(qCoupon.applicableParks.isEmpty()));
         
         return where;
     }

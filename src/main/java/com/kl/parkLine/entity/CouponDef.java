@@ -12,6 +12,9 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
@@ -62,7 +65,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
     /**
      * 优惠券定义编号
      */
-    @Column(name = "code", nullable = false, unique = true, length = 16)
+    @Column(name = "code", nullable = false, unique = true, length = 32)
     @ApiModelProperty("优惠券定义唯一编号")
     private String code;
     
@@ -80,28 +83,28 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
     @ApiModelProperty("优惠券定义变动备注")
     @Transient
     private String changeRemark;
-
-    /**
-     * 金额
-     */
-    @NeedToCompare(name = "金额")
-    @Column(name = "amt", precision = 15 ,scale = 2)
-    @ApiModelProperty("优惠券定义金额")
-    private BigDecimal amt;
     
     /**
-     *使用支付的最小金额（满xx使用）
+     *折扣后的封顶金额
      */
-    @NeedToCompare(name = "使用支付的最小金额")
-    @Column(name = "min_amt", precision = 15 ,scale = 2)
-    @ApiModelProperty("使用支付的最小金额（满xx使用）")
-    private BigDecimal minAmt;
+    @NeedToCompare(name = "使用支付的最大金额")
+    @Column(name = "max_amt", nullable = false, precision = 15 ,scale = 2)
+    @ApiModelProperty("最大金额")
+    private BigDecimal maxAmt;
+    
+    /**
+     * 优惠券折扣
+     */
+    @NeedToCompare(name = "折扣")
+    @Column(name = "discount", nullable = false, precision = 15 ,scale = 2)
+    @ApiModelProperty("折扣（例如8折）")
+    private BigDecimal discount;
     
     /**
      * 优惠券总数
      */
     @NeedToCompare(name = "优惠券总数")
-    @Column(name = "total_cnt")
+    @Column(name = "total_cnt", nullable = false)
     @ApiModelProperty("优惠券总数")
     private Integer totalCnt;
     
@@ -160,12 +163,20 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
     private Integer term;
     
     /**
+     * 激活价格
+     */
+    @NeedToCompare(name = "激活价格")
+    @Column(name = "active_price", nullable = false, precision = 15 ,scale = 2)
+    @ApiModelProperty("激活价格")
+    private BigDecimal activePrice;
+    
+    /**
      * 适用的停车场
      */
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "couponDef", cascade = {CascadeType.ALL})  
-    @JsonIgnore
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "tr_coupon_def_park", joinColumns = { @JoinColumn(name="coupon_def_id") }, inverseJoinColumns={ @JoinColumn(name="park_id") })  
     @ApiModelProperty(hidden = true)
-    private List<CouponDefPark> couponDefParks;
+    private List<Park> applicableParks;
     
     /**
      * 操作记录

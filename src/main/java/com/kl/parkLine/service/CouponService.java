@@ -1,5 +1,6 @@
 package com.kl.parkLine.service;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.joda.time.DateTime;
@@ -82,7 +83,7 @@ public class CouponService
         }
         
         //检查是否已经有同类优惠券
-        if (couponDao.existsByCouponDefCouponDefId(couponDef.getCouponDefId()))
+        if (couponDao.existsByCouponDefAndOwner(couponDef, user))
         {
             throw new BusinessException("请勿重复领取");
         }
@@ -93,13 +94,16 @@ public class CouponService
                 .couponDef(couponDef)
                 .code(String.format("YHJ%s", String.valueOf(now.getMillis())))
                 .name(couponDef.getName())
-                .minAmt(couponDef.getMinAmt())
-                .amt(couponDef.getAmt())
+                .maxAmt(couponDef.getMaxAmt())
+                .discount(couponDef.getDiscount())
+                .activePrice(couponDef.getActivePrice())
+                .applicableParks((new ArrayList<>(couponDef.getApplicableParks())))
                 .owner(user)
                 .startDate(today.toDate())
                 .endDate(endDate.toDate())
                 .status(CouponStatus.valid)
                 .build();
+        
         couponDao.save(coupon);
         
         //增加优惠券定义的已经领取数量
@@ -132,11 +136,14 @@ public class CouponService
                         qCoupon.code,
                         qCoupon.name,
                         qCoupon.owner.name.as("ownerName"),
-                        qCoupon.amt,
-                        qCoupon.minAmt,
+                        qCoupon.discount,
+                        qCoupon.activePrice,
+                        qCoupon.usedAmt,
+                        qCoupon.maxAmt,
                         qCoupon.status,
                         qCoupon.startDate,
-                        qCoupon.endDate))
+                        qCoupon.endDate,
+                        qCoupon.usedDate))
                 .from(qCoupon)
                 .where(searchPred)
                 .offset(pageable.getOffset())
@@ -162,7 +169,14 @@ public class CouponService
      */
     public Coupon findBest4Order(Order order)
     {
-        return couponDao.findTopByOwnerAndStatusAndMinAmtLessThanEqualOrderByAmtDescEndDate(order.getOwner(), CouponStatus.valid, order.getAmt());
+        Predicate searchPred = couponPredicates.applicable4Order(order);
+        QCoupon qCoupon = QCoupon.coupon;
+        Coupon coupon = jpaQueryFactory
+                .selectFrom(qCoupon)
+                .from(qCoupon)
+                .where(searchPred).orderBy(qCoupon.discount.asc()).orderBy(qCoupon.endDate.asc())
+                .fetchFirst();
+        return coupon;
     }
     
     /**
@@ -212,6 +226,30 @@ public class CouponService
             throw new BusinessException(String.format("不能查询 %s 状态订单的可用优惠券", order.getStatus().getText()));
         }
         
-        return couponDao.findByOwnerAndStatusAndMinAmtLessThanEqualOrderByAmtDescEndDate(order.getOwner(), CouponStatus.valid, order.getAmt(), pageable);
+        Predicate searchPred = couponPredicates.applicable4Order(order);
+        QCoupon qCoupon = QCoupon.coupon;
+        QueryResults<CouponVo> queryResults = jpaQueryFactory
+                .select(Projections.constructor(CouponVo.class, qCoupon.couponId,
+                        qCoupon.couponDef.couponDefId,
+                        qCoupon.couponDef.code.as("couponDefCode"),
+                        qCoupon.couponDef.name.as("couponDefName"),
+                        qCoupon.code,
+                        qCoupon.name,
+                        qCoupon.owner.name.as("ownerName"),
+                        qCoupon.discount,
+                        qCoupon.activePrice,
+                        qCoupon.usedAmt,
+                        qCoupon.maxAmt,
+                        qCoupon.status,
+                        qCoupon.startDate,
+                        qCoupon.endDate,
+                        qCoupon.usedDate))
+                .from(qCoupon)
+                .where(searchPred)
+                .orderBy(qCoupon.discount.asc()).orderBy(qCoupon.endDate.asc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetchResults();
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
 }

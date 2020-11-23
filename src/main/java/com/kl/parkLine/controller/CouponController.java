@@ -50,7 +50,8 @@ public class CouponController
             Coupon coupon = couponService.apply(couponDef, auth.getName());
             CouponVo couponVo = CouponVo.builder().couponId(coupon.getCouponId())
                     .code(coupon.getCode())
-                    .amt(coupon.getAmt())
+                    .discount(coupon.getDiscount())
+                    .activePrice(coupon.getActivePrice())
                     .name(coupon.getName())
                     .status(coupon.getStatus())
                     .startDate(coupon.getStartDate())
@@ -58,7 +59,7 @@ public class CouponController
                     .couponDefCode(couponDef.getCode())
                     .couponDefCouponDefId(couponDef.getCouponDefId())
                     .ownerName(auth.getName())
-                    .minAmt(coupon.getMinAmt())
+                    .maxAmt(coupon.getMaxAmt())
                     .build();
             return RestResult.success(couponVo);
         }

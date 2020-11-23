@@ -112,7 +112,6 @@ public class OrderService
     @Autowired
     private DeviceService deviceService;
     
-    private final Float ACTIVE_COUPON_FACTOR = 0.8f; //激活优惠券金额与券面金额系数
     private final List<OrderStatus> checkedStatus = new ArrayList<OrderStatus>();
     
     //已经完成的订单状态
@@ -937,10 +936,7 @@ public class OrderService
         }
         
         //检查金额是否一致
-        //TODO: 暂定激活优惠券的金额面值的8折
-        if (!activeCouponParam.getAmt().setScale(2,BigDecimal.ROUND_HALF_UP).equals(
-                coupon.getAmt().multiply(new BigDecimal(ACTIVE_COUPON_FACTOR))
-                .setScale(2,BigDecimal.ROUND_HALF_UP)))
+        if (!activeCouponParam.getAmt().equals(coupon.getActivePrice()))
         {
             throw new BusinessException("金额不正确");
         }
@@ -1006,7 +1002,9 @@ public class OrderService
             couponService.useCoupon(coupon, order.getCode());
             order.setUsedCoupon(coupon);
             //设置订单实付款金额
-            order.setRealAmt(order.getAmt().subtract(coupon.getAmt()));
+            BigDecimal discount = order.getAmt().multiply(new BigDecimal(10).subtract(coupon.getDiscount()).divide(new BigDecimal(10), 2, RoundingMode.HALF_UP));
+            BigDecimal realDiscount = coupon.getMaxAmt().min(discount);
+            order.setRealAmt(order.getAmt().subtract(realDiscount));
             order.appedChangeRemark(String.format("使用优惠券: %s; ", coupon.getCode()));
         }
         save(order);

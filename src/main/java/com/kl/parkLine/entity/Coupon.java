@@ -2,6 +2,7 @@ package com.kl.parkLine.entity;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -13,6 +14,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -77,7 +80,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
     /**
      * 优惠券编号
      */
-    @Column(name = "code", nullable = false, unique = true, length = 16)
+    @Column(name = "code", nullable = false, unique = true, length = 32)
     @ApiModelProperty("优惠券实例唯一编号")
     private String code;
     
@@ -85,7 +88,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      * 优惠券名称
      */
     @NeedToCompare(name = "名称")
-    @Column(name = "name", nullable = false, length = 64)
+    @Column(name = "name", nullable = false, length = 64, unique = true)
     @ApiModelProperty("优惠券名称")
     private String name;
     
@@ -98,20 +101,36 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
     private CouponStatus status;
     
     /**
-     * 金额
+     *折扣后的封顶金额
      */
-    @NeedToCompare(name = "金额")
-    @Column(name = "amt", precision = 15 ,scale = 2)
-    @ApiModelProperty("优惠券定义金额")
-    private BigDecimal amt;
+    @NeedToCompare(name = "使用支付的最大金额")
+    @Column(name = "max_amt", nullable = false, precision = 15 ,scale = 2)
+    @ApiModelProperty("最大金额")
+    private BigDecimal maxAmt;
     
     /**
-     *使用支付的最小金额（满xx使用）
+     * 优惠券折扣
      */
-    @NeedToCompare(name = "使用支付的最小金额")
-    @Column(name = "min_amt", precision = 15 ,scale = 2)
-    @ApiModelProperty("使用支付的最小金额（满xx使用）")
-    private BigDecimal minAmt;
+    @NeedToCompare(name = "折扣")
+    @Column(name = "discount", nullable = false, precision = 15 ,scale = 2)
+    @ApiModelProperty("折扣（例如8折）")
+    private BigDecimal discount;
+    
+    /**
+     * 激活价格
+     */
+    @NeedToCompare(name = "激活价格")
+    @Column(name = "active_price", nullable = false, precision = 15 ,scale = 2)
+    @ApiModelProperty("激活价格")
+    private BigDecimal activePrice;
+    
+    /**
+     * 适用的停车场
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "tr_coupon_park", joinColumns = { @JoinColumn(name="coupon_id") }, inverseJoinColumns={ @JoinColumn(name="park_id") })  
+    @ApiModelProperty(hidden = true)
+    private List<Park> applicableParks;
     
     /**
      * 有效期开始时间
@@ -142,6 +161,14 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @ApiModelProperty("使用时间")
     private Date usedDate;
+    
+    /**
+     * 实际抵扣的金额
+     */
+    @NeedToCompare(name = "实际抵扣的金额")
+    @Column(name = "used_amt", precision = 15 ,scale = 2)
+    @ApiModelProperty("实际抵扣的金额")
+    private BigDecimal usedAmt;
     
     /**
      * 拥有者

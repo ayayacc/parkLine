@@ -35,16 +35,22 @@ public class CouponDefVo
     private String name;
     
     /**
-     * 金额
+     *折扣后的封顶金额
      */
-    @ApiModelProperty(name="金额", position=2)
-    private BigDecimal amt;
+    @ApiModelProperty("最大金额")
+    private BigDecimal maxAmt;
     
     /**
-     *使用支付的最小金额（满xx使用）
+     * 优惠券折扣
      */
-    @ApiModelProperty(name="使用支付的最小金额（满xx使用）", position=3)
-    private BigDecimal minAmt;
+    @ApiModelProperty("折扣（例如8折）")
+    private BigDecimal discount;
+    
+    /**
+     * 激活价格
+     */
+    @ApiModelProperty("激活价格")
+    private BigDecimal activePrice;
     
     /**
      * 优惠券总数

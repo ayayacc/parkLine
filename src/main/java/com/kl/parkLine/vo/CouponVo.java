@@ -55,11 +55,17 @@ public class CouponVo
     @JsonProperty(value = "ownerName")
     private String ownerName;
     
-    @ApiModelProperty("优惠券实例金额")
-    private BigDecimal amt;
+    @ApiModelProperty("折扣（例如8折）")
+    private BigDecimal discount;
     
-    @ApiModelProperty("使用支付的最小金额（满xx使用）")
-    private BigDecimal minAmt;
+    @ApiModelProperty("激活价格")
+    private BigDecimal activePrice;
+    
+    @ApiModelProperty("实际抵扣金额")
+    private BigDecimal usedAmt;
+    
+    @ApiModelProperty("使用支付的最大金额")
+    private BigDecimal maxAmt;
     
     @ApiModelProperty("优惠券状态")
     private CouponStatus status;
@@ -73,4 +79,8 @@ public class CouponVo
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @ApiModelProperty("有效期结束时间")
     private Date endDate;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @ApiModelProperty("使用时间")
+    private Date usedDate;
 }

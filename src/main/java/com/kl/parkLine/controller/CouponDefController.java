@@ -47,7 +47,9 @@ public class CouponDefController
         try
         {
             couponDefService.save(couponDef);
-            return RestResult.success();
+            CouponDefVo couponDefVo = CouponDefVo.builder().code(couponDef.getCode())
+                    .couponDefId(couponDef.getCouponDefId()).build();
+            return RestResult.success(couponDefVo);
         }
         catch (Exception e)
         {
@@ -75,7 +77,8 @@ public class CouponDefController
         else 
         {
             CouponDefVo couponDefVo = CouponDefVo.builder()
-                    .amt(couponDef.getAmt())
+                    .name(couponDef.getName())
+                    .code(couponDef.getCode())
                     .build();
             return RestResult.success(couponDefVo);
         }

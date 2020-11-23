@@ -27,7 +27,7 @@ public class CouponServiceTest
     {
         Order order = orderService.findOneByOrderId(1);
         Coupon coupon = couponService.findBest4Order(order);
-        assertEquals(coupon.getCode(), "YHJ1603933619895");
+        assertEquals(coupon.getCode(), "YHJ1606120006999");
     }
     
 }
