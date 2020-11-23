@@ -224,8 +224,9 @@ public class EventAdapter
         String carNo = boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo().trim().toUpperCase();
         
         //bse64图片处理
-        //code: carNo-timeStamp.jpg
-        String code = String.format("%s-%d.jpg", carNo, timeStamp);
+        //code: carNo-in/out-timeStamp.jpg
+        Date now = new Date();
+        String code = String.format("%s-%s-%d.jpg", carNo, device.getUseage(), now.getTime());
         aliYunOssCmpt.upload(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getImageFile(), code);
         
         //车牌识别Id 

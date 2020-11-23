@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.github.wxpay.sdk.WXPay;
@@ -26,6 +27,7 @@ import springfox.documentation.oas.annotations.EnableOpenApi;
 @EnableHystrix
 @EnableJpaAuditing(auditorAwareRef = "authAuditorAware")
 @EnableOpenApi
+@EnableAsync
 public class ParkLineApplication 
 {
 

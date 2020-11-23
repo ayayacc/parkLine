@@ -6,11 +6,15 @@ import java.io.InputStream;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.aliyun.oss.OSSClient;
 import com.aliyun.oss.model.CannedAccessControlList;
+import com.aliyun.oss.model.GetObjectRequest;
+import com.aliyun.oss.model.OSSObject;
 import com.aliyun.oss.model.ObjectMetadata;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
@@ -65,10 +69,43 @@ public class AliYunOssCmpt
      * @return 文件url
      * @throws IOException
      */
+    @Async
     public void upload(String base64Img, String code) throws IOException 
     {
         InputStream is = utils.decodeImg(base64Img);
         upload(is, code);
         is.close();
+    }
+    
+    /**
+     * 将awsOSS的文件下载到InputStream
+     * @param key 文件代码
+     * @return
+     */
+    public InputStream downloadStream(String key)
+    {
+        GetObjectRequest getObjectRequest = new GetObjectRequest(bucket, key);
+
+        OSSObject OSSObject = ossClient.getObject(getObjectRequest);
+
+        return OSSObject.getObjectContent();
+    }
+    
+    /**
+     * 获取awsOSS上的文件数据
+     * @param key 文件代码
+     * @return
+     * @throws IOException
+     */
+    public byte[] getBytes(String key) throws IOException 
+    {
+        GetObjectRequest getObjectRequest = new GetObjectRequest(bucket, key);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        OSSObject OSSObject = ossClient.getObject(getObjectRequest);
+        InputStream objectInputStream = OSSObject.getObjectContent();
+        byte[] bytes = IOUtils.toByteArray(objectInputStream);
+        objectInputStream.close();
+        httpHeaders.setContentLength(bytes.length);
+        return bytes;
     }
 }

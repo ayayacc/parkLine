@@ -1,5 +1,6 @@
 package com.kl.parkLine.service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.kl.parkLine.component.AliYunOssCmpt;
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.component.WxCmpt;
 import com.kl.parkLine.dao.IOrderDao;
@@ -41,6 +43,7 @@ import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CarType;
 import com.kl.parkLine.enums.ChargeType;
 import com.kl.parkLine.enums.CouponStatus;
+import com.kl.parkLine.enums.DeviceUseage;
 import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
@@ -94,6 +97,8 @@ public class OrderService
     @Autowired
     private Utils util;
     
+    @Autowired
+    private AliYunOssCmpt aliYunOssCmpt;
     
     @Autowired
     private WxCmpt wxCmpt;
@@ -508,6 +513,21 @@ public class OrderService
         DateTime outTime = new DateTime(order.getOutTime());
         Integer minutes = Minutes.minutesBetween(inTime, outTime).getMinutes();
         
+        //月票
+        //按照出场时间检查是否有月票
+        Date inDate = inTime.withTimeAtStartOfDay().toDate(); // 去掉时分秒，只保留日期
+        Date outDate = outTime.withTimeAtStartOfDay().toDate(); // 去掉时分秒，只保留日期
+        //月票的开始日期在入场之前，结束日期在出场之后
+        Order monthlyTkt = orderDao.findByTypeAndCarAndParkAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                OrderType.monthlyTicket, car, park, OrderStatus.payed, inDate, outDate);
+        if (null != monthlyTkt)
+        {
+            order.setUsedMonthlyTkt(monthlyTkt);
+            order.setAmt(BigDecimal.ZERO);
+            order.setRealAmt(BigDecimal.ZERO);
+            return;
+        }
+        
         //阶梯计费
         if (park.getChargeType().equals(ChargeType.step))
         {
@@ -549,51 +569,6 @@ public class OrderService
                 amt = amt.add(modAmt);
             }
         }
-        
-        /*
-        //月票
-        Park park = order.getPark();
-        BigDecimal amt = BigDecimal.ZERO;
-        //按照出场时间检查是否有月票
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Date outDate = sdf.parse(sdf.format(order.getOutTime())); // 去掉时分秒，只保留日期
-        Order monthlyTkt = orderDao.findByTypeAndCarCarNoAndParkParkIdAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                OrderType.monthlyTicket, order.getCar().getCarNo(), 
-                order.getPark().getParkId(), OrderStatus.payed, outDate, outDate);
-        if (null != monthlyTkt)
-        {
-            order.setUsedMonthlyTkt(monthlyTkt);
-            order.setAmt(BigDecimal.ZERO);
-            return;
-        }
-        //根据停车场规则计算金额
-        //计算时间差
-        DateTime inTime = new DateTime(order.getInTime());
-        DateTime outTime = new DateTime(order.getOutTime());
-        int minutes = Minutes.minutesBetween(inTime, outTime).getMinutes();
-        
-        //计算价格
-        BigDecimal feeTimeTotal = new BigDecimal(minutes - park.getFreeTime()); //计算应该计费的时间
-        if (0 < feeTimeTotal.compareTo(BigDecimal.ZERO)) //超过免费时间(超过x分钟收费)
-        {
-            amt = amt.add(park.getPriceLev1()); //第一阶段计费(x分钟后，x分钟--x分钟收费x元)
-            
-            //第二阶段计费时间(x分钟后，每x分钟收费x元,不足x分钟，按x分钟算)
-            if (0 != park.getTimeLev2())
-            {
-                BigDecimal feeTimeLev2 = feeTimeTotal.subtract(new BigDecimal(park.getTimeLev1())); 
-                if (0 < feeTimeLev2.compareTo(BigDecimal.ZERO)) //达到第二阶段计费条件
-                {
-                    BigDecimal amtLev2 = feeTimeLev2.divide(new BigDecimal(park.getTimeLev2()), 
-                            RoundingMode.CEILING).multiply(park.getPriceLev2());
-                    amt = amt.add(amtLev2);
-                }
-            }
-        }
-        
-        //最多不超过x元
-        order.setAmt(amt.min(park.getMaxAmt()));
-        order.setRealAmt(order.getAmt());*/
         order.setAmt(amt);
         order.setRealAmt(amt);
     }
@@ -1153,5 +1128,29 @@ public class OrderService
         
         //记录备注
         this.save(order);
+    }
+    
+    /**
+     * 获取订单的出入库截图
+     * @param order 指定的订单
+     * @param eventType 出/入
+     * @return
+     * @throws IOException
+     */
+    public byte[] getOrderImage(Order order, DeviceUseage deviceUseage) throws IOException
+    {
+        String code = "";
+        switch (deviceUseage)
+        {
+            case in:
+                code = order.getInImgCode();
+                break;
+            case out:
+                code = order.getOutImgCode();
+                break;
+            default:
+                break;
+        }
+        return aliYunOssCmpt.getBytes(code);
     }
 }
