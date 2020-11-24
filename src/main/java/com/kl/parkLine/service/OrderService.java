@@ -729,9 +729,6 @@ public class OrderService
         order.setStatus(OrderStatus.needToPay);
         //设置支付日期
         order.setPaymentTime(null);
-        
-        //TODO:恢复优惠券状态
-        
         order.appedChangeRemark(String.format("微信付款失败: %s", wxPayNotifyParam));
         this.save(order);
     }
@@ -963,33 +960,46 @@ public class OrderService
     }
     
     /*
-     * 准备支付, 设置优惠券, 不保存订单
+     * 设置优惠券
      */
-    private void preparePay(Order order, Coupon coupon, String payerName) throws BusinessException 
+    private void useCoupon(Order order, Integer couponId, String payerName) throws BusinessException 
     {
-        //检查订单状态
-        if (!order.getStatus().equals(OrderStatus.needToPay))
-        {
-            throw new BusinessException(String.format("订单: %s 处于: %s 状态, 无需支付", 
-                    order.getCode(), order.getStatus().getText()));
-        }
-        
-        //设置无优惠券初始值
-        order.setRealAmt(order.getAmt());
-        
+        Coupon coupon = null;
         if (order.getAutoCoupon()) //自动匹配优惠券
         {
             //找到最合适的优惠券
             coupon = couponService.findBest4Order(order);
         }
-        
-        //设置coupon
-        if (null != coupon)
+        else if (null != couponId) //手工指定优惠券
         {
+            //查找优惠券
+            coupon = couponService.findOneById(couponId);
+            if (null == coupon)
+            {
+                throw new BusinessException(String.format("无效的优惠券Id: %d", couponId));
+            }
+            
             //检查coupon状态
             if (!coupon.getStatus().equals(CouponStatus.valid))
             {
                 throw new BusinessException(String.format("优惠券处于: %s 状态, 不能使用", coupon.getStatus().getText()));
+            }
+            
+            //检查有效期
+            Date now = new DateTime().withTimeAtStartOfDay().toDate();
+            if (now.before(coupon.getStartDate()))
+            {
+                throw new BusinessException("优惠券有效期还没开始");
+            }
+            if (now.after(coupon.getEndDate()))
+            {
+                throw new BusinessException("优惠券已经超过有效期");
+            }
+            
+            //检查试用停车场
+            if (!coupon.getApplicableParks().contains(order.getPark()))
+            {
+                throw new BusinessException("优惠券不适用于当前停车场");
             }
             
             //检查优惠券拥有者
@@ -997,7 +1007,11 @@ public class OrderService
             {
                 throw new BusinessException("优惠券在他人名下, 不能使用");
             }
-            
+        }
+        
+        //设置coupon
+        if (null != coupon)
+        {
             //消耗优惠券
             couponService.useCoupon(coupon, order.getCode());
             order.setUsedCoupon(coupon);
@@ -1007,7 +1021,6 @@ public class OrderService
             order.setRealAmt(order.getAmt().subtract(realDiscount));
             order.appedChangeRemark(String.format("使用优惠券: %s; ", coupon.getCode()));
         }
-        save(order);
     }
     
     /**
@@ -1051,25 +1064,24 @@ public class OrderService
             throw new BusinessException(String.format("无效的订单Id: %d", payParam.getOrderId()));
         }
         
-        //查找指定优惠券
-        Coupon coupon = null;
-        if (null != payParam.getCouponId())
+        //检查订单状态
+        if (!order.getStatus().equals(OrderStatus.needToPay))
         {
-            //查找优惠券
-            coupon = couponService.findOneById(payParam.getCouponId());
-            if (null == coupon)
-            {
-                throw new BusinessException(String.format("无效的优惠券Id: %d", payParam.getCouponId()));
-            }
+            throw new BusinessException(String.format("订单: %s 处于: %s 状态, 无需支付", 
+                    order.getCode(), order.getStatus().getText()));
         }
-        
+
         //钱包支付
         order.setPaymentType(PaymentType.qb);
         order.setAutoCoupon(false);
         order.setRealAmt(order.getAmt());
         
-        //准备支付，检查状态，设置优惠券
-        this.preparePay(order, coupon, payerName);
+        //只有停车订单才能使用优惠券
+        if (order.getType().equals(OrderType.parking))
+        {
+            //准备支付，设置优惠券
+            this.useCoupon(order, payParam.getCouponId(), payerName);
+        }
         
         payByWallet(order);
     }
@@ -1081,13 +1093,20 @@ public class OrderService
      */
     public void quickPayByWallet(Order order) throws Exception
     {
+        //检查订单状态
+        if (!order.getStatus().equals(OrderStatus.needToPay))
+        {
+            throw new BusinessException(String.format("订单: %s 处于: %s 状态, 无需支付", 
+                    order.getCode(), order.getStatus().getText()));
+        }
+        
         //钱包支付
         order.setPaymentType(PaymentType.qb);
         order.setAutoCoupon(true);
         order.setRealAmt(order.getAmt());
         
         //准备支付，检查状态，设置优惠券
-        this.preparePay(order, null, order.getOwner().getName());
+        this.useCoupon(order, null, order.getOwner().getName());
         
         //使用钱包付款
         this.payByWallet(order);
