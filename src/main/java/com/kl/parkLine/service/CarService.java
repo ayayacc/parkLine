@@ -269,6 +269,20 @@ public class CarService
      */
     public DrivingLicenseVo lock(String userName, String carNo, MultipartFile licenseImg) throws IOException, ServerException, ClientException, ParseException, BusinessException
     {
+        //车牌颜色
+        PlateColor plateColor = PlateColor.blue;
+        if (BULE_PLATE_NO_LEN != carNo.length())
+        {
+            plateColor = PlateColor.green;
+        }
+        
+        //检查车辆是否已经绑定过行驶证
+        Car car = this.getCar(carNo, plateColor);
+        if (null != car.getLicense())
+        {
+            throw new BusinessException(String.format("车辆 %s 已经绑定过行驶证,请联系客服确认", carNo));
+        }
+        
         User user = userService.findByName(userName);
         
         //"DrivingLicense_carNo_timestamp"
@@ -281,11 +295,6 @@ public class CarService
         
         //识别行驶证
         DrivingLicenseVo drivingLicenseVo = aliYunCmpt.recognizeDrivingLicense(code);
-        PlateColor plateColor = PlateColor.blue;
-        if (BULE_PLATE_NO_LEN != drivingLicenseVo.getPlateNumber().length())
-        {
-            plateColor = PlateColor.green;
-        }
         
         if (!carNo.equalsIgnoreCase(drivingLicenseVo.getPlateNumber().trim()))
         {
@@ -293,7 +302,6 @@ public class CarService
         }
         
         //保存车辆
-        Car car = this.getCar(carNo, plateColor);
         DrivingLicense license = car.getLicense();
         if (null == license)
         {
