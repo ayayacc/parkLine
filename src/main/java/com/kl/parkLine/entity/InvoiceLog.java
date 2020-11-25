@@ -25,6 +25,7 @@ import lombok.Setter;
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "TT_INVOICE_LOG")
+@org.hibernate.annotations.Table(appliesTo = "tt_invoice_log",comment = "开票申请变动记录")
 @Getter
 @Setter
 @DynamicUpdate
@@ -39,7 +40,7 @@ public class InvoiceLog extends AbstractLog implements Serializable
     private Integer invoiceLogId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
-    @JoinColumn(name = "invoice_id")
+    @JoinColumn(name = "invoice_id", columnDefinition="int comment '发票Id'")
     @JsonIgnore
     private Invoice invoice;
 

@@ -15,7 +15,7 @@ public enum Gender implements BaseEnum
     @ApiModelProperty("1:男")
     male(1, "男"),
     @ApiModelProperty("2:女")
-    femail(2, "女");
+    female(2, "女");
     
     private Integer value;
     private String text;

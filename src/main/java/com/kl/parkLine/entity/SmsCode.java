@@ -39,6 +39,7 @@ import lombok.Setter;
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "TT_SMS_CODE")
+@org.hibernate.annotations.Table(appliesTo = "tt_sms_code",comment = "短信验证码")
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
@@ -55,14 +56,14 @@ public class SmsCode extends AbstractEntity implements java.io.Serializable
     /**
      * 手机号码
      */
-    @Column(name = "mobile", length = 16, nullable = false)
+    @Column(name = "mobile", length = 16, nullable = false, columnDefinition="varchar(16) comment '手机号码'")
     @ApiModelProperty("mobile")
     private String mobile;
     
     /**
      * 验证码
      */
-    @Column(name = "code", length = 8, nullable = false)
+    @Column(name = "code", length = 8, nullable = false, columnDefinition="varchar(8) comment '验证码'")
     @ApiModelProperty("验证码")
     private String code;
     
@@ -70,7 +71,7 @@ public class SmsCode extends AbstractEntity implements java.io.Serializable
      * 有效期
      */
     @Temporal(TemporalType.TIMESTAMP)       
-    @Column(name = "expier_time", nullable = false)
+    @Column(name = "expier_time", nullable = false, columnDefinition="datetime comment '过期时间'")
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")     
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("过期时间")
@@ -79,7 +80,7 @@ public class SmsCode extends AbstractEntity implements java.io.Serializable
     /**
      * 是否有效
      */
-    @Column(name = "enabled", length = 4, nullable = false)
+    @Column(name = "enabled", length = 4, nullable = false, columnDefinition="varchar(4) comment '是否有效Y/N'")
     @ApiModelProperty("是否有效")
     private String enabled;
 

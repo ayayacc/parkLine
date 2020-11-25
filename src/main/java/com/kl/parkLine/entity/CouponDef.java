@@ -50,6 +50,7 @@ import lombok.Setter;
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "TT_COUPON_DEF")
+@org.hibernate.annotations.Table(appliesTo = "tt_coupon_def",comment = "优惠券定义")
 @DynamicUpdate
 @DynamicInsert
 @ApiModel("优惠券定义")
@@ -65,7 +66,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
     /**
      * 优惠券定义编号
      */
-    @Column(name = "code", nullable = false, unique = true, length = 32)
+    @Column(name = "code", nullable = false, unique = true, length = 32, columnDefinition="varchar(32) comment '优惠券定义唯一编号'")
     @ApiModelProperty("优惠券定义唯一编号")
     private String code;
     
@@ -73,7 +74,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      * 优惠券定义名称
      */
     @NeedToCompare(name = "名称")
-    @Column(name = "name", nullable = false, length = 64, unique = true)
+    @Column(name = "name", nullable = false, length = 64, unique = true, columnDefinition="varchar(64) comment '优惠券定义名称'")
     @ApiModelProperty("优惠券定义名称")
     private String name;
     
@@ -87,16 +88,16 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
     /**
      *折扣后的封顶金额
      */
-    @NeedToCompare(name = "使用支付的最大金额")
-    @Column(name = "max_amt", nullable = false, precision = 15 ,scale = 2)
-    @ApiModelProperty("最大金额")
+    @NeedToCompare(name = "最大折扣金额")
+    @Column(name = "max_amt", nullable = false, precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '最大折扣金额'")
+    @ApiModelProperty("最大折扣金额")
     private BigDecimal maxAmt;
     
     /**
      * 优惠券折扣
      */
     @NeedToCompare(name = "折扣")
-    @Column(name = "discount", nullable = false, precision = 15 ,scale = 2)
+    @Column(name = "discount", nullable = false, precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '折扣（例如8折）'")
     @ApiModelProperty("折扣（例如8折）")
     private BigDecimal discount;
     
@@ -104,7 +105,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      * 优惠券总数
      */
     @NeedToCompare(name = "优惠券总数")
-    @Column(name = "total_cnt", nullable = false)
+    @Column(name = "total_cnt", nullable = false, columnDefinition="int comment '优惠券总数'")
     @ApiModelProperty("优惠券总数")
     private Integer totalCnt;
     
@@ -112,7 +113,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      * 已经领取数量
      */
     @NeedToCompare(name = "已经领取数量")
-    @Column(name = "applied_cnt", nullable = false, columnDefinition ="int default 0")
+    @Column(name = "applied_cnt", nullable = false, columnDefinition ="int default 0 comment '已经领取数量'")
     @ApiModelProperty("已经领取数量")
     private Integer appliedCnt;
     
@@ -120,7 +121,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      * 已经使用数量
      */
     @NeedToCompare(name = "已经使用数量")
-    @Column(name = "used_cnt", nullable = false, columnDefinition ="int default 0")
+    @Column(name = "used_cnt", nullable = false, columnDefinition ="int default 0 comment '已经使用数量'")
     @ApiModelProperty("已经使用数量")
     private Integer usedCnt;
     
@@ -128,7 +129,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      * 是否有效
      */
     @NeedToCompare(name = "是否有效")
-    @Column(name = "enabled", length = 4, nullable = false)
+    @Column(name = "enabled", length = 4, nullable = false, columnDefinition ="varchar(4) comment '是否有熊Y/N'")
     @ApiModelProperty("是否有效")
     private String enabled;
     
@@ -136,7 +137,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      * 有效期开始时间
      */
     @Temporal(TemporalType.DATE)            
-    @Column(name = "start_date", nullable = false)
+    @Column(name = "start_date", nullable = false, columnDefinition="date comment '有效期开始时间(含当天)'")
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @NeedToCompare(name = "有效期开始时间")
@@ -147,7 +148,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      * 有效期结束时间
      */
     @Temporal(TemporalType.DATE)            
-    @Column(name = "end_date", nullable = false)
+    @Column(name = "end_date", nullable = false, columnDefinition="date comment '有效期结束时间(含当天)'")
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @NeedToCompare(name = "有效期结束时间")
@@ -158,7 +159,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      * 领取后N天有效
      */
     @NeedToCompare(name = "领取后N天有效")
-    @Column(name = "term", nullable = false)
+    @Column(name = "term", nullable = false, columnDefinition="int comment '领取后N天有效'")
     @ApiModelProperty("领取后N天有效")
     private Integer term;
     
@@ -166,7 +167,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      * 激活价格
      */
     @NeedToCompare(name = "激活价格")
-    @Column(name = "active_price", nullable = false, precision = 15 ,scale = 2)
+    @Column(name = "active_price", nullable = false, precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '激活价格(元)'")
     @ApiModelProperty("激活价格")
     private BigDecimal activePrice;
     

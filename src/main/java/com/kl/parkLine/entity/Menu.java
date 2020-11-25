@@ -30,6 +30,7 @@ import lombok.Setter;
 
 @Entity
 @Table(name="TC_MENU")
+@org.hibernate.annotations.Table(appliesTo = "tc_menu",comment = "菜单")
 @SuppressWarnings("serial")
 @Getter
 @Setter
@@ -43,17 +44,17 @@ public class Menu extends AbstractEntity implements java.io.Serializable
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer menuId;
 
-    @Column(name = "name", nullable = false, unique = true, length = 255)
+    @Column(name = "name", nullable = false, unique = true, length = 255, columnDefinition="varchar(255) comment '菜单名称'")
     private String name;
 
-    @Column(name = "url", nullable = false, length = 255)
+    @Column(name = "url", nullable = false, length = 255, columnDefinition="varchar(255) comment '菜单url'")
     private String url;
     
-    @Column(name = "sort_idx", nullable = false)
+    @Column(name = "sort_idx", nullable = false, columnDefinition="varchar(255) comment '菜单排序'")
     private String sortIdx;
     
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(name="parent_menu_id")
+    @JoinColumn(name="parent_menu_id", columnDefinition="int comment '上级菜单Id'")
     private Menu parentMenu; 
     
     @ManyToMany(mappedBy = "menus", fetch = FetchType.EAGER)
@@ -64,7 +65,7 @@ public class Menu extends AbstractEntity implements java.io.Serializable
     @OrderBy(value="sort_idx asc") 
     private Set<Menu> childMenus; 
     
-    @Column(name = "enabled", length = 4, nullable = false)
+    @Column(name = "enabled", length = 4, nullable = false, columnDefinition="varchar(4) comment '是否有效Y/N'")
     private String enabled;
 
     public void addChildMenu(Menu childMenu)

@@ -44,6 +44,7 @@ import lombok.Setter;
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "TT_INVOICE")
+@org.hibernate.annotations.Table(appliesTo = "tt_invoice",comment = "开票申请")
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
@@ -57,20 +58,20 @@ public class Invoice extends AbstractEntity implements java.io.Serializable
     /**
      * 开票编号
      */
-    @Column(name = "code", nullable = false, unique = true, length = 16)
+    @Column(name = "code", nullable = false, unique = true, length = 16, columnDefinition="varchar(16) comment '开票编号,领取优惠券时自动生成'")
     private String code;
     
     /**
      * 开票金额
      */
-    @Column(name = "amt", precision = 15 ,scale = 2)
+    @Column(name = "amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '开票金额'")
     private BigDecimal amt;
     
     /*所有订单类型公用*/
     /**
      * 发票状态: 已经申请/开票成功/开票失败
      */
-    @Column(name = "status")
+    @Column(name = "status", columnDefinition="varchar(255) comment 'submited/successed/failed'")
     @Enumerated(EnumType.STRING)
     private InvoiceStatus status;
     

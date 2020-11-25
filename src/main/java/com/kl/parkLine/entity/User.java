@@ -47,6 +47,7 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @Table(name = "TT_USER")
+@org.hibernate.annotations.Table(appliesTo = "tt_user",comment = "用户表")
 @ApiModel("用户")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -62,35 +63,35 @@ public class User extends AbstractDateEntity implements UserDetails
     /**
      * 微信用户openid
      */
-    @Column(name = "wx_open_id", length = 64, unique = true)
+    @Column(name = "wx_open_id", length = 64, unique = true, columnDefinition="varchar(64) comment '微信用户openid'")
     @ApiModelProperty("微信用户openid")
     private String wxOpenId;
     
     /**
      * 用户唯一标识
      */
-    @Column(name = "name", nullable = false, length = 64, unique = true)
+    @Column(name = "name", nullable = false, length = 64, unique = true, columnDefinition="varchar(64) comment '用户唯一标识'")
     @ApiModelProperty("用户唯一标识")
     private String name;
     
-    @Column(name = "nick_name", length = 64)
+    @Column(name = "nick_name", length = 64, columnDefinition="varchar(64) comment '用户昵称'")
     @ApiModelProperty("用户昵称")
     private String nickName;
     
-    @Column(name = "mobile", length = 16)
+    @Column(name = "mobile", length = 16, columnDefinition="varchar(16) comment '手机号码'")
     @ApiModelProperty("手机号码")
     private String mobile;
     
-    @Column(name = "country", length = 64)
+    @Column(name = "country", length = 64, columnDefinition="varchar(64) comment '国家'")
     private String country;
     
-    @Column(name = "province", length = 64)
+    @Column(name = "province", length = 64, columnDefinition="varchar(64) comment '省'")
     private String province;
     
-    @Column(name = "city", length = 64)
+    @Column(name = "city", length = 64, columnDefinition="varchar(64) comment '市'")
     private String city;
     
-    @Column(name = "gender")
+    @Column(name = "gender", columnDefinition="varchar(255) comment '性别:unkonwn/male/female'")
     @Enumerated(EnumType.STRING)
     private Gender gender;
     
@@ -98,10 +99,10 @@ public class User extends AbstractDateEntity implements UserDetails
      * 是否开通了免密支付
      */
     @ApiModelProperty("是否开通无感支付")
-    @Column(name = "is_quick_pay", nullable = false, columnDefinition="bool default false")
+    @Column(name = "is_quick_pay", nullable = false, columnDefinition="bool default false comment '是否开通无感支付'")
     private Boolean isQuickPay;
     
-    @Column(name = "password", length = 16)
+    @Column(name = "password", length = 16, columnDefinition="varchar(16) comment '用户密码,MD5散列'")
     @JsonIgnore
     @ApiModelProperty(hidden = true)
     private String password;
@@ -117,19 +118,19 @@ public class User extends AbstractDateEntity implements UserDetails
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = {CascadeType.MERGE, CascadeType.PERSIST}) 
     private Set<Car> cars;
     
-    @Column(name = "is_enabled")
+    @Column(name = "is_enabled", columnDefinition="bool comment '用户是否有效'")
     private boolean isEnabled;
     
     /**
-     * 钱包余额
+     * 钱包余额(元)
      */
-    @Column(name = "balance", precision = 15 ,scale = 2, nullable = false, columnDefinition = "int default 0")
+    @Column(name = "balance", precision = 15 ,scale = 2, nullable = false, columnDefinition = "decimal(15,2) default 0 comment '钱包余额(元)'")
     private BigDecimal balance;
     
     /**
      * 是否订阅了公众号
      */
-    @Column(name = "subscribe")
+    @Column(name = "subscribe", columnDefinition = "varchar(255) comment '是否订阅了公众号Y/N'")
     private String subscribe;
     
     @ManyToMany(fetch = FetchType.LAZY)

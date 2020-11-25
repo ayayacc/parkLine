@@ -20,7 +20,7 @@ import lombok.Setter;
  * 
  * 事件图片
  *
- * <p>车辆数据
+ * <p>事件图片
  * @author chenc 2020年9月11日
  * @see
  * @since 1.0
@@ -30,6 +30,7 @@ import lombok.Setter;
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "TT_EVENT_PIC")
+@org.hibernate.annotations.Table(appliesTo = "tt_event_pic",comment = "事件图片")
 @DynamicUpdate
 @DynamicInsert
 public class EventPic implements java.io.Serializable
@@ -49,13 +50,13 @@ public class EventPic implements java.io.Serializable
     /**
      * 图片url
      */
-    @Column(name = "pic_url", length = 128, nullable = false)
+    @Column(name = "pic_url", length = 128, nullable = false, columnDefinition="varchar(128) comment '图片url'")
     private String picUrl;
     
     /**
      * 图片类型
      */
-    @Column(name = "pic_type", length = 16, nullable = false)
+    @Column(name = "pic_type", length = 16, nullable = false, columnDefinition="varchar(16) comment '图片类型'")
     private String picType;
 
     @Override

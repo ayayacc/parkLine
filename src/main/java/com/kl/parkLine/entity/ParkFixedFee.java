@@ -33,6 +33,7 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @Table(name = "TC_PARK_FIXED_FEE")
+@org.hibernate.annotations.Table(appliesTo = "tc_park_fixed_fee",comment = "停车场固定计费配置:freeTime分钟内免费，每feePeriod分钟收费price元, maxPeriod小时内，最高maxAmt元")
 public class ParkFixedFee implements java.io.Serializable
 {
     @Id
@@ -44,32 +45,32 @@ public class ParkFixedFee implements java.io.Serializable
      * 免费时长（分钟）
      */
     @NeedToCompare(name = "免费时长（分钟）")
-    @Column(name = "free_time", nullable = false, columnDefinition ="int default 0") 
+    @Column(name = "free_time", nullable = false, columnDefinition ="int default 0 comment '免费时长（分钟）'") 
     private Integer freeTime;
     
     
     /**
      * 计费周期（分钟）
      */
-    @Column(name = "fee_period", nullable = false)
+    @Column(name = "fee_period", nullable = false, columnDefinition="int comment '计费周期（分钟）'")
     private Integer feePeriod;
     
     /**
      * 单价
      */
-    @Column(name = "price", precision = 8 ,scale = 2, nullable = false)
+    @Column(name = "price", precision = 8 ,scale = 2, nullable = false, columnDefinition="decimal(8,2) comment '单价'")
     private BigDecimal price;
     
     /**
      * 计算封顶金额的周期(小时)
      */
-    @Column(name = "max_period", nullable = false)
+    @Column(name = "max_period", nullable = false, columnDefinition="int comment '计算封顶金额的周期(小时)'")
     private Integer maxPeriod;
     
     /**
      * 最高金额
      */
-    @Column(name = "max_amt", precision = 8 ,scale = 2, nullable = false, columnDefinition ="int default 999999") 
+    @Column(name = "max_amt", precision = 8 ,scale = 2, nullable = false, columnDefinition ="decimal(8,2) default 999999 comment '最高金额'") 
     private BigDecimal maxAmt;
         
 }

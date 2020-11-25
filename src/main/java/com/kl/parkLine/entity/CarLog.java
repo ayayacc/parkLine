@@ -25,6 +25,7 @@ import lombok.Setter;
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "TT_CAR_LOG")
+@org.hibernate.annotations.Table(appliesTo = "tt_car_log",comment = "车辆变动记录表")
 @Getter
 @Setter
 @DynamicUpdate
@@ -39,7 +40,7 @@ public class CarLog extends AbstractLog implements Serializable
     private Integer carLogId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
-    @JoinColumn(name = "car_id")
+    @JoinColumn(name = "car_id", columnDefinition="int comment '车辆Id'")
     @JsonIgnore
     private Car car;
     

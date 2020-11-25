@@ -25,6 +25,7 @@ import lombok.Setter;
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "TT_COUPON_DEF_LOG")
+@org.hibernate.annotations.Table(appliesTo = "tt_coupon_def_log",comment = "优惠券定义变动记录")
 @Getter
 @Setter
 @DynamicUpdate
@@ -39,7 +40,7 @@ public class CouponDefLog extends AbstractLog implements Serializable
     private Integer couponDefLogId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
-    @JoinColumn(name = "coupon_def_id")
+    @JoinColumn(name = "coupon_def_id", columnDefinition="int comment '优惠券定义Id'")
     @JsonIgnore
     private CouponDef couponDef;
 

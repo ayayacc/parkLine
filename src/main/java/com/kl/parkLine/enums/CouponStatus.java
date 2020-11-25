@@ -10,15 +10,13 @@ import lombok.Getter;
 @SwaggerDisplayEnum
 public enum CouponStatus implements BaseEnum
 {
-    notStart(1, "未开始"),
+    valid(1, "有效"),
     
-    valid(2, "有效"),
+    used(2, "已使用"),
     
-    used(3, "已使用"),
+    invalid(3, "无效"),
     
-    invalid(4, "无效"),
-    
-    expired(5, "已过期");
+    expired(4, "已过期");
     
     private Integer value;
     private String text;

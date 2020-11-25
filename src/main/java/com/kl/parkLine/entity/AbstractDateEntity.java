@@ -23,7 +23,7 @@ import lombok.Setter;
 public abstract class AbstractDateEntity
 {
     @Temporal(TemporalType.TIMESTAMP)            
-    @Column(name="created_date", nullable=false)
+    @Column(name="created_date", nullable=false, columnDefinition="datetime comment '创建时间'")
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss" )
     @CreatedDate
@@ -31,7 +31,7 @@ public abstract class AbstractDateEntity
     private Date createdDate;
     
     @Temporal(TemporalType.TIMESTAMP)            
-    @Column(name="last_modified_date", nullable=false)
+    @Column(name="last_modified_date", nullable=false, columnDefinition="datetime comment '最新更新时间'")
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss" )
     @LastModifiedDate

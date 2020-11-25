@@ -53,6 +53,7 @@ import lombok.Setter;
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "TT_COUPON")
+@org.hibernate.annotations.Table(appliesTo = "tt_coupon",comment = "优惠券 CouponDef 的实例")
 @DynamicUpdate
 @DynamicInsert
 @Builder
@@ -72,7 +73,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      * 优惠券的定义
      */
     @ManyToOne
-    @JoinColumn(name = "coupon_def")
+    @JoinColumn(name = "coupon_def", columnDefinition="int comment '优惠券所属优惠券定义'")
     @JsonIgnore
     @ApiModelProperty(hidden = true)
     private CouponDef couponDef; 
@@ -80,7 +81,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
     /**
      * 优惠券编号
      */
-    @Column(name = "code", nullable = false, unique = true, length = 32)
+    @Column(name = "code", nullable = false, unique = true, length = 32, columnDefinition="varchar(32) comment '优惠券实例唯一编号,领取优惠券时自动生成'")
     @ApiModelProperty("优惠券实例唯一编号")
     private String code;
     
@@ -88,31 +89,31 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      * 优惠券名称
      */
     @NeedToCompare(name = "名称")
-    @Column(name = "name", nullable = false, length = 64, unique = true)
+    @Column(name = "name", nullable = false, length = 64, unique = true, columnDefinition="varchar(64) comment '优惠券名称,默认等于优惠券定义名称'")
     @ApiModelProperty("优惠券名称")
     private String name;
     
     /**
      * 状态
      */
-    @Column(name = "status")
+    @Column(name = "status", columnDefinition="varchar(255) comment 'valid(有效)/used(已使用)/invalid(无效)/expired(已过期)'")
     @Enumerated(EnumType.STRING)
     @ApiModelProperty("优惠券状态")
     private CouponStatus status;
     
     /**
-     *折扣后的封顶金额
+     *最大折扣金额
      */
-    @NeedToCompare(name = "使用支付的最大金额")
-    @Column(name = "max_amt", nullable = false, precision = 15 ,scale = 2)
-    @ApiModelProperty("最大金额")
+    @NeedToCompare(name = "最大折扣金额")
+    @Column(name = "max_amt", nullable = false, precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '最大折扣金额(元)'")
+    @ApiModelProperty("最大折扣金额")
     private BigDecimal maxAmt;
     
     /**
      * 优惠券折扣
      */
     @NeedToCompare(name = "折扣")
-    @Column(name = "discount", nullable = false, precision = 15 ,scale = 2)
+    @Column(name = "discount", nullable = false, precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '折扣（例如8折）'")
     @ApiModelProperty("折扣（例如8折）")
     private BigDecimal discount;
     
@@ -120,7 +121,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      * 激活价格
      */
     @NeedToCompare(name = "激活价格")
-    @Column(name = "active_price", nullable = false, precision = 15 ,scale = 2)
+    @Column(name = "active_price", nullable = false, precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '激活价格(元)'")
     @ApiModelProperty("激活价格")
     private BigDecimal activePrice;
     
@@ -136,7 +137,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      * 有效期开始时间
      */
     @Temporal(TemporalType.DATE)            
-    @Column(name = "start_date", nullable = false)
+    @Column(name = "start_date", nullable = false, columnDefinition="date comment '有效期开始时间(含当天)'")
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @ApiModelProperty("有效期开始时间")
@@ -146,7 +147,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      * 有效期结束时间
      */
     @Temporal(TemporalType.DATE)            
-    @Column(name = "end_date", nullable = false)
+    @Column(name = "end_date", nullable = false, columnDefinition="date comment '有效期结束时间(含当天)'")
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @ApiModelProperty("有效期结束时间")
@@ -156,9 +157,9 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      * 使用时间
      */
     @Temporal(TemporalType.TIMESTAMP)            
-    @Column(name = "used_date")
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "used_date", columnDefinition="datetime comment '使用时间'")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("使用时间")
     private Date usedDate;
     
@@ -166,7 +167,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      * 实际抵扣的金额
      */
     @NeedToCompare(name = "实际抵扣的金额")
-    @Column(name = "used_amt", precision = 15 ,scale = 2)
+    @Column(name = "used_amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '实际抵扣的金额'")
     @ApiModelProperty("实际抵扣的金额")
     private BigDecimal usedAmt;
     
@@ -175,7 +176,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner", nullable = false)
+    @JoinColumn(name = "owner", nullable = false, columnDefinition="int comment '拥有者'")
     @ApiModelProperty("拥有者")
     private User owner;
 

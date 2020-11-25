@@ -49,6 +49,7 @@ import lombok.Setter;
 @DynamicUpdate
 @DynamicInsert
 @Table(name = "TC_PARK")
+@org.hibernate.annotations.Table(appliesTo = "tc_park",comment = "停车场")
 @EntityListeners({AuditingEntityListener.class})
 public class Park extends AbstractDateEntity implements java.io.Serializable
 {
@@ -61,14 +62,14 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 停车场编号
      */
     @NeedToCompare(name = "编号")
-    @Column(name = "code", nullable = false, length = 64, unique = true)
+    @Column(name = "code", nullable = false, length = 64, unique = true, columnDefinition="varchar(64) comment '停车场唯一编号'")
     private String code;
     
     /**
      * 停车场名称
      */
-    @NeedToCompare(name = "名称")
-    @Column(name = "name", nullable = false, length = 64, unique = true)
+    @NeedToCompare(name = "名称") 
+    @Column(name = "name", nullable = false, length = 64, unique = true, columnDefinition="varchar(64) comment '停车场名称'")
     private String name;
     
     /**
@@ -82,62 +83,62 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 停车场总车位数量
      */
     @NeedToCompare(name = "车位总数")
-    @Column(name = "total_cnt", nullable = false)
+    @Column(name = "total_cnt", nullable = false, columnDefinition="int comment '车位总数'")
     private Integer totalCnt;
     
     /**
      * 当前可用车位数量
      */
     @NeedToCompare(name = "可用车位数")
-    @Column(name = "available_cnt", nullable = false)
+    @Column(name = "available_cnt", nullable = false, columnDefinition="int comment '可用车位数'")
     private Integer availableCnt;
     
     /**
      * 经纬度
      */
     @NeedToCompare(name = "经纬度")
-    @Column(name = "geo", length = 32)
+    @Column(name = "geo", length = 32, columnDefinition="varchar(32) comment '经纬度'")
     private String geo;
     
     /**
      * 联系方式
      */
     @NeedToCompare(name = "联系方式")
-    @Column(name = "contact", nullable = false, length = 16)
+    @Column(name = "contact", nullable = false, length = 16, columnDefinition="varchar(16) comment '联系方式'")
     private String contact;
     
     /**
      * 省
      */
     @NeedToCompare(name = "省")
-    @Column(name = "province", length = 16)
+    @Column(name = "province", length = 16, columnDefinition="varchar(16) comment '省'")
     private String province;
     
     /**
      * 市
      */
     @NeedToCompare(name = "市")
-    @Column(name = "city", length = 16)
+    @Column(name = "city", length = 16, columnDefinition="varchar(16) comment '市'")
     private String city;
     
     /**
      * 详细地址
      */
     @NeedToCompare(name = "详细地址")
-    @Column(name = "address", length = 128)
+    @Column(name = "address", length = 128, columnDefinition="varchar(128) comment '详细地址'")
     private String address;
     
     /**
      * 是否有效
      */
     @NeedToCompare(name = "是否有效")
-    @Column(name = "enabled", length = 4, nullable = false)
+    @Column(name = "enabled", length = 4, nullable = false, columnDefinition="varchar(4) comment '是否有效,Y/N'")
     private String enabled;
     
     /**
      * 计费类型: 固定计费/阶梯计费
      */
-    @Column(name = "charge_type", nullable = false)
+    @Column(name = "charge_type", nullable = false, columnDefinition="varchar(255) comment '计费类型: 固定计费/阶梯计费'")
     @Enumerated(EnumType.STRING)
     private ChargeType chargeType;
     
@@ -152,14 +153,14 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     /**
      * 白色车牌是否免费
      */
-    @Column(name = "is_white_plate_free", nullable = false, columnDefinition="bool default true")
+    @Column(name = "is_white_plate_free", nullable = false, columnDefinition="bool default true comment '白色车牌是否免费'")
     private Boolean isWhitePlateFree;
 
     /**
      * 燃油车固定计费规则
      */
     @OneToOne(fetch=FetchType.LAZY,cascade = CascadeType.ALL)
-    @JoinColumn(name="fuel_fixed_fee_id", referencedColumnName="park_fixed_fee_id")
+    @JoinColumn(name="fuel_fixed_fee_id", referencedColumnName="park_fixed_fee_id", columnDefinition="integer comment '燃油车固定计费规则'")
     private ParkFixedFee fuelFixedFee;
     
     /**
@@ -184,7 +185,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 新能源车固定计费规则
      */
     @OneToOne(fetch=FetchType.LAZY,cascade = CascadeType.ALL)
-    @JoinColumn(name="new_energy_fixed_fee_id", referencedColumnName="park_fixed_fee_id")
+    @JoinColumn(name="new_energy_fixed_fee_id", referencedColumnName="park_fixed_fee_id", columnDefinition="integer comment '新能源车固定计费规则'")
     private ParkFixedFee newEnergyFixedFee;
     
     /**
@@ -206,15 +207,15 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     private List<ParkStepFee> newEnergyStepFees;
     
     @NeedToCompare(name = "月票说明")
-    @Column(name = "monthly_tkt_remark", length=1024) 
+    @Column(name = "monthly_tkt_remark", length=1024, columnDefinition="varchar(1024) comment '月票说明'") 
     private String monthlyTktRemark;
     
     @NeedToCompare(name = "燃油车月票单价")
-    @Column(name = "fuel_monthly_price", precision = 8 ,scale = 2) 
+    @Column(name = "fuel_monthly_price", precision = 8 ,scale = 2, columnDefinition="decimal(8,2) comment '燃油车月票单价'") 
     private BigDecimal fuelMonthlyPrice;
     
     @NeedToCompare(name = "新能源车月票单价")
-    @Column(name = "new_energy_monthly_price", precision = 8 ,scale = 2) 
+    @Column(name = "new_energy_monthly_price", precision = 8 ,scale = 2, columnDefinition="decimal(8,2) comment '新能源车月票单价'") 
     private BigDecimal newEnergyMonthlyPrice;
     
     /**

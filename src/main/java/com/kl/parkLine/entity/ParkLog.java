@@ -25,6 +25,7 @@ import lombok.Setter;
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "TC_PARK_LOG")
+@org.hibernate.annotations.Table(appliesTo = "tc_park_log",comment = "停车场变动记录")
 @Getter
 @Setter
 @DynamicUpdate
@@ -42,7 +43,7 @@ public class ParkLog extends AbstractLog implements Serializable
      * 停车场
      */
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
-    @JoinColumn(name = "park_id")
+    @JoinColumn(name = "park_id", columnDefinition="int comment '停车场Id'")
     @JsonIgnore
     private Park park;
     

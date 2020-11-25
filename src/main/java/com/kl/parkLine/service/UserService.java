@@ -98,7 +98,7 @@ public class UserService
                 user.setGender(Gender.male);
                 break;
             case 2:
-                user.setGender(Gender.femail);
+                user.setGender(Gender.female);
             default:
                 user.setGender(Gender.unkonwn);
                 break;

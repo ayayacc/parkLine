@@ -29,6 +29,7 @@ import lombok.Setter;
 @SuppressWarnings("serial")
 @Entity
 @Table(name = "TT_ORDER_LOG")
+@org.hibernate.annotations.Table(appliesTo = "tt_order_log",comment = "订单变动记录")
 @Getter
 @Setter
 @DynamicUpdate
@@ -46,12 +47,12 @@ public class OrderLog extends AbstractLog implements Serializable
     private Integer orderLogId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", columnDefinition="int comment '订单Id'")
     @JsonIgnore
     private Order order;
     
     @OneToOne(fetch=FetchType.LAZY)
-    @JoinColumn(name="event_id")
+    @JoinColumn(name="event_id", columnDefinition="int comment '事件Id'")
     private Event event;
 
     @Override

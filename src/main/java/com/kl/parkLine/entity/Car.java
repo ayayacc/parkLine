@@ -44,8 +44,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @SuppressWarnings("serial")
-@Entity
+@Entity(name = "TT_CAR")
 @Table(name = "TT_CAR", uniqueConstraints={@UniqueConstraint(columnNames ={"car_no","palte_color"})})
+@org.hibernate.annotations.Table(appliesTo = "tt_car",comment = "车辆表")
 @DynamicUpdate
 @DynamicInsert
 @EntityListeners({AuditingEntityListener.class})
@@ -59,25 +60,25 @@ public class Car extends AbstractDateEntity implements java.io.Serializable
     /**
      * 车牌号
      */
-    @Column(name = "car_no", length = 16, nullable = false)
+    @Column(name = "car_no", length = 16, nullable = false, columnDefinition="varchar(16) comment '车牌号'")
     private String carNo;
     
     /**
      *  车牌颜色
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "palte_color", nullable = false)
+    @Column(name = "palte_color", nullable = false, columnDefinition="varchar(255) comment '车牌颜色'")
     private PlateColor plateColor;
     
     /**
      *  车辆类型:燃油车/新能源
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "car_type", nullable = false)
+    @Column(name = "car_type", nullable = false, columnDefinition="varchar(255) comment '车辆类型:fuel(燃油车)/newEnergy(新能源车)'")
     private CarType carType;
     
     @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", columnDefinition="int comment '车辆绑定的用户'")
     @JsonIgnore
     private User user;
 
