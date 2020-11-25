@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.kl.parkLine.component.AliYunOssCmpt;
+import com.kl.parkLine.component.AliYunCmpt;
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.component.WxCmpt;
 import com.kl.parkLine.dao.IOrderDao;
@@ -98,7 +98,7 @@ public class OrderService
     private Utils util;
     
     @Autowired
-    private AliYunOssCmpt aliYunOssCmpt;
+    private AliYunCmpt aliYunOssCmpt;
     
     @Autowired
     private WxCmpt wxCmpt;
@@ -150,6 +150,9 @@ public class OrderService
                         qOrder.inTime,
                         qOrder.outTime,
                         qOrder.amt,
+                        qOrder.realAmt,
+                        qOrder.walletBalance,
+                        qOrder.paymentTime,
                         qOrder.startDate,
                         qOrder.endDate,
                         qOrder.inImgCode,
@@ -505,12 +508,13 @@ public class OrderService
     public void calAmt(Order order) throws ParseException, BusinessException
     {
         BigDecimal amt = BigDecimal.ZERO;
-        //TODO: 计算费用
         Park park = order.getPark();
         Car car = order.getCar();
         DateTime inTime = new DateTime(order.getInTime());
         DateTime outTime = new DateTime(order.getOutTime());
         Integer minutes = Minutes.minutesBetween(inTime, outTime).getMinutes();
+        
+        //TODO: 白名单和白牌车免费
         
         //月票
         //按照出场时间检查是否有月票

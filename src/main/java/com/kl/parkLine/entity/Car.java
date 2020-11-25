@@ -15,6 +15,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -88,6 +89,13 @@ public class Car extends AbstractDateEntity implements java.io.Serializable
     @ApiModelProperty("变动备注")
     @Transient
     private String changeRemark;
+    
+    /**
+     * 车辆行驶证Id
+     */
+    @OneToOne(fetch=FetchType.LAZY,cascade = CascadeType.ALL)
+    @JoinColumn(name="license_id", referencedColumnName="driving_license_id", columnDefinition="integer comment '车辆行驶证Id'")
+    private DrivingLicense license;
     
     /**
      * 操作记录

@@ -34,7 +34,7 @@ public class EventAdapter
     private DeviceService deviceService;
     
     @Autowired
-    private AliYunOssCmpt aliYunOssCmpt;
+    private AliYunCmpt aliYunCmpt;
     
     private final  String DEVICE_COMPANY_XLT = "信路通";
     private final  String DEVICE_COMPANY_BY = "博粤";
@@ -227,7 +227,7 @@ public class EventAdapter
         //code: carNo-in/out-timeStamp.jpg
         Date now = new Date();
         String code = String.format("%s-%s-%d.jpg", carNo, device.getUseage(), now.getTime());
-        aliYunOssCmpt.upload(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getImageFile(), code);
+        aliYunCmpt.upload(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getImageFile(), code);
         
         //车牌识别Id 
         retEvent.setPlateId(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getPlateId());

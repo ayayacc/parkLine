@@ -1,8 +1,12 @@
 package com.kl.parkLine.service;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Optional;
 
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,11 +15,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.exceptions.ServerException;
+import com.kl.parkLine.component.AliYunCmpt;
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.ICarDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.CarLog;
+import com.kl.parkLine.entity.DrivingLicense;
 import com.kl.parkLine.entity.QCar;
 import com.kl.parkLine.entity.QUser;
 import com.kl.parkLine.entity.User;
@@ -24,6 +33,7 @@ import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.enums.RoleType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.CarParam;
+import com.kl.parkLine.json.DrivingLicenseVo;
 import com.kl.parkLine.predicate.CarPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.CarVo;
@@ -40,6 +50,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 @Transactional(rollbackFor = Exception.class)
 public class CarService
 {
+    //蓝色车牌号码长度
+    private final Integer BULE_PLATE_NO_LEN = 7;
+    
     @Autowired
     private UserService userService;
     
@@ -54,6 +67,9 @@ public class CarService
     
     @Autowired
     private Utils util;
+    
+    @Autowired
+    private AliYunCmpt aliYunCmpt;
     
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
@@ -238,5 +254,66 @@ public class CarService
         {
             return reqData.getUser().getName().equalsIgnoreCase(logonUser.getName());
         }
+    }
+    
+    /**
+     * 通过上传行驶证照片锁定车辆
+     * @param carNo
+     * @param licensePics 行驶证正反面照片
+     * @return
+     * @throws IOException 
+     * @throws ParseException 
+     * @throws ClientException 
+     * @throws ServerException 
+     * @throws BusinessException 
+     */
+    public DrivingLicenseVo lock(String userName, String carNo, MultipartFile licenseImg) throws IOException, ServerException, ClientException, ParseException, BusinessException
+    {
+        User user = userService.findByName(userName);
+        
+        //"DrivingLicense_carNo_timestamp"
+        Date now = new Date();
+        String extName = FilenameUtils.getExtension(licenseImg.getOriginalFilename());
+        String code = String.format("DrivingLicense_%s_%d.%s", carNo, now.getTime(), extName);
+        
+        //将图片上传到oss
+        aliYunCmpt.upload(licenseImg, code);
+        
+        //识别行驶证
+        DrivingLicenseVo drivingLicenseVo = aliYunCmpt.recognizeDrivingLicense(code);
+        PlateColor plateColor = PlateColor.blue;
+        if (BULE_PLATE_NO_LEN != drivingLicenseVo.getPlateNumber().length())
+        {
+            plateColor = PlateColor.green;
+        }
+        
+        if (!carNo.equalsIgnoreCase(drivingLicenseVo.getPlateNumber().trim()))
+        {
+            throw new BusinessException(String.format("车牌号 %s 与行驶证 %s 不一致", carNo, drivingLicenseVo.getPlateNumber()));
+        }
+        
+        //保存车辆
+        Car car = this.getCar(carNo, plateColor);
+        DrivingLicense license = car.getLicense();
+        if (null == license)
+        {
+            license = new DrivingLicense();
+            car.setLicense(license);
+        }
+        license.setImgCode(code);
+        license.setAddress(drivingLicenseVo.getAddress());
+        license.setEngineNumber(drivingLicenseVo.getEngineNumber());
+        license.setIssueDate(drivingLicenseVo.getIssueDate());
+        license.setModel(drivingLicenseVo.getModel());
+        license.setOwner(drivingLicenseVo.getOwner());
+        license.setRegisterDate(drivingLicenseVo.getRegisterDate());
+        license.setUseCharacter(drivingLicenseVo.getUseCharacter());
+        license.setVehicleType(drivingLicenseVo.getVehicleType());
+        license.setVin(drivingLicenseVo.getVin());
+        car.setChangeRemark("绑定行驶证");
+        car.setUser(user);
+        save(car);
+        
+        return drivingLicenseVo;
     }
 }

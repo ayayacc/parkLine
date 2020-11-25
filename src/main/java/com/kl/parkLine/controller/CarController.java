@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.CarParam;
+import com.kl.parkLine.json.DrivingLicenseVo;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.CarService;
 import com.kl.parkLine.vo.CarVo;
@@ -63,11 +64,18 @@ public class CarController
     @PostMapping("/lock")
     @ApiOperation(value="上传行驶证锁定车辆", notes="通过上传行驶证照片，锁定车辆，同时强制解绑未上传行驶证的绑定关系,上传行驶证后，只有本人和管理员可以进行解绑")
     @ApiImplicitParam(name="Authorization", value="登录令牌",required=true, paramType="header")
-    public RestResult<Car> lock(@ApiParam(name="车牌号码", type="string")@RequestParam String carNo, 
-            @ApiParam(name="行驶证照片照片") @RequestParam MultipartFile licensePic, Authentication auth)
+    public RestResult<DrivingLicenseVo> lock(@ApiParam(name="车牌号码", type="string")@RequestParam String carNo, 
+            @ApiParam(name="行驶证照片照片") @RequestParam MultipartFile licenseImg, Authentication auth)
     {
-        //TODO:行驶证锁定车辆
-        return null;
+        try
+        {
+            //上传车辆行驶证,锁定车辆
+            return RestResult.success(carService.lock(auth.getName(), carNo, licenseImg));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
     }
     
     /**

@@ -4,7 +4,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.aliyun.oss.OSSClient;
+import com.aliyun.com.viapi.FileUtils;
+import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSClientBuilder;
+import com.aliyuncs.DefaultAcsClient;
+import com.aliyuncs.exceptions.ClientException;
+import com.aliyuncs.profile.DefaultProfile;
 
 @Configuration
 public class AliyunConfig
@@ -15,13 +20,27 @@ public class AliyunConfig
     @Value("${cloud.aliyun.secretKey}")
     private String secretKey;
 
-    @Value("${cloud.aliyun.endpoint}")
+    @Value("${cloud.aliyun.oss.endpoint}")
     private String endpoint;
 
     @Bean
-    public OSSClient aliYunOssClient() 
+    public OSS aliYunOssClient() 
     {
-        OSSClient ossClient = new OSSClient(endpoint, accessKey, secretKey);
+        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKey, secretKey);
         return ossClient;
+    }
+    
+    @Bean
+    public DefaultAcsClient aliYunAcsClient()
+    {
+        DefaultProfile profile = DefaultProfile.getProfile("cn-shanghai", accessKey, secretKey);
+        DefaultAcsClient acsClient = new DefaultAcsClient(profile);
+        return acsClient;
+    }
+    
+    @Bean
+    public FileUtils fileUtils() throws ClientException 
+    {
+        return FileUtils.getInstance(accessKey,secretKey);
     }
 }

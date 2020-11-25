@@ -69,9 +69,18 @@ public class OrderVo
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date outTime; 
     
-    @ApiModelProperty(name="金额", value="amt")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @ApiModelProperty(name="金额(元)", value="amt")
     private BigDecimal amt; 
+    
+    @ApiModelProperty(name="使用优惠券后实付金额(元)", value="amt")
+    private BigDecimal realAmt; 
+    
+    @ApiModelProperty(name="钱包余额(元)", value="walletBalance")
+    private BigDecimal walletBalance; 
+    
+    @ApiModelProperty(name="付款时间", value="paymentTime")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date paymentTime; 
     
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
     @ApiModelProperty(name="月票开始时间", value="startDate")
