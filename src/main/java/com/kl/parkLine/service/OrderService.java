@@ -48,7 +48,9 @@ import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PaymentType;
+import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.exception.EventException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.ChargeWalletParam;
@@ -111,6 +113,9 @@ public class OrderService
     
     @Autowired
     private DeviceService deviceService;
+    
+    @Autowired
+    private ParkCarItemService parkCarItemService;
     
     private final List<OrderStatus> checkedStatus = new ArrayList<OrderStatus>();
     
@@ -281,8 +286,9 @@ public class OrderService
      * @throws NoSuchFieldException 
      * @throws ParseException 
      * @throws BusinessException 
+     * @throws EventException 
      */
-    public Order processEvent(Event event) throws NoSuchFieldException, SecurityException, ParseException, BusinessException
+    public Order processEvent(Event event) throws BusinessException, EventException, NoSuchFieldException, SecurityException, ParseException
     {
         Order order = null;
         switch (event.getType())
@@ -308,8 +314,9 @@ public class OrderService
      * 停车入场事件处理
      * @param event 事件对象
      * @throws BusinessException 
+     * @throws EventException 
      */
-    public Order carIn(Event event) throws BusinessException 
+    public Order carIn(Event event) throws BusinessException, EventException 
     {
         //停车场
         Park park = null;
@@ -323,9 +330,22 @@ public class OrderService
             park = device.getPark();
         }
         
-        
         //车辆信息
         Car car = carService.getCar(event.getPlateNo(), event.getPlateColor());
+        
+        //检查是否在黑名单
+        if (parkCarItemService.existsInBlackList(park, car))
+        {
+            throw new EventException("黑名单车辆");
+        }
+        //检查车辆是否存在待交费订单
+        if (park.getIsForbidenOwe())
+        {
+            if (orderDao.existsByTypeAndCarAndStatus(OrderType.parking, car, OrderStatus.needToPay))
+            {
+                throw new EventException("欠费车辆");
+            }
+        }
         
         Order order = Order.builder()
                 .code(util.makeCode(OrderType.parking))
@@ -514,7 +534,20 @@ public class OrderService
         DateTime outTime = new DateTime(order.getOutTime());
         Integer minutes = Minutes.minutesBetween(inTime, outTime).getMinutes();
         
-        //TODO: 白名单和白牌车免费
+        //白牌车免费
+        if (car.getPlateColor().equals(PlateColor.white))
+        {
+            order.setAmt(BigDecimal.ZERO);
+            order.setRealAmt(BigDecimal.ZERO);
+            return;
+        }
+        //白名单免费
+        if (parkCarItemService.existsInWhiteList(park, car))
+        {
+            order.setAmt(BigDecimal.ZERO);
+            order.setRealAmt(BigDecimal.ZERO);
+            return;
+        }
         
         //月票
         //按照出场时间检查是否有月票
@@ -840,6 +873,35 @@ public class OrderService
     }    
     
     /**
+     * 
+     * @param payOrderParam
+     * @return
+     * @throws Exception
+     */
+    public BigDecimal inqueryParking(PayOrderParam payOrderParam, String payerName) throws BusinessException
+    {
+        //找到对应订单
+        Order order = this.findOneByOrderId(payOrderParam.getOrderId());
+        if (null == order)
+        {
+            throw new BusinessException(String.format("无效的订单Id: %d", payOrderParam.getOrderId()));
+        }
+        
+        //找到对应优惠券
+        Coupon coupon = couponService.findOneById(payOrderParam.getCouponId());
+        if (null == coupon)
+        {
+            throw new BusinessException(String.format("无效的优惠券Id: %d", payOrderParam.getCouponId()));
+        }
+        
+        //检查优惠券可用性
+        checkCoupon(order, coupon, payerName);
+        
+        //返回真实值
+        return calRealAmt(order, coupon);
+    }
+    
+    /**
      * 创建一个新的月票订单
      * @param monthlyTktParam
      * @throws Exception 
@@ -983,34 +1045,8 @@ public class OrderService
                 throw new BusinessException(String.format("无效的优惠券Id: %d", couponId));
             }
             
-            //检查coupon状态
-            if (!coupon.getStatus().equals(CouponStatus.valid))
-            {
-                throw new BusinessException(String.format("优惠券处于: %s 状态, 不能使用", coupon.getStatus().getText()));
-            }
-            
-            //检查有效期
-            Date now = new DateTime().withTimeAtStartOfDay().toDate();
-            if (now.before(coupon.getStartDate()))
-            {
-                throw new BusinessException("优惠券有效期还没开始");
-            }
-            if (now.after(coupon.getEndDate()))
-            {
-                throw new BusinessException("优惠券已经超过有效期");
-            }
-            
-            //检查试用停车场
-            if (!coupon.getApplicableParks().contains(order.getPark()))
-            {
-                throw new BusinessException("优惠券不适用于当前停车场");
-            }
-            
-            //检查优惠券拥有者
-            if (!coupon.getOwner().getName().equalsIgnoreCase(payerName))
-            {
-                throw new BusinessException("优惠券在他人名下, 不能使用");
-            }
+            //检查优惠券是否可用
+            checkCoupon(order, coupon, payerName);
         }
         
         //设置coupon
@@ -1020,11 +1056,62 @@ public class OrderService
             couponService.useCoupon(coupon, order.getCode());
             order.setUsedCoupon(coupon);
             //设置订单实付款金额
-            BigDecimal discount = order.getAmt().multiply(new BigDecimal(10).subtract(coupon.getDiscount()).divide(new BigDecimal(10), 2, RoundingMode.HALF_UP));
-            BigDecimal realDiscount = coupon.getMaxAmt().min(discount);
-            order.setRealAmt(order.getAmt().subtract(realDiscount));
+            order.setRealAmt(calRealAmt(order, coupon));
             order.appedChangeRemark(String.format("使用优惠券: %s; ", coupon.getCode()));
         }
+    }
+    
+    /**
+     * 检查优惠券是否可用于订单
+     * @param order 订单
+     * @param coupon 被检查的优惠券
+     * @param payerName 付款人
+     * @return
+     * @throws BusinessException 
+     */
+    private void checkCoupon(Order order, Coupon coupon, String payerName) throws BusinessException
+    {
+      //检查coupon状态
+        if (!coupon.getStatus().equals(CouponStatus.valid))
+        {
+            throw new BusinessException(String.format("优惠券处于: %s 状态, 不能使用", coupon.getStatus().getText()));
+        }
+        
+        //检查有效期
+        Date now = new DateTime().withTimeAtStartOfDay().toDate();
+        if (now.before(coupon.getStartDate()))
+        {
+            throw new BusinessException("优惠券有效期还没开始");
+        }
+        if (now.after(coupon.getEndDate()))
+        {
+            throw new BusinessException("优惠券已经超过有效期");
+        }
+        
+        //检查试用停车场
+        if (!coupon.getApplicableParks().contains(order.getPark()))
+        {
+            throw new BusinessException("优惠券不适用于当前停车场");
+        }
+        
+        //检查优惠券拥有者
+        if (!coupon.getOwner().getName().equalsIgnoreCase(payerName))
+        {
+            throw new BusinessException("优惠券在他人名下, 不能使用");
+        }
+    }
+    
+    /**
+     * 计算使用优惠券后的金额
+     * @param order
+     * @param coupon
+     * @return
+     */
+    private BigDecimal calRealAmt(Order order, Coupon coupon)
+    {
+        BigDecimal discount = order.getAmt().multiply(new BigDecimal(10).subtract(coupon.getDiscount()).divide(new BigDecimal(10), 2, RoundingMode.HALF_UP));
+        BigDecimal realDiscount = coupon.getMaxAmt().min(discount);
+        return order.getAmt().subtract(realDiscount);
     }
     
     /**

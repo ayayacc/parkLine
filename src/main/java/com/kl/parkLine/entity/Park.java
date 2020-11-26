@@ -146,15 +146,29 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 白名单
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
-    @OrderBy(value = "createdDate desc")
+    @Where(clause="parkCarType='white'")
     @JsonIgnore
-    private List<ParkWhiteItem> whiteList;
+    private List<ParkCarItem> whiteList;
+    
+    /**
+     * 黑名单
+     */
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
+    @Where(clause="parkCarType='black'")
+    @JsonIgnore
+    private List<ParkCarItem> blackList;
     
     /**
      * 白色车牌是否免费
      */
     @Column(name = "is_white_plate_free", nullable = false, columnDefinition="bool default true comment '白色车牌是否免费'")
     private Boolean isWhitePlateFree;
+    
+    /**
+     * 是否禁止欠费车辆
+     */
+    @Column(name = "is_forbiden_owe", nullable = false, columnDefinition="bool default true comment '是否禁止欠费车辆'")
+    private Boolean isForbidenOwe;
 
     /**
      * 燃油车固定计费规则

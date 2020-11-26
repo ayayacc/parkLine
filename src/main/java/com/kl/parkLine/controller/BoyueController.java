@@ -21,6 +21,7 @@ import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.OrderLog;
 import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.OrderStatus;
+import com.kl.parkLine.exception.EventException;
 import com.kl.parkLine.service.EventService;
 import com.kl.parkLine.service.OrderLogService;
 import com.kl.parkLine.service.OrderService;
@@ -62,68 +63,93 @@ public class BoyueController
             eventService.save(event);
             
             //处理事件（创建订单或者更改订单状态）
-            Order order = orderService.processEvent(event);
+            Order order = null;
+            String content = "";
+            try
+            {
+                order = orderService.processEvent(event);
+            }
+            catch (EventException e) //识别黑名单车辆和欠费车辆
+            {
+                content = e.getMessage();
+            }
             
             resp.setPlateId(event.getPlateId());
             //入场事件,开闸
             if (event.getType().equals(EventType.in))
             {
-                resp.setInfo("ok"); //回复OK开闸
-                resp.setContent(String.format("欢迎光临:%s", event.getPlateNo()));
+                if (null == order)
+                {
+                    resp.setInfo("pok"); //回复OK开闸
+                    resp.setContent(content);
+                }
+                else
+                {
+                    resp.setInfo("ok"); //回复OK开闸
+                    resp.setContent(String.format("欢迎光临:%s", event.getPlateNo()));
+                }
             }
             else if (event.getType().equals(EventType.complete)) //停车完成，出场
             {
-                if (order.getStatus().equals(OrderStatus.noNeedToPay)) //无需支付 
+                if (null == order) //订单为空,发生异常,可能入场时车牌识别错误
                 {
                     resp.setInfo("ok"); //回复OK开闸
                     resp.setContent(String.format("一路顺风:%s", event.getPlateNo()));
                 }
-                else if (order.getStatus().equals(OrderStatus.payed)) //已经提前支付
+                else  //订单不为空
                 {
-                    //判断是否超过离场时间限制
-                    Date now = new Date();
-                    if (now.before(order.getOutTimeLimit()))
+                    if (order.getStatus().equals(OrderStatus.noNeedToPay)) //无需支付 
                     {
                         resp.setInfo("ok"); //回复OK开闸
                         resp.setContent(String.format("一路顺风:%s", event.getPlateNo()));
                     }
-                    else
+                    else if (order.getStatus().equals(OrderStatus.payed)) //已经提前支付
                     {
-                        //TODO: 计算需要补缴费用
-                        resp.setInfo("notok"); //回复notok开闸,等待用户付款
+                        //判断是否超过离场时间限制
+                        Date now = new Date();
+                        if (now.before(order.getOutTimeLimit()))
+                        {
+                            resp.setInfo("ok"); //回复OK开闸
+                            resp.setContent(String.format("一路顺风:%s", event.getPlateNo()));
+                        }
+                        else
+                        {
+                            //TODO: 计算需要补缴费用
+                            resp.setInfo("notok"); //回复notok开闸,等待用户付款
+                        }
                     }
-                }
-                else if (order.getStatus().equals(OrderStatus.needToPay)) //需要付款
-                {
-                    DateTime inTime = new DateTime(order.getInTime());
-                    DateTime outTime = new DateTime(order.getOutTime());
-                    Period period = new Period(inTime, outTime, PeriodType.time());
-                    if (null == order.getOwner()
-                        ||!order.getOwner().getIsQuickPay()) //拥有者为空或者用户未开通无感支付
-                     {
-                         resp.setInfo("notok"); //回复notok开闸,等待用户付款
-                         resp.setContent(String.format("停车时长%d小时%d分,请交费%.2f元", period.getHours(),
-                                 period.getMinutes(), order.getAmt().floatValue()));
-                     }
-                     else //用户开通了无感支付
-                     {
-                         try
-                         {
-                             orderService.quickPayByWallet(order); //无感支付, 钱包支付订单
-                             resp.setInfo("ok"); //回复OK开闸
-                             resp.setContent(String.format("一路顺风:%s", event.getPlateNo()));
-                         }
-                         catch (Exception e) //无感支付失败, 记录到订单中
+                    else if (order.getStatus().equals(OrderStatus.needToPay)) //需要付款
+                    {
+                        DateTime inTime = new DateTime(order.getInTime());
+                        DateTime outTime = new DateTime(order.getOutTime());
+                        Period period = new Period(inTime, outTime, PeriodType.time());
+                        if (null == order.getOwner()
+                            ||!order.getOwner().getIsQuickPay()) //拥有者为空或者用户未开通无感支付
                          {
                              resp.setInfo("notok"); //回复notok开闸,等待用户付款
                              resp.setContent(String.format("停车时长%d小时%d分,请交费%.2f元", period.getHours(),
                                      period.getMinutes(), order.getAmt().floatValue()));
-                             OrderLog log = OrderLog.builder().order(order).build();
-                             log.setRemark(String.format("%s, 无感支付失败: %s", order.getChangeRemark(), e.getMessage()));
-                             orderLogService.save(log);
                          }
-                     }
-                } 
+                         else //用户开通了无感支付
+                         {
+                             try
+                             {
+                                 orderService.quickPayByWallet(order); //无感支付, 钱包支付订单
+                                 resp.setInfo("ok"); //回复OK开闸
+                                 resp.setContent(String.format("一路顺风:%s", event.getPlateNo()));
+                             }
+                             catch (Exception e) //无感支付失败, 记录到订单中
+                             {
+                                 resp.setInfo("notok"); //回复notok开闸,等待用户付款
+                                 resp.setContent(String.format("停车时长%d小时%d分,请交费%.2f元", period.getHours(),
+                                         period.getMinutes(), order.getAmt().floatValue()));
+                                 OrderLog log = OrderLog.builder().order(order).build();
+                                 log.setRemark(String.format("%s, 无感支付失败: %s", order.getChangeRemark(), e.getMessage()));
+                                 orderLogService.save(log);
+                             }
+                         }
+                    } 
+                }
             }
         }
         catch (Exception e)

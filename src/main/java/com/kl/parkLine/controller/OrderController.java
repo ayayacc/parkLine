@@ -254,6 +254,26 @@ public class OrderController
             return RestResult.failed(e.getMessage());
         }
     }
+    
+    /**
+     * 使用钱包支付停车订单前，计算优惠券价格
+     */
+    @PostMapping("/parking/inquery")
+    @ApiOperation(value="支付订单", notes="发起订单支付")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Object> inqueryParkingOrder(@ApiParam(name="订单支付参数", required=true) @RequestBody PayOrderParam payParam,
+            Authentication auth)
+    {
+        try
+        {
+            orderService.inqueryParking(payParam, auth.getName());
+            return RestResult.success();
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
+    }
 
     /**
      * 微信付款通知

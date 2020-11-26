@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -16,19 +18,20 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.kl.parkLine.enums.ParkCarType;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @SuppressWarnings("serial")
 @Entity
-@Table(name = "TC_PARK_WHITE_LIST")
-@org.hibernate.annotations.Table(appliesTo = "tc_park_white_list",comment = "停车场白名单")
+@Table(name = "TC_PARK_CAR_ITEM")
+@org.hibernate.annotations.Table(appliesTo = "tc_park_car_item",comment = "停车场黑白名单")
 @Getter
 @Setter
 @DynamicUpdate
 @DynamicInsert
-public class ParkWhiteItem implements Serializable
+public class ParkCarItem implements Serializable
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,9 +48,24 @@ public class ParkWhiteItem implements Serializable
     private Park park;
     
     /**
+     * 名单类型
+     */
+    @Column(name = "status", columnDefinition="varchar(255) comment '名单类型: 白名单(white)/黑名单(black)'")
+    @Enumerated(EnumType.STRING)
+    private ParkCarType parkCarType;
+    
+    /**
      * 车牌号
      */
-    @Column(name = "car_no", length = 16, nullable = false, columnDefinition="varchar(16) comment '车牌号'")
-    private String carNo;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY) 
+    @JoinColumn(name = "car_id", columnDefinition="int comment '车辆Id'")
+    @JsonIgnore
+    private Car car;
+    
+    /**
+     * 备注
+     */
+    @Column(name = "remark", length=64, columnDefinition="varchar(64) comment '备注'")
+    private String remark;
     
 }

@@ -17,8 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.dao.IRoleDao;
+import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Device;
 import com.kl.parkLine.entity.Park;
+import com.kl.parkLine.entity.ParkCarItem;
 import com.kl.parkLine.entity.ParkFixedFee;
 import com.kl.parkLine.entity.ParkSpecialFee;
 import com.kl.parkLine.entity.ParkStepFee;
@@ -27,6 +29,7 @@ import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CarType;
 import com.kl.parkLine.enums.ChargeType;
 import com.kl.parkLine.enums.DeviceUseage;
+import com.kl.parkLine.enums.ParkCarType;
 import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.enums.RoleType;
 import com.kl.parkLine.exception.BusinessException;
@@ -65,10 +68,10 @@ public class InitSystemTest
     @Rollback(false)
     public void initSystem() throws Exception
     {
+        initCar();
         initPark();
         initRole();
         initUser();
-        initCar();
     }
     
     /**
@@ -200,6 +203,25 @@ public class InitSystemTest
                     park.setNewEnergySpecialFees(newEnergySpecialFees);
                 }
                 
+                //白名单
+                List<ParkCarItem> whiteList = new ArrayList<>();
+                park.setWhiteList(whiteList);
+                ParkCarItem item = new ParkCarItem();
+                Car carWhite = carService.getCar("桂BB1111", PlateColor.blue);
+                item.setCar(carWhite);
+                item.setPark(park);
+                item.setParkCarType(ParkCarType.white);
+                whiteList.add(item);
+                
+                //黑名单
+                List<ParkCarItem> blackList = new ArrayList<>();
+                park.setBlackList(blackList);
+                item = new ParkCarItem();
+                Car carBlack = carService.getCar("桂HB1111", PlateColor.blue);
+                item.setCar(carBlack);
+                item.setPark(park);
+                item.setParkCarType(ParkCarType.black);
+                blackList.add(item);
             }
             else if (park.getName().equalsIgnoreCase("parkNameStep")) //阶梯计费
             {
@@ -314,7 +336,9 @@ public class InitSystemTest
     {
         String[][] carStrs = {
                 {"桂B11111", "blue"},
-                {"桂B22222新", "green"}
+                {"桂B22222新", "green"},
+                {"桂BH1111", "blue"},
+                {"桂BB1111", "blue"}
         };
         
         for (String[] carStr : carStrs)

@@ -275,6 +275,7 @@ public class CarService
         {
             plateColor = PlateColor.green;
         }
+        //TODO: 用车辆类型对应车牌颜色
         
         //检查车辆是否已经绑定过行驶证
         Car car = this.getCar(carNo, plateColor);
