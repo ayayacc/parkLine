@@ -50,9 +50,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 @Transactional(rollbackFor = Exception.class)
 public class CarService
 {
-    //蓝色车牌号码长度
-    private final Integer BULE_PLATE_NO_LEN = 7;
-    
     @Autowired
     private UserService userService;
     
@@ -267,18 +264,11 @@ public class CarService
      * @throws ServerException 
      * @throws BusinessException 
      */
-    public DrivingLicenseVo lock(String userName, String carNo, MultipartFile licenseImg) throws IOException, ServerException, ClientException, ParseException, BusinessException
+    public DrivingLicenseVo lock(String userName, Car car, MultipartFile licenseImg) throws IOException, ServerException, ClientException, ParseException, BusinessException
     {
-        //车牌颜色
-        PlateColor plateColor = PlateColor.blue;
-        if (BULE_PLATE_NO_LEN != carNo.length())
-        {
-            plateColor = PlateColor.green;
-        }
-        //TODO: 用车辆类型对应车牌颜色
+        String carNo = car.getCarNo();
         
         //检查车辆是否已经绑定过行驶证
-        Car car = this.getCar(carNo, plateColor);
         if (null != car.getLicense())
         {
             throw new BusinessException(String.format("车辆 %s 已经绑定过行驶证,请联系客服确认", carNo));

@@ -1,5 +1,10 @@
 package com.kl.parkLine.controller;
 
+import java.util.List;
+
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.WKTReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,8 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.NearbyParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.ParkService;
+import com.kl.parkLine.vo.ParkLocationVo;
 import com.kl.parkLine.vo.ParkVo;
 
 import io.swagger.annotations.Api;
@@ -31,6 +38,9 @@ public class ParkController
 {
     @Autowired 
     private ParkService parkService;  
+    
+    @Autowired
+    private WKTReader wktReader;
     
     /**
      * 保存停车场信息
@@ -95,5 +105,24 @@ public class ParkController
             @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
         return RestResult.success(parkService.fuzzyFindPage(parkVo, pageable, auth.getName()));
+    }
+    
+    @PostMapping("/nearby")
+    @ApiOperation(value="附近停车场信息", notes="查询附近停车场")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<List<ParkLocationVo>> nearby(@ApiParam(name="查询条件",type="query") @RequestBody NearbyParam nearbyParam,
+            Authentication auth)
+    {
+        try
+        {
+            Geometry point = wktReader.read(nearbyParam.getCenterPoint());
+            Point centerPoint = point.getInteriorPoint();
+            return RestResult.success(parkService.findNearby(centerPoint, nearbyParam.getDistanceKm()));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
+        
     }
 }

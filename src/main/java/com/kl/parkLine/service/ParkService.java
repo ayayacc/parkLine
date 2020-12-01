@@ -1,8 +1,14 @@
 package com.kl.parkLine.service;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -21,6 +27,7 @@ import com.kl.parkLine.entity.User;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.ParkPredicates;
 import com.kl.parkLine.util.Const;
+import com.kl.parkLine.vo.ParkLocationVo;
 import com.kl.parkLine.vo.ParkVo;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Predicate;
@@ -50,6 +57,9 @@ public class ParkService
     @Autowired
     private ParkPredicates parkPredicates;
     
+    @Autowired
+    private WKTReader wktReader;
+    
     /**
      * 根据停车场编码找到停车场对象
      * @param code 停车场编码
@@ -57,6 +67,37 @@ public class ParkService
     public Park findOneByCode(String code)
     {
         return parkDao.findOneByCode(code);
+    }
+    
+    /**
+     * 找指定位置附近的停车场
+     * @param code 停车场编码
+     * @throws ParseException 
+     */
+    public List<ParkLocationVo> findNearby(Point centerPoint, Double distanceKm) throws ParseException
+    {
+        //找到附近停车场
+        List<Map<String, Object>> rows = parkDao.findNearby(centerPoint, distanceKm);
+        
+        List<ParkLocationVo> ret = new ArrayList<>();
+        //遍历所有结果行
+        for (Map<String, Object> row : rows)
+        {
+            Geometry geometry = wktReader.read(row.get("geotext").toString());
+            Point point = geometry.getInteriorPoint();
+            ParkLocationVo neerByParkVo = ParkLocationVo.builder().parkId((Integer)row.get("park_id"))
+                    .code(row.get("code").toString())
+                    .name(row.get("name").toString())
+                    .totalCnt((Integer)row.get("total_cnt"))
+                    .availableCnt((Integer)row.get("available_cnt"))
+                    .lng(point.getX())
+                    .lat(point.getY())
+                    .contact(row.get("contact").toString())
+                    .distance((Double)row.get("dist"))
+                    .build();
+            ret.add(neerByParkVo);
+        }
+        return ret;
     }
     
     public Park findOneById(Integer parkId) throws BusinessException

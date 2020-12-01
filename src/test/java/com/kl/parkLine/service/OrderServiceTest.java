@@ -577,4 +577,16 @@ public class OrderServiceTest
             assertEquals(amt, order.getAmt().intValue());
         }
     }
+    
+    @Test
+    public void testCalDiscount()
+    {
+        BigDecimal amt = new BigDecimal(8);
+        BigDecimal discountRate = new BigDecimal(8);
+        BigDecimal max = new BigDecimal(1);
+        BigDecimal discount = amt.multiply(new BigDecimal(10).subtract(discountRate).divide(new BigDecimal(10), 2, RoundingMode.HALF_UP));
+        BigDecimal realDiscount = max.min(discount);
+        BigDecimal realAmt = amt.subtract(realDiscount);
+        assertEquals(new BigDecimal(7), realAmt);
+    }
 }

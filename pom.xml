@@ -118,6 +118,13 @@
 		  <version>1.0.0</version>
 		</dependency>
 		
+        <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-spatial -->
+		<dependency>
+		    <groupId>org.hibernate</groupId>
+		    <artifactId>hibernate-spatial</artifactId>
+		</dependency>
+
+        
 		<!-- querydsl -->
 		<dependency>
 			<groupId>com.querydsl</groupId>
@@ -211,5 +218,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>

@@ -61,6 +61,7 @@ import com.kl.parkLine.json.WxUnifiedOrderResult;
 import com.kl.parkLine.predicate.OrderPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.OrderVo;
+import com.kl.parkLine.vo.ParkLocationVo;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
@@ -212,6 +213,28 @@ public class OrderService
     {
         Car car = carService.getCar(carParam.getCarNo(), carParam.getPlateColor());
         return orderDao.findTopByCarAndStatusOrderByInTimeDesc(car, OrderStatus.needToPay);
+    }
+    
+    public ParkLocationVo findParkingByCar(Car car) throws BusinessException 
+    {
+        Order order = orderDao.findTopByTypeAndCarAndStatusOrderByInTimeDesc(OrderType.parking, car, OrderStatus.needToPay);
+        if (null == order)
+        {
+            throw new BusinessException("未找到车辆的入场记录");
+        }
+        
+        Park park = order.getPark();
+        ParkLocationVo parkLocationVo = ParkLocationVo.builder()
+                .parkId(park.getParkId())
+                .code(park.getCode())
+                .name(park.getName())
+                .totalCnt(park.getTotalCnt())
+                .availableCnt(park.getAvailableCnt())
+                .lng(park.getGeo().getX())
+                .lat(park.getGeo().getY())
+                .contact(park.getContact())
+                .build();
+        return parkLocationVo;
     }
     
     /**
@@ -542,7 +565,8 @@ public class OrderService
             return;
         }
         //白名单免费
-        if (parkCarItemService.existsInWhiteList(park, car))
+        
+        if (park.getIsWhitePlateFree() && parkCarItemService.existsInWhiteList(park, car))
         {
             order.setAmt(BigDecimal.ZERO);
             order.setRealAmt(BigDecimal.ZERO);
@@ -1071,7 +1095,7 @@ public class OrderService
      */
     private void checkCoupon(Order order, Coupon coupon, String payerName) throws BusinessException
     {
-      //检查coupon状态
+        //检查coupon状态
         if (!coupon.getStatus().equals(CouponStatus.valid))
         {
             throw new BusinessException(String.format("优惠券处于: %s 状态, 不能使用", coupon.getStatus().getText()));
@@ -1089,7 +1113,8 @@ public class OrderService
         }
         
         //检查试用停车场
-        if (!coupon.getApplicableParks().contains(order.getPark()))
+        if (0 < coupon.getApplicableParks().size()
+                &&!coupon.getApplicableParks().contains(order.getPark()))
         {
             throw new BusinessException("优惠券不适用于当前停车场");
         }

@@ -23,6 +23,7 @@ import javax.persistence.Transient;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Where;
+import org.locationtech.jts.geom.Point;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -96,9 +97,8 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     /**
      * 经纬度
      */
-    @NeedToCompare(name = "经纬度")
-    @Column(name = "geo", length = 32, columnDefinition="varchar(32) comment '经纬度'")
-    private String geo;
+    @Column(name = "geo", columnDefinition = "geometry comment '经纬度'")
+    private Point geo;;
     
     /**
      * 联系方式

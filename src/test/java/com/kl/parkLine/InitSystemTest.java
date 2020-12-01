@@ -10,6 +10,9 @@ import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.WKTReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
@@ -56,6 +59,9 @@ public class InitSystemTest
     @Autowired
     private CarService carService;
     
+    @Autowired
+    private WKTReader wktReader;
+    
     @BeforeEach
     public void wireUpAuditor()
     {
@@ -78,13 +84,14 @@ public class InitSystemTest
      * 初始化停车场
      * @throws BusinessException 
      * @throws ParseException 
+     * @throws org.locationtech.jts.io.ParseException 
      */
-    private void initPark() throws BusinessException, ParseException
+    private void initPark() throws BusinessException, ParseException, org.locationtech.jts.io.ParseException
     {
         String[][] parksStr = {
-            {"FixedPark01", "parkNameFixed", "100", "108.2815 22.9033", "parkContact01"},
-            {"FixedParkWithSpecial01", "parkNameFixedWithSpecial", "100", "108.2815 22.9033", "parkContact01"},
-            {"StepPark01", "parkNameStep", "100", "108.2815 22.9033", "parkContact02"}
+            {"FixedPark01", "parkNameFixed", "100", "POINT(108.281 22.9033)", "parkContact01"},
+            {"FixedParkWithSpecial01", "parkNameFixedWithSpecial", "100", "POINT(108.281 22.9033)", "parkContact01"},
+            {"StepPark01", "parkNameStep", "100", "POINT(109.441 24.3226)", "parkContact02"}
         };
         //0--60分钟免费,60--120分钟10元,120--180分钟20元,180--999999分钟30元
         Integer[][] stepFeesData = {
@@ -131,7 +138,9 @@ public class InitSystemTest
             park.setCode(code);
             park.setName(parkStr[1]);
             park.setTotalCnt(Integer.valueOf(parkStr[2]));
-            park.setGeo(parkStr[3]);
+            Geometry point = wktReader.read(parkStr[3]);
+            Point pointToSave = point.getInteriorPoint();
+            park.setGeo(pointToSave);
             park.setContact(parkStr[4]);
             park.setTotalCnt(100);
             park.setAvailableCnt(100);

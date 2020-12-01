@@ -2,6 +2,7 @@ package com.kl.parkLine;
 
 import javax.persistence.EntityManager;
 
+import org.locationtech.jts.io.WKTReader;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
@@ -46,5 +47,11 @@ public class ParkLineApplication
 	public WXPay wxPay(MyWXConfig config)
 	{
 	    return new WXPay(config);
+	}
+	
+	@Bean
+	public WKTReader wKTReader()
+	{
+	    return new WKTReader();
 	}
 }

@@ -25,10 +25,11 @@ import com.kl.parkLine.util.Const;
 @Component
 public class WxCmpt
 {
-    //TODO: 设置小程序参数
-    private final String APP_SECRET = "5ff32eb6bfd676e8ca93289e333b54cf";
-    private final String APP_ID = "5ff32eb6bfd676e8ca93289e333b54cf";
-    private final String API_KEY = "5ff32eb6bfd676e8ca93289e333b54cf";
+    @Value("${wx.app.id}")
+    private String appId;
+    
+    @Value("${wx.app.secret}")
+    private String appSecret;
     
     private final String HQ = "HQ";
     private final String TRADE_TYPE = "JSAPI";
@@ -47,7 +48,7 @@ public class WxCmpt
         String url = "https://api.weixin.qq.com/sns/jscode2session?appid={APPID}&secret={APPSECRET}&js_code={JSCODE}&grant_type=authorization_code";
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(jsonConverter);
-        WxCode2SessionResult result = restTemplate.getForObject(url, WxCode2SessionResult.class, APP_ID, APP_SECRET, jsCode);
+        WxCode2SessionResult result = restTemplate.getForObject(url, WxCode2SessionResult.class, appId, appSecret, jsCode);
         if (false == StringUtils.isEmpty(result.getErrmsg()))
         {
             throw new Exception(String.format("Get WeChat jscode2session failed:%d, %s", 
@@ -115,14 +116,14 @@ public class WxCmpt
         String pack = String.format("prepay_id=%s", result.get("prepay_id"));
         signParams.put("package", pack);
         signParams.put("signType", "MD5");
-        signParams.put("appId", APP_ID);
+        signParams.put("appId", appId);
         Long timeStamp = System.currentTimeMillis() / 1000;
         signParams.put("timeStamp", timeStamp.toString());
-        String paySign = WXPayUtil.generateSignature(signParams, API_KEY);
+        String paySign = WXPayUtil.generateSignature(signParams, appSecret);
         signParams.put("paySign", paySign);
         
         return WxUnifiedOrderResult.builder().nonceStr(nonceStr)
-            .pack(pack).signType("MD5").appId(APP_ID).timeStamp(timeStamp.toString())
+            .pack(pack).signType("MD5").appId(appId).timeStamp(timeStamp.toString())
             .paySign(paySign).orderCode(order.getCode()).build();
     }
     
