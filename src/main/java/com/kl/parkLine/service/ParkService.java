@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.kl.parkLine.component.MapCmpt;
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IParkDao;
 import com.kl.parkLine.entity.Park;
@@ -25,6 +26,8 @@ import com.kl.parkLine.entity.ParkLog;
 import com.kl.parkLine.entity.QPark;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.QqMapPoiItem;
+import com.kl.parkLine.json.QqMapSearchResult;
 import com.kl.parkLine.predicate.ParkPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.ParkLocationVo;
@@ -59,6 +62,9 @@ public class ParkService
     
     @Autowired
     private WKTReader wktReader;
+    
+    @Autowired
+    private MapCmpt mapCmpt;
     
     /**
      * 根据停车场编码找到停车场对象
@@ -97,6 +103,23 @@ public class ParkService
                     .build();
             ret.add(neerByParkVo);
         }
+        
+        //调用腾讯地图查找其他停车场
+        QqMapSearchResult mapSearchResult = mapCmpt.search(centerPoint, distanceKm);
+        if (0 == mapSearchResult.getStatus())
+        {
+            for (QqMapPoiItem qqMapPoiItem : mapSearchResult.getData())
+            {
+                ParkLocationVo neerByParkVo = ParkLocationVo.builder()
+                        .name(qqMapPoiItem.getTitle())
+                        .lng(qqMapPoiItem.getLocation().getLng())
+                        .lat(qqMapPoiItem.getLocation().getLat())
+                        .contact(qqMapPoiItem.getTel())
+                        .build();
+                ret.add(neerByParkVo);
+            }
+        }
+        
         return ret;
     }
     

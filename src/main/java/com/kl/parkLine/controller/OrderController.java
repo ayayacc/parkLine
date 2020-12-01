@@ -266,8 +266,7 @@ public class OrderController
     {
         try
         {
-            orderService.inqueryParking(payParam, auth.getName());
-            return RestResult.success();
+            return RestResult.success(orderService.inqueryParking(payParam, auth.getName()));
         }
         catch (Exception e)
         {
