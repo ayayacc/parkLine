@@ -276,12 +276,14 @@ public class OrderController
 
     /**
      * 微信付款通知
+     * @throws Exception 
      */
     @PostMapping("/wxpay/notify")
     @ApiOperation(hidden = true, value = "")
-    public String wxPayNotify() throws IOException, Exception
+    public String wxPayNotify() throws Exception
     {
         Map<String, String> retMap = new HashMap<String, String>();
+        WxPayNotifyParam wxPayNotifyParam = null;
         try
         {
             StringBuilder sb = new StringBuilder();
@@ -308,15 +310,9 @@ public class OrderController
                 throw new BusinessException((String) notifyMap.get("return_msg"));
             }
             
-            //交易标识
-            String result_code = (String) notifyMap.get("result_code");
-            if (!result_code.equalsIgnoreCase(Const.WX_SUCCESS))
-            {
-                throw new BusinessException((String)notifyMap.get("err_code_des"));
-            }
             //读取支付结果参数
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-            WxPayNotifyParam wxPayNotifyParam = WxPayNotifyParam.builder()
+            wxPayNotifyParam = WxPayNotifyParam.builder()
                     .openId(notifyMap.get("openid"))
                     .attach(notifyMap.get("attach"))
                     .bankType(notifyMap.get("bank_type"))
@@ -325,6 +321,14 @@ public class OrderController
                     .transactionId(notifyMap.get("transaction_id"))
                     .timeEnd(simpleDateFormat.parse(notifyMap.get("time_end")))
                     .build();
+            
+            //交易标识
+            String result_code = (String) notifyMap.get("result_code");
+            if (!result_code.equalsIgnoreCase(Const.WX_SUCCESS))
+            {
+                throw new BusinessException((String)notifyMap.get("err_code_des"));
+            }
+           
             //处理订单状态,注意特殊情况：订单已经退款，但收到了支付结果成功的通知，不应把商户侧订单状态从退款改成支付成功
             orderService.wxPaySuccess(wxPayNotifyParam);
             retMap.put("return_code", "SUCCESS");
@@ -333,6 +337,10 @@ public class OrderController
         {
             retMap.put("return_code", "FAIL");
             retMap.put("return_msg", e.getMessage());
+            if (null != wxPayNotifyParam)
+            {
+                orderService.wxPayFail(wxPayNotifyParam);
+            }
         }
         return WXPayUtil.mapToXml(retMap);
     }

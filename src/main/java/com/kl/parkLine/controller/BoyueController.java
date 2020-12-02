@@ -78,9 +78,9 @@ public class BoyueController
             //入场事件,开闸
             if (event.getType().equals(EventType.in))
             {
-                if (null == order)
+                if (null == order)  //黑名单或者欠费车辆
                 {
-                    resp.setInfo("pok"); //回复OK开闸
+                    resp.setInfo("notok"); //回复notok不开闸
                     resp.setContent(content);
                 }
                 else

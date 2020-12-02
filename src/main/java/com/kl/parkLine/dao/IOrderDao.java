@@ -36,4 +36,5 @@ public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredic
     public Page<OrderVo> findByOwnerAndWalletBalanceIsNotNull(User owner, Pageable pageable);
     public Page<OrderVo> findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus status, User owner, BigDecimal amt, Pageable pageable);
     public Page<OrderVo> findByTypeAndStatusAndOwnerOrderByCreatedDateDesc(OrderType orderType, OrderStatus status, User owner, Pageable pageable);
+    public Integer countByOwnerAndTypeAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(User owner, OrderType orderType, OrderStatus status, Date startDate, Date endDate);
 }

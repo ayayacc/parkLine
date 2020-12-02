@@ -126,7 +126,6 @@ public class OrderService
     public OrderService()
     {
         //检查重复订单包含的状态: 存在等待付款和已经付款的月票订单时，不能再次创建重复的月票
-        checkedStatus.add(OrderStatus.needToPay);
         checkedStatus.add(OrderStatus.payed);
         
         //已经完成的订单状态：已经付款的或者无需支付的
@@ -554,19 +553,23 @@ public class OrderService
         Park park = order.getPark();
         Car car = order.getCar();
         DateTime inTime = new DateTime(order.getInTime());
-        DateTime outTime = new DateTime(order.getOutTime());
+        
+        DateTime outTime = null;new DateTime();
+        if (null == order.getOutTime()) //提前支付
+        {
+            outTime = new DateTime();
+        }
         Integer minutes = Minutes.minutesBetween(inTime, outTime).getMinutes();
         
         //白牌车免费
-        if (car.getPlateColor().equals(PlateColor.white))
+        if (park.getIsWhitePlateFree() && car.getPlateColor().equals(PlateColor.white))
         {
             order.setAmt(BigDecimal.ZERO);
             order.setRealAmt(BigDecimal.ZERO);
             return;
         }
         //白名单免费
-        
-        if (park.getIsWhitePlateFree() && parkCarItemService.existsInWhiteList(park, car))
+        if (parkCarItemService.existsInWhiteList(park, car))
         {
             order.setAmt(BigDecimal.ZERO);
             order.setRealAmt(BigDecimal.ZERO);
@@ -782,7 +785,7 @@ public class OrderService
         {
             return;
         }
-        if (!order.getStatus().equals(OrderStatus.needToPay))  //已经处理过付款通知(微信会重复推送同一张订单的付款通知)
+        if (order.getStatus().equals(OrderStatus.needToPay))  //已经处理过付款通知(微信会重复推送同一张订单的付款通知)
         {
             return;
         }
@@ -1285,5 +1288,17 @@ public class OrderService
                 break;
         }
         return aliYunOssCmpt.getBytes(code);
+    }
+    
+    /**
+     * 查询用户可用优惠券数量
+     * @param owner
+     * @return
+     */
+    public Integer countValidMonthlyTktByOwner(User owner) 
+    {
+        Date today = new DateTime().withTimeAtStartOfDay().toDate();
+        return orderDao.countByOwnerAndTypeAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                owner, OrderType.monthlyTicket, OrderStatus.payed, today, today);
     }
 }

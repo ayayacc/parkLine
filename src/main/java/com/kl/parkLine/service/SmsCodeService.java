@@ -72,8 +72,7 @@ public class SmsCodeService
         smsCodeDao.save(newCode);
         
         //发送消息
-        //TODO: 完善短消息内容：您正在登陆xxx，验证码:xxx,1分钟有效
-        smsCmpt.sendSms(mobile, String.format("短信验证码:%s", code));
+        smsCmpt.sendSms(mobile, String.format("【停车线】您的验证码:%s，感谢使用", code));
         
         return newCode;
     }

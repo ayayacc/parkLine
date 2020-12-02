@@ -23,7 +23,7 @@ public class FeignClientFallback implements IWxFeignClient, IMapFeignClient
             String sig)
     {
         QqMapSearchResult result = new QqMapSearchResult();
-        result.setErrmsg("qq map search exception");
+        result.setMessage("qq map search exception");
         return result;
     }
     

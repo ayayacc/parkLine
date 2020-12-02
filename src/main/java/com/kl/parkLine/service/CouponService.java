@@ -252,4 +252,15 @@ public class CouponService
                 .fetchResults();
         return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
+    
+    /**
+     * 查询用户可用优惠券数量
+     * @param owner
+     * @return
+     */
+    public Integer countValidByOwner(User owner) 
+    {
+        Date today = new DateTime().withTimeAtStartOfDay().toDate();
+        return couponDao.countByOwnerAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(owner, CouponStatus.valid, today, today);
+    }
 }

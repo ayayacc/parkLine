@@ -6,10 +6,14 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.Value;
 
 @Builder
 @Value
+@Getter
+@Setter
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("停车场Vo")
@@ -41,4 +45,7 @@ public class ParkLocationVo
      
     @ApiModelProperty("距离(KM)")
     private Double distance;
+    
+    @ApiModelProperty("免费时长(分钟)")
+    private Integer freeTimeMin;
 }

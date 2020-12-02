@@ -146,7 +146,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 白名单
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
-    @Where(clause="parkCarType='white'")
+    @Where(clause="park_car_type='white'")
     @JsonIgnore
     private List<ParkCarItem> whiteList;
     
@@ -154,7 +154,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 黑名单
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
-    @Where(clause="parkCarType='black'")
+    @Where(clause="park_car_type='black'")
     @JsonIgnore
     private List<ParkCarItem> blackList;
     
@@ -181,7 +181,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 燃油车特殊时段计费规则
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
-    @Where(clause="carType='fuel'")
+    @Where(clause="car_type='fuel'")
     @OrderBy(value = "startMin asc")
     @JsonIgnore
     private List<ParkSpecialFee> fuelSpecialFees;
@@ -190,7 +190,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 燃油车阶梯计费规则
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
-    @Where(clause="carType='fuel'")
+    @Where(clause="car_type='fuel'")
     @OrderBy(value = "startMin asc")
     @JsonIgnore
     private List<ParkStepFee> fuelStepFees;
@@ -206,7 +206,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 燃油车特殊时段计费规则
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
-    @Where(clause="carType='newEnergy'")
+    @Where(clause="car_type='newEnergy'")
     @OrderBy(value = "startMin asc")
     @JsonIgnore
     private List<ParkSpecialFee> newEnergySpecialFees;
@@ -215,7 +215,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 新能源车阶梯计费规则
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
-    @Where(clause="carType='newEnergy'")
+    @Where(clause="car_type='newEnergy'")
     @OrderBy(value = "startMin asc")
     @JsonIgnore
     private List<ParkStepFee> newEnergyStepFees;

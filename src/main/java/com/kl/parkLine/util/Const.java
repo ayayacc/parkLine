@@ -30,4 +30,6 @@ public class Const
     
     public final static String SYS_USER = "SYSTEM";
     
+    public final static Integer OUT_LIMIT_TIME_NIN = 30;
+    
 }

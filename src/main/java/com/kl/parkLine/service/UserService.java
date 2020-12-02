@@ -18,6 +18,7 @@ import com.kl.parkLine.entity.QUser;
 import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.Gender;
+import com.kl.parkLine.json.MyCounts;
 import com.kl.parkLine.json.WxUserInfo;
 import com.kl.parkLine.predicate.UserPredicates;
 import com.kl.parkLine.util.RoleCode;
@@ -46,6 +47,12 @@ public class UserService
     
     @Autowired
     private JPAQueryFactory jpaQueryFactory;
+    
+    @Autowired
+    private CouponService couponService;
+    
+    @Autowired
+    private OrderService orderService;
     
     /**
      * 保存用户
@@ -192,5 +199,26 @@ public class UserService
     {
         //TODO: 实现用户访问权限控制
         return reqData.getUsername().equals(user.getName());
+    }
+    
+    /**
+     * 统计我的各种数量
+     * @param userName 用户名
+     * @return
+     */
+    public MyCounts myCounts(String userName)
+    {
+        MyCounts myCounts = new MyCounts();
+        
+        //找到当前用户
+        User user = userDao.findOneByName(userName);
+        
+        //查询优惠券数量
+        myCounts.setCouponCnt(couponService.countValidByOwner(user));
+        
+        //查询月票数量
+        myCounts.setMonthlyTktCnt(orderService.countValidMonthlyTktByOwner(user));
+        
+        return myCounts;
     }
 }

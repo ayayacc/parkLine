@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class QqMapSearchResult extends WxResultBase
+public class QqMapSearchResult
 {
     private Integer status;  
     private String message;  

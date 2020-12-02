@@ -1,5 +1,6 @@
 package com.kl.parkLine.service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +24,10 @@ import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IParkDao;
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.ParkLog;
+import com.kl.parkLine.entity.ParkStepFee;
 import com.kl.parkLine.entity.QPark;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.ChargeType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.QqMapPoiItem;
 import com.kl.parkLine.json.QqMapSearchResult;
@@ -79,6 +82,7 @@ public class ParkService
      * 找指定位置附近的停车场
      * @param code 停车场编码
      * @throws ParseException 
+     * @throws BusinessException 
      */
     public List<ParkLocationVo> findNearby(Point centerPoint, Double distanceKm) throws ParseException
     {
@@ -89,6 +93,25 @@ public class ParkService
         //遍历所有结果行
         for (Map<String, Object> row : rows)
         {
+            Integer freeTimeMin = 0;
+            Park park = this.findOneByCode(row.get("code").toString());
+            if (park.getChargeType().equals(ChargeType.fixed))
+            {
+                freeTimeMin = park.getFuelFixedFee().getFreeTime();
+            }
+            else
+            {
+                for (ParkStepFee parkSetpFee : park.getFuelStepFees())
+                {
+                    if (parkSetpFee.getAmt().setScale(0).equals(BigDecimal.ZERO))
+                    {
+                        freeTimeMin = parkSetpFee.getEndMin();
+                        break;
+                    }
+                }
+            }
+                
+            //获取自运营停车场数据
             Geometry geometry = wktReader.read(row.get("geotext").toString());
             Point point = geometry.getInteriorPoint();
             ParkLocationVo neerByParkVo = ParkLocationVo.builder().parkId((Integer)row.get("park_id"))
@@ -100,7 +123,9 @@ public class ParkService
                     .lat(point.getY())
                     .contact(row.get("contact").toString())
                     .distance((Double)row.get("dist"))
+                    .freeTimeMin(freeTimeMin)
                     .build();
+            
             ret.add(neerByParkVo);
         }
         
