@@ -774,6 +774,7 @@ public class OrderService
                 .leftJoin(qPark).on(qOrder.park.eq(qPark))
                 .leftJoin(qCar).on(qOrder.car.eq(qCar))
                 .where(qOrder.owner.eq(user).and(qOrderPayment.walletBalance.isNotNull()))
+                .orderBy(qOrderPayment.paymentTime.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetchResults();
