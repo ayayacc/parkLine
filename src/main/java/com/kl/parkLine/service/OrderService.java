@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +57,7 @@ import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
+import com.kl.parkLine.json.TimePoint;
 import com.kl.parkLine.json.WxPayNotifyParam;
 import com.kl.parkLine.json.WxUnifiedOrderResult;
 import com.kl.parkLine.predicate.OrderPredicates;
@@ -540,6 +542,87 @@ public class OrderService
     }
     
     /**
+     * 计算订单的停车时长，扣除月票时间
+     * @param order
+     * @return
+     */
+    public Integer getParkingMinutes(Order order, DateTime outTime)
+    {
+        //月票
+        //找到车子在该停车场的有效月票
+        List<Order> monthlyTkts = orderDao.findByTypeAndCarAndParkAndStatusOrderByStartDate(OrderType.monthlyTicket, order.getCar(), order.getPark(), OrderStatus.payed);
+        List<TimePoint> timePoints = new ArrayList<>();
+        for (Order monthlyTkt : monthlyTkts)
+        {
+            TimePoint startPoint = new TimePoint();
+            //start point
+            startPoint.setDateTime(new DateTime(monthlyTkt.getStartDate()));
+            startPoint.setKey("startDate");
+            startPoint.setOrder(monthlyTkt);
+            timePoints.add(startPoint);
+            
+            TimePoint endPoint = new TimePoint();
+            endPoint.setDateTime(new DateTime(monthlyTkt.getEndDate()).plusDays(1)); //第二天的凌晨
+            endPoint.setKey("endDate");
+            endPoint.setOrder(monthlyTkt);
+            timePoints.add(endPoint);
+        }
+        
+        //入场时间
+        TimePoint inPoint = new TimePoint();
+        inPoint.setDateTime(new DateTime(order.getInTime()));
+        inPoint.setKey("inTime");
+        timePoints.add(inPoint);
+        
+        //出场时间
+        TimePoint outPoint = new TimePoint();
+        outPoint.setDateTime(new DateTime(outTime));
+        outPoint.setKey("outTime");
+        timePoints.add(outPoint);
+        
+        //按时间排序
+        Collections.sort(timePoints);
+        Integer minutes = 0;
+        Boolean covering = false;  //是否被月票覆盖中
+        TimePoint startPoint = null;
+        for (TimePoint currentPoint : timePoints)
+        {
+            if (currentPoint.getKey().equals("inTime"))  //入场点
+            {
+                if (!covering) //如果没有被月票覆盖，开始计时
+                {
+                    startPoint = currentPoint;
+                }
+            }
+            else if (currentPoint.getKey().equals("startDate")) //月票起始点
+            {
+                covering = true;  //开始被月票覆盖，累计开始月票前的停车时长
+                order.setUsedMonthlyTkt(currentPoint.getOrder());
+                if (null != startPoint)
+                {
+                    minutes += Minutes.minutesBetween(startPoint.getDateTime(), currentPoint.getDateTime()).getMinutes();
+                }
+            }
+            else if (currentPoint.getKey().equals("endDate")) //月票终止点
+            {
+                covering = false;  //结束被月票覆盖，设置计时开始点
+                startPoint = currentPoint;
+                continue;
+            }
+            else if (currentPoint.getKey().equals("outTime")) //出场点
+            {
+                if (!covering)
+                {
+                    minutes += Minutes.minutesBetween(startPoint.getDateTime(), currentPoint.getDateTime()).getMinutes();
+                }
+                break;
+            }
+        }
+        
+        return minutes;
+    }
+    
+    /**
      * 计算订单金额，并且设置到order中
      * @param park
      * @param order
@@ -549,17 +632,8 @@ public class OrderService
      */
     public void calAmt(Order order) throws ParseException, BusinessException
     {
-        BigDecimal amt = BigDecimal.ZERO;
         Park park = order.getPark();
         Car car = order.getCar();
-        DateTime inTime = new DateTime(order.getInTime());
-        
-        DateTime outTime = null;new DateTime();
-        if (null == order.getOutTime()) //提前支付
-        {
-            outTime = new DateTime();
-        }
-        Integer minutes = Minutes.minutesBetween(inTime, outTime).getMinutes();
         
         //白牌车免费
         if (park.getIsWhitePlateFree() && car.getPlateColor().equals(PlateColor.white))
@@ -576,20 +650,26 @@ public class OrderService
             return;
         }
         
-        //月票
-        //按照出场时间检查是否有月票
-        Date inDate = inTime.withTimeAtStartOfDay().toDate(); // 去掉时分秒，只保留日期
-        Date outDate = outTime.withTimeAtStartOfDay().toDate(); // 去掉时分秒，只保留日期
-        //月票的开始日期在入场之前，结束日期在出场之后
-        Order monthlyTkt = orderDao.findByTypeAndCarAndParkAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                OrderType.monthlyTicket, car, park, OrderStatus.payed, inDate, outDate);
-        if (null != monthlyTkt)
+        //出入场时间
+        BigDecimal amt = BigDecimal.ZERO;
+        DateTime outTime = null;
+        if (null == order.getOutTime()) //提前支付
         {
-            order.setUsedMonthlyTkt(monthlyTkt);
-            order.setAmt(BigDecimal.ZERO);
-            order.setRealAmt(BigDecimal.ZERO);
-            return;
+            outTime = new DateTime();
+            //设置出场时间限制,30分钟
+            DateTime outTimeLimit =  outTime.plusMinutes(Const.OUT_LIMIT_TIME_NIN);
+            order.setOutTimeLimit(outTimeLimit.toDate());
         }
+        else
+        {
+            outTime = new DateTime(order.getOutTime());
+        }
+
+        //初始值
+        order.setAmt(BigDecimal.ZERO);
+        order.setRealAmt(BigDecimal.ZERO);
+        
+        Integer minutes = this.getParkingMinutes(order, outTime);
         
         //阶梯计费
         if (park.getChargeType().equals(ChargeType.step))

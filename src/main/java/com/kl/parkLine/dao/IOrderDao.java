@@ -23,7 +23,7 @@ import com.kl.parkLine.vo.OrderVo;
 public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredicateExecutor<OrderVo>
 {
     public Order findOneByActId(String actId);
-    public Order findByTypeAndCarAndParkAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(OrderType orderType, Car car, Park park, OrderStatus status, Date startDate, Date outDate);
+    public List<Order> findByTypeAndCarAndParkAndStatusOrderByStartDate(OrderType orderType, Car car, Park park, OrderStatus status);
     public Order findTopByPlateIdAndStatusOrderByInTimeDesc(Integer plateId, OrderStatus status);
     public Order findTopByOutDeviceSnOrderByOutTimeDesc(String outDeviceSn);
     public Order findOneByOrderId(Integer orderId);

@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.joda.time.DateTime;
+import org.joda.time.Minutes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +19,8 @@ import com.kl.parkLine.dao.IOrderDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.Park;
+import com.kl.parkLine.enums.OrderStatus;
+import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.MonthlyTktParam;
@@ -138,6 +141,176 @@ public class OrderServiceTest
         initStepNewEnergy();
     }
     
+    @Test
+    public void initMonthlyTkt() throws BusinessException, ParseException
+    {
+        Park fixedPark = parkService.findOneByCode("FixedPark01");
+        Car car = carService.getCar("桂B11111", PlateColor.blue);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        
+        //月票2021-01-01---2021-01-10
+        String code = "固定费率_2021-01-01---2021-01-10";
+        Order order = orderDao.findOneByCode(code); 
+        if (null == order)
+        {
+            order = new Order();
+            order.setCode(code);
+        }
+        order.setType(OrderType.monthlyTicket);
+        order.setStatus(OrderStatus.payed);
+        order.setPark(fixedPark);
+        order.setCar(car);
+        Date startDate = simpleDateFormat.parse("2021-01-01");
+        Date endDate = simpleDateFormat.parse("2021-01-10");
+        order.setStartDate(startDate);
+        order.setEndDate(endDate);
+        orderService.save(order);
+        
+        //月票2021-01-15---2021-01-30
+        code = "固定费率_2021-01-15---2021-01-30";
+        order = orderDao.findOneByCode(code); 
+        if (null == order)
+        {
+            order = new Order();
+            order.setCode(code);
+        }
+        order.setType(OrderType.monthlyTicket);
+        order.setStatus(OrderStatus.payed);
+        order.setPark(fixedPark);
+        order.setCar(car);
+        startDate = simpleDateFormat.parse("2021-01-15");
+        endDate = simpleDateFormat.parse("2021-01-30");
+        order.setStartDate(startDate);
+        order.setEndDate(endDate);
+        orderService.save(order);
+    }
+    
+    @Test
+    public void testGetMinutes() throws BusinessException, ParseException
+    {
+        
+        Park fixedPark = parkService.findOneByCode("FixedPark01");
+        Car car = carService.getCar("桂B11111", PlateColor.blue);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Order order = new Order();
+        order.setType(OrderType.parking);
+        order.setPark(fixedPark);
+        order.setCar(car);
+        
+        //固定费率_60m, 出入场都在月票开始之前
+        Date inTime = simpleDateFormat.parse("2020-12-31 22:59:08");
+        Date outTime = simpleDateFormat.parse("2020-12-31 23:59:08");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        Integer minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(60, minutes);
+        
+        //固定费率_60m, 入场在月票开始前，出场在月票开始时刻
+        inTime = simpleDateFormat.parse("2020-12-31 22:59:08");
+        outTime = simpleDateFormat.parse("2021-01-01 00:00:00");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(60, minutes);
+        
+        //固定费率_60m, 入场在月票开始前，出场在月票结束前
+        inTime = simpleDateFormat.parse("2020-12-31 22:59:08");
+        outTime = simpleDateFormat.parse("2021-01-05 23:59:08");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(60, minutes);
+        
+        //固定费率_60m, 入场在月票开始前，出场在月票结束后
+        inTime = simpleDateFormat.parse("2020-12-31 23:29:08");
+        outTime = simpleDateFormat.parse("2021-01-11 00:30:08");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(60, minutes);
+        
+        //固定费率_0m, 入场在月票开始后，出场在月票结束前
+        inTime = simpleDateFormat.parse("2021-01-02 23:30:08");
+        outTime = simpleDateFormat.parse("2021-01-8 00:30:08");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(0, minutes);
+        
+        //固定费率_60m, 入场在月票开始后，出场在月票结束后
+        inTime = simpleDateFormat.parse("2021-01-02 23:30:08");
+        outTime = simpleDateFormat.parse("2021-01-11 01:00:08");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(60, minutes);
+        
+        //固定费率_60m, 出入场在月票结束后
+        inTime = simpleDateFormat.parse("2021-01-11 08:30:08");
+        outTime = simpleDateFormat.parse("2021-01-11 09:30:08");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(60, minutes);
+        
+        //固定费率_60+4*24*60m, 入场在月票1开始前，出场在月票2中
+        inTime = simpleDateFormat.parse("2020-12-31 22:59:08");
+        outTime = simpleDateFormat.parse("2021-01-15 09:30:08");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(60+4*24*60, minutes);
+        
+        //固定费率_4*24*60+60*2, 入场在月票1开始前，出场在月票2结束后
+        inTime = simpleDateFormat.parse("2020-12-31 22:59:08");
+        outTime = simpleDateFormat.parse("2021-01-31 01:00:08");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(60+4*24*60+60, minutes);
+        
+        //固定费率_4*24*60m, 入场在月票1中，出场在月票2中
+        inTime = simpleDateFormat.parse("2021-01-02 08:30:08");
+        outTime = simpleDateFormat.parse("2021-01-30 09:30:08");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(4*24*60, minutes);
+        
+        //固定费率_4*24*60m, 入场在月票1中，出场在月票2结束后
+        inTime = simpleDateFormat.parse("2021-01-02 08:30:08");
+        outTime = simpleDateFormat.parse("2021-01-31 01:00:08");
+        order.setInTime(inTime);
+        order.setOutTime(outTime);
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
+        assertEquals(4*24*60+60, minutes);
+    }
+    
+    @Test
+    public void testMinutesBetween() throws ParseException
+    {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        DateTime startPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:00:01"));
+        DateTime endPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:00:59"));
+        assertEquals(0, Minutes.minutesBetween(startPoint, endPoint).getMinutes());
+        
+        startPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:00:01"));
+        endPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:01:00"));
+        assertEquals(0, Minutes.minutesBetween(startPoint, endPoint).getMinutes());
+        
+        startPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:00:01"));
+        endPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:01:01"));
+        assertEquals(1, Minutes.minutesBetween(startPoint, endPoint).getMinutes());
+        
+        startPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:00:10"));
+        endPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:01:09"));
+        assertEquals(0, Minutes.minutesBetween(startPoint, endPoint).getMinutes());
+        
+        startPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:00:10"));
+        endPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:01:18"));
+        assertEquals(1, Minutes.minutesBetween(startPoint, endPoint).getMinutes());
+    }
+    
     //固定费率燃油车订单
     private void initFixFuel() throws ParseException, BusinessException 
     {
@@ -154,6 +327,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -169,6 +343,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -184,6 +359,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -199,6 +375,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -214,6 +391,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -229,6 +407,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -244,6 +423,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -259,6 +439,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -284,6 +465,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(stepPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -299,6 +481,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(stepPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -314,6 +497,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(stepPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -329,6 +513,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(stepPark);
         order.setCar(fuelCar);
         order.setInTime(inTime.toDate());
@@ -354,6 +539,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -369,6 +555,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -384,6 +571,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -399,6 +587,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -414,6 +603,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -429,6 +619,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -444,6 +635,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -459,6 +651,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(fixedPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -483,6 +676,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(stepPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -498,6 +692,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(stepPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -513,6 +708,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(stepPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
@@ -528,6 +724,7 @@ public class OrderServiceTest
             order = new Order();
             order.setCode(code);
         }
+        order.setType(OrderType.parking);
         order.setPark(stepPark);
         order.setCar(newEnergyCar);
         order.setInTime(inTime.toDate());
