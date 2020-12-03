@@ -13,6 +13,7 @@ import com.kl.parkLine.entity.User;
 import com.kl.parkLine.feign.IWxFeignClient;
 import com.kl.parkLine.json.WxCode2SessionResult;
 import com.kl.parkLine.service.UserService;
+import com.kl.parkLine.util.Const;
 
 @Component
 public class WxAuthenticationProvider implements AuthenticationProvider
@@ -22,8 +23,6 @@ public class WxAuthenticationProvider implements AuthenticationProvider
     
     @Value("${wx.app.secret}")
     private String appSecret;
-    
-    private final String WX_PREFIX = "wxopenid_";
     
     private MyUserDetailsService userDetailsService;
     
@@ -44,7 +43,7 @@ public class WxAuthenticationProvider implements AuthenticationProvider
         {
             throw new WxAuthenticationException(result.getErrmsg());
         }
-        String userName = WX_PREFIX + result.getOpenid();
+        String userName = Const.WX_PREFIX + result.getOpenid();
         User user = userDetailsService.loadUserByUsername(userName);
         WxAuthenticationToken wxAuthenticationToken = (WxAuthenticationToken)authentication;
         //微信用户第一次使用本系统

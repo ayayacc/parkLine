@@ -34,11 +34,13 @@ import com.kl.parkLine.entity.Device;
 import com.kl.parkLine.entity.Event;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.OrderLog;
+import com.kl.parkLine.entity.OrderPayment;
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.ParkFixedFee;
 import com.kl.parkLine.entity.ParkStepFee;
 import com.kl.parkLine.entity.QCar;
 import com.kl.parkLine.entity.QOrder;
+import com.kl.parkLine.entity.QOrderPayment;
 import com.kl.parkLine.entity.QPark;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CarType;
@@ -53,19 +55,17 @@ import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.exception.EventException;
 import com.kl.parkLine.json.ActiveCouponParam;
-import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.TimePoint;
 import com.kl.parkLine.json.WxPayNotifyParam;
 import com.kl.parkLine.json.WxUnifiedOrderResult;
-import com.kl.parkLine.predicate.OrderPredicates;
 import com.kl.parkLine.util.Const;
+import com.kl.parkLine.vo.OrderPaymentVo;
 import com.kl.parkLine.vo.OrderVo;
 import com.kl.parkLine.vo.ParkLocationVo;
 import com.querydsl.core.QueryResults;
-import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -93,8 +93,11 @@ public class OrderService
     @Autowired
     private ParkService parkService;
     
+    /*@Autowired
+    private OrderPredicates orderPredicates;*/
+    
     @Autowired
-    private OrderPredicates orderPredicates;
+    private JPAQueryFactory jpaQueryFactory;
     
     @Autowired
     private IParkStepFeeDao parkStepFeeDao;
@@ -110,9 +113,6 @@ public class OrderService
     
     @Autowired
     private CouponService couponService;
-    
-    @Autowired
-    private JPAQueryFactory jpaQueryFactory;
     
     @Autowired
     private DeviceService deviceService;
@@ -134,13 +134,14 @@ public class OrderService
         completedStauts.add(OrderStatus.payed);
         completedStauts.add(OrderStatus.noNeedToPay);
     }  
+    
     /**
      * 分页查询
      * @param searchPred
      * @param pageable
      * @return
      */
-    private Page<OrderVo> fuzzyFindPage(Predicate searchPred, Pageable pageable)
+    /*private Page<OrderVo> fuzzyFindPage(Predicate searchPred, Pageable pageable)
     {
         QOrder qOrder = QOrder.order;
         QPark qPark = QPark.park;
@@ -173,13 +174,13 @@ public class OrderService
         return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
     
-    /**
+    *//**
      * 作为终端用户分页查询
      * @param orderVo
      * @param pageable
      * @param userName
      * @return
-     */
+     *//*
     public Page<OrderVo> fuzzyFindPageAsUser(OrderVo orderVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);
@@ -189,13 +190,13 @@ public class OrderService
         return fuzzyFindPage(searchPred, pageable);
     }
     
-    /**
+    *//**
      * 作为后台管理(停车场/管理员)分页查询
      * @param orderVo
      * @param pageable
      * @param userName
      * @return
-     */
+     *//*
     public Page<OrderVo> fuzzyFindPageAsManager(OrderVo orderVo, Pageable pageable, String userName)
     {
         User user = userService.findByName(userName);
@@ -203,16 +204,15 @@ public class OrderService
         Predicate searchPred = orderPredicates.fuzzyAsManager(orderVo, user);
         
         return fuzzyFindPage(searchPred, pageable);
-    }
+    }*/
     
     public Order findOneByOrderId(Integer orderId) 
     {
         return orderDao.findOneByOrderId(orderId);
     }
     
-    public OrderVo findNeedToPayByCar(CarParam carParam) throws BusinessException 
+    public OrderVo findNeedToPayByCar(Car car)
     {
-        Car car = carService.getCar(carParam.getCarNo(), carParam.getPlateColor());
         return orderDao.findTopByCarAndStatusOrderByInTimeDesc(car, OrderStatus.needToPay);
     }
     
@@ -656,14 +656,14 @@ public class OrderService
         if (null == order.getOutTime()) //提前支付
         {
             outTime = new DateTime();
-            //设置出场时间限制,30分钟
-            DateTime outTimeLimit =  outTime.plusMinutes(Const.OUT_LIMIT_TIME_NIN);
-            order.setOutTimeLimit(outTimeLimit.toDate());
         }
         else
         {
             outTime = new DateTime(order.getOutTime());
         }
+        //设置出场时间限制,30分钟
+        DateTime outTimeLimit = outTime.plusMinutes(Const.OUT_LIMIT_TIME_NIN);
+        order.setOutTimeLimit(outTimeLimit.toDate());
 
         //初始值
         order.setAmt(BigDecimal.ZERO);
@@ -743,10 +743,41 @@ public class OrderService
      * @param userName
      * @return
      */
-    public Page<OrderVo> myWalletLogs(String userName, Pageable pageable)
+    public Page<OrderPaymentVo> myWalletLogs(String userName, Pageable pageable)
     {
         User user = userService.findByName(userName);
-        return orderDao.findByOwnerAndWalletBalanceIsNotNull(user, pageable);
+        QOrderPayment qOrderPayment = QOrderPayment.orderPayment;
+        QOrder qOrder = QOrder.order;
+        QPark qPark = QPark.park;
+        QCar qCar = QCar.car;
+        QueryResults<OrderPaymentVo> queryResults = jpaQueryFactory
+                .select(Projections.constructor(OrderPaymentVo.class, qOrderPayment.orderPaymentId,
+                        qOrder.orderId.as("orderOrderId"),
+                        qOrder.code.as("orderCode"),
+                        qOrder.type.as("orderType"),
+                        qOrder.status.as("orderStatus"),
+                        qPark.parkId.as("orderParkParkId"),
+                        qPark.name.as("orderParkName"),
+                        qCar.carId.as("orderCarCarId"),
+                        qCar.carNo.as("orderCarCarNo"),
+                        qOrder.inTime.as("orderInTime"),
+                        qOrder.outTime.as("orderOutTime"),
+                        qOrder.amt.as("orderAmt"),
+                        qOrderPayment.amt.as("payedAmt"),
+                        qOrderPayment.walletBalance,
+                        qOrderPayment.paymentTime,
+                        qOrder.startDate.as("orderStartDate"),
+                        qOrder.endDate.as("orderEndDate"),
+                        qOrder.inImgCode.as("orderInImgCode"),
+                        qOrder.outImgCode.as("orderOutImgCode")))
+                .from(qOrderPayment).leftJoin(qOrder).on(qOrderPayment.order.eq(qOrder))
+                .leftJoin(qPark).on(qOrder.park.eq(qPark))
+                .leftJoin(qCar).on(qOrder.car.eq(qCar))
+                .where(qOrder.owner.eq(user).and(qOrderPayment.walletBalance.isNotNull()))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetchResults();
+        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
     }
     
     /**
@@ -778,8 +809,10 @@ public class OrderService
      */
     public Page<OrderVo> invoiceable(String userName, Pageable pageable)
     {
-        User user = userService.findByName(userName);
-        return orderDao.findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus.payed, user, BigDecimal.ZERO, pageable);
+        //TODO: 查找可开票付款记录
+        return null;
+        //User user = userService.findByName(userName);
+        //return orderDao.findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus.payed, user, BigDecimal.ZERO, pageable);
     }
     
     /**
@@ -819,22 +852,29 @@ public class OrderService
         }
         //修改订单状态
         order.setStatus(OrderStatus.payed);
-        //设置支付日期
-        order.setPaymentTime(wxPayNotifyParam.getTimeEnd());
-        
-        //设置付款银行
-        order.setBankType(wxPayNotifyParam.getBankType());
         //微信订单号
         order.setWxTransactionId(wxPayNotifyParam.getTransactionId());
         //设置用户关注公众号情况
         order.getOwner().setSubscribe(wxPayNotifyParam.getIsSubscribe());
+        
+        //设置订单支付
+        order.setStatus(OrderStatus.payed);
+        order.setPayedAmt(order.getRealAmt());
+        OrderPayment orderPayment = new OrderPayment();
+        orderPayment.setAmt(order.getRealAmt());
+        orderPayment.setBankType(wxPayNotifyParam.getBankType());
+        orderPayment.setOrder(order);
+        orderPayment.setPaymentType(PaymentType.wx);
+        orderPayment.setPaymentTime(wxPayNotifyParam.getTimeEnd());
+        order.setLastPaymentTime(wxPayNotifyParam.getTimeEnd());
+        order.getOrderPayments().add(orderPayment);
         
         switch (order.getType())
         {
             case walletIn: //钱包充值订单:增加钱包余额
                 User owner = order.getOwner();
                 owner.setBalance(owner.getBalance().add(order.getAmt()));
-                order.setWalletBalance(owner.getBalance()); //记录钱包余额
+                orderPayment.setWalletBalance(owner.getBalance());//记录钱包余额
                 break;
             case coupon:
                 Coupon coupon = order.getActivatedCoupon();
@@ -872,7 +912,6 @@ public class OrderService
         //修改订单状态
         order.setStatus(OrderStatus.needToPay);
         //设置支付日期
-        order.setPaymentTime(null);
         order.appedChangeRemark(String.format("微信付款失败: %s", wxPayNotifyParam));
         this.save(order);
     }
@@ -994,6 +1033,12 @@ public class OrderService
             throw new BusinessException(String.format("无效的订单Id: %d", payOrderParam.getOrderId()));
         }
         
+        User payer = userService.findByName(payerName);
+        if (null == payer)
+        {
+            throw new BusinessException(String.format("无效的用户: %d", payerName));
+        }
+        
         //找到对应优惠券
         Coupon coupon = couponService.findOneById(payOrderParam.getCouponId());
         if (null == coupon)
@@ -1002,7 +1047,7 @@ public class OrderService
         }
         
         //检查优惠券可用性
-        checkCoupon(order, coupon, payerName);
+        checkCoupon(order, coupon, payer);
         
         //返回真实值
         return calRealAmt(order, coupon);
@@ -1132,42 +1177,6 @@ public class OrderService
         return wxCmpt.unifiedOrder(order);
     }
     
-    /*
-     * 设置优惠券
-     */
-    private void useCoupon(Order order, Integer couponId, String payerName) throws BusinessException 
-    {
-        Coupon coupon = null;
-        if (order.getAutoCoupon()) //自动匹配优惠券
-        {
-            //找到最合适的优惠券
-            coupon = couponService.findBest4Order(order);
-        }
-        else if (null != couponId) //手工指定优惠券
-        {
-            //查找优惠券
-            coupon = couponService.findOneById(couponId);
-            if (null == coupon)
-            {
-                throw new BusinessException(String.format("无效的优惠券Id: %d", couponId));
-            }
-            
-            //检查优惠券是否可用
-            checkCoupon(order, coupon, payerName);
-        }
-        
-        //设置coupon
-        if (null != coupon)
-        {
-            //消耗优惠券
-            couponService.useCoupon(coupon, order.getCode());
-            order.setUsedCoupon(coupon);
-            //设置订单实付款金额
-            order.setRealAmt(calRealAmt(order, coupon));
-            order.appedChangeRemark(String.format("使用优惠券: %s; ", coupon.getCode()));
-        }
-    }
-    
     /**
      * 检查优惠券是否可用于订单
      * @param order 订单
@@ -1176,7 +1185,7 @@ public class OrderService
      * @return
      * @throws BusinessException 
      */
-    private void checkCoupon(Order order, Coupon coupon, String payerName) throws BusinessException
+    private void checkCoupon(Order order, Coupon coupon, User payer) throws BusinessException
     {
         //检查coupon状态
         if (!coupon.getStatus().equals(CouponStatus.valid))
@@ -1203,7 +1212,7 @@ public class OrderService
         }
         
         //检查优惠券拥有者
-        if (!coupon.getOwner().getName().equalsIgnoreCase(payerName))
+        if (!coupon.getOwner().getUserId().equals(payer.getUserId()))
         {
             throw new BusinessException("优惠券在他人名下, 不能使用");
         }
@@ -1219,7 +1228,7 @@ public class OrderService
     {
         BigDecimal discount = order.getAmt().multiply(new BigDecimal(10).subtract(coupon.getDiscount()).divide(new BigDecimal(10), 2, RoundingMode.HALF_UP));
         BigDecimal realDiscount = coupon.getMaxAmt().min(discount);
-        return order.getAmt().subtract(realDiscount);
+        return order.getAmt().subtract(realDiscount).setScale(2);
     }
     
     /**
@@ -1242,9 +1251,13 @@ public class OrderService
                     order.getCode(), order.getStatus().getText()));
         }
         
-        //微信支付不能使用优惠券
-        order.setPaymentType(PaymentType.wx);
-        order.setRealAmt(order.getAmt());
+        //订单拥有者是付款人
+        User payer = userService.findByName(payerName);
+        if (null == payer)
+        {
+            throw new BusinessException(String.format("无效的用户: %d", payerName));
+        }
+        order.setOwner(payer);
         
         return wxCmpt.unifiedOrder(order);
     }
@@ -1263,26 +1276,39 @@ public class OrderService
             throw new BusinessException(String.format("无效的订单Id: %d", payParam.getOrderId()));
         }
         
+        //订单拥有者是付款人
+        User payer = userService.findByName(payerName);
+        if (null == payer)
+        {
+            throw new BusinessException(String.format("无效的用户: %d", payerName));
+        }
+        order.setOwner(payer);
+        
         //检查订单状态
         if (!order.getStatus().equals(OrderStatus.needToPay))
         {
             throw new BusinessException(String.format("订单: %s 处于: %s 状态, 无需支付", 
                     order.getCode(), order.getStatus().getText()));
         }
-
-        //钱包支付
-        order.setPaymentType(PaymentType.qb);
-        order.setAutoCoupon(false);
-        order.setRealAmt(order.getAmt());
         
         //只有停车订单才能使用优惠券
+        Coupon coupon = null;
         if (order.getType().equals(OrderType.parking))
         {
-            //准备支付，设置优惠券
-            this.useCoupon(order, payParam.getCouponId(), payerName);
+            if (null != payParam.getCouponId()) //明确指定优惠券
+            {
+                //查找优惠券
+                coupon = couponService.findOneById(payParam.getCouponId());
+                if (null == coupon)
+                {
+                    throw new BusinessException(String.format("无效的优惠券Id: %d", payParam.getCouponId()));
+                }
+                
+                //检查优惠券是否可用
+                checkCoupon(order, coupon, payer);
+            }
         }
-        
-        payByWallet(order);
+        payByWallet(order, coupon);
     }
     
     /**
@@ -1299,23 +1325,22 @@ public class OrderService
                     order.getCode(), order.getStatus().getText()));
         }
         
-        //钱包支付
-        order.setPaymentType(PaymentType.qb);
-        order.setAutoCoupon(true);
-        order.setRealAmt(order.getAmt());
-        
-        //准备支付，检查状态，设置优惠券
-        this.useCoupon(order, null, order.getOwner().getName());
+        //找到最合适的优惠券
+        Coupon coupon = null;
+        if (order.getType().equals(OrderType.parking))
+        {
+            coupon = couponService.findBest4Order(order);
+        }
         
         //使用钱包付款
-        this.payByWallet(order);
+        this.payByWallet(order, coupon);
     }
     
     /**
      * 使用钱包余额付款
      * @param order
      */
-    public void payByWallet(Order order) throws BusinessException
+    public void payByWallet(Order order, Coupon coupon) throws BusinessException
     {
         //检查拥有者
         User owner = order.getOwner();
@@ -1331,16 +1356,33 @@ public class OrderService
                     owner.getBalance().floatValue(), order.getRealAmt().floatValue()));
         }
         
+        //设置coupon
+        if (null != coupon)
+        {
+            //消耗优惠券
+            couponService.useCoupon(coupon, order.getCode());
+            //设置订单实付款金额
+            order.setRealAmt(calRealAmt(order, coupon));
+            order.appedChangeRemark(String.format("使用优惠券: %s; ", coupon.getCode()));
+        }
+
         //扣减钱包余额
         BigDecimal newBlance = owner.getBalance().subtract(order.getRealAmt()).setScale(2, BigDecimal.ROUND_HALF_UP);
         order.appedChangeRemark(String.format("余额: %.2f 元 --> %.2f 元",  owner.getBalance().floatValue(), newBlance.floatValue()));
         owner.setBalance(newBlance);
         
-        //订单已经支付
+        //设置订单支付
         order.setStatus(OrderStatus.payed);
-        order.setPaymentType(PaymentType.qb);
-        order.setPaymentTime(new Date());
-        order.setWalletBalance(newBlance);
+        order.setPayedAmt(order.getRealAmt());
+        OrderPayment orderPayment = new OrderPayment();
+        orderPayment.setUsedCoupon(coupon);
+        orderPayment.setAmt(order.getRealAmt());
+        orderPayment.setOrder(order);
+        orderPayment.setPaymentType(PaymentType.qb);
+        orderPayment.setPaymentTime(new Date());
+        orderPayment.setWalletBalance(newBlance);
+        order.setLastPaymentTime(orderPayment.getPaymentTime());
+        order.getOrderPayments().add(orderPayment);
         
         //记录备注
         this.save(order);

@@ -107,7 +107,7 @@ public class BoyueController
                     {
                         //判断是否超过离场时间限制
                         Date now = new Date();
-                        if (now.before(order.getOutTimeLimit()))
+                        if (!now.after(order.getOutTimeLimit()))
                         {
                             resp.setInfo("ok"); //回复OK开闸
                             resp.setContent(String.format("一路顺风:%s", event.getPlateNo()));
@@ -181,11 +181,20 @@ public class BoyueController
         Order order = orderService.findRecentByOutDeviceSn(serialno);
         if (null != order) //订单处于已经完成支付或者无需支付状态,开闸
         {
-            if (order.getStatus().equals(OrderStatus.payed)
-                    ||order.getStatus().equals(OrderStatus.noNeedToPay)) //已经付款，开闸
+            if (order.getStatus().equals(OrderStatus.noNeedToPay)) //无需付款，开闸
             {
                 resp.setInfo("ok");
                 resp.setContent("一路顺风");
+            }
+            else if (order.getStatus().equals(OrderStatus.payed)) //已经支付
+            {
+                //未超过出场时限
+                Date now = new Date();
+                if (!now.after(order.getOutTimeLimit()))
+                {
+                    resp.setInfo("ok");
+                    resp.setContent("一路顺风");
+                }
             }
         }
         

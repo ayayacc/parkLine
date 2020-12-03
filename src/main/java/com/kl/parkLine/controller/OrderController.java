@@ -22,11 +22,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.wxpay.sdk.WXPayUtil;
+import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.enums.DeviceUseage;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
-import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
@@ -35,6 +35,7 @@ import com.kl.parkLine.json.WxPayNotifyParam;
 import com.kl.parkLine.json.WxUnifiedOrderResult;
 import com.kl.parkLine.service.OrderService;
 import com.kl.parkLine.util.Const;
+import com.kl.parkLine.vo.OrderPaymentVo;
 import com.kl.parkLine.vo.OrderVo;
 
 import io.swagger.annotations.Api;
@@ -134,7 +135,7 @@ public class OrderController
      * @param pageable 分页条件
      * @param auth 当前登录用户
      * @return 订单查询结果
-     */
+     *//*
     @GetMapping("/findAsUser")
     @ApiOperation(value="分页查询订单", notes="分页批量查询订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
@@ -144,13 +145,13 @@ public class OrderController
         return RestResult.success(orderService.fuzzyFindPageAsUser(orderVo, pageable, auth.getName()));
     }
     
-    /**
+    *//**
      * 停车场/公司管理分页查询订单
      * @param order 查询条件
      * @param pageable 分页条件
      * @param auth 当前登录用户
      * @return 订单查询结果
-     */
+     *//*
     @GetMapping("/findAsManager")
     @ApiOperation(value="分页查询订单", notes="分页批量查询订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
@@ -158,7 +159,7 @@ public class OrderController
             @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
     {
         return RestResult.success(orderService.fuzzyFindPageAsManager(orderVo, pageable, auth.getName()));
-    }
+    }*/
     
     /**
      * 查询订单明细
@@ -200,20 +201,18 @@ public class OrderController
      * @param car 车辆对象
      * @return
      */
-    @PostMapping(value = "/needToPayByCar")
+    @GetMapping(value = "/needToPayByCar/{carId}")
     @ApiOperation(value="根据车辆Id查询到需要付款的订单", notes="根据车辆Id查询到需要付款的订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<OrderVo> getNeedToPayByCar(
-            @ApiParam(name="车牌号码", required=true) @RequestBody(required=true) CarParam carParam)
+    public RestResult<OrderVo> getNeedToPayByCar(@ApiParam(name="车辆Id",type="path") @PathVariable("carId") Integer carId, 
+            @ApiIgnore @PathVariable("carId") Car car)
     {
-        try
+        if (null == car)
         {
-            return RestResult.success(orderService.findNeedToPayByCar(carParam));
+            return RestResult.failed(String.format("无效的车辆Id: %d", carId));
         }
-        catch (Exception e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        
+        return RestResult.success(orderService.findNeedToPayByCar(car));
     }
     
     /**
@@ -391,7 +390,7 @@ public class OrderController
     @GetMapping("/my/wallet")
     @ApiOperation(value="我的钱包", notes="我的钱包变动记录")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Page<OrderVo>> myWalletLogs(@ApiParam(name="分页信息",type="query") Pageable pageable,
+    public RestResult<Page<OrderPaymentVo>> myWalletLogs(@ApiParam(name="分页信息",type="query") Pageable pageable,
             Authentication auth)
     {
         return RestResult.success(orderService.myWalletLogs(auth.getName(), pageable));

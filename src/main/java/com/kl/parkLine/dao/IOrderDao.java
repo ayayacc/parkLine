@@ -1,6 +1,5 @@
 package com.kl.parkLine.dao;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -33,8 +32,6 @@ public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredic
     public Boolean existsByTypeAndCarAndStatus(OrderType type, Car car, OrderStatus status);
     public Order findTopByTypeAndCarAndStatusOrderByInTimeDesc(OrderType type, Car car, OrderStatus status);
     public Set<Order> findByCarAndOwnerIsNull(Car car);
-    public Page<OrderVo> findByOwnerAndWalletBalanceIsNotNull(User owner, Pageable pageable);
-    public Page<OrderVo> findByStatusAndOwnerAndAmtGreaterThanAndInvoiceIsNull(OrderStatus status, User owner, BigDecimal amt, Pageable pageable);
     public Page<OrderVo> findByTypeAndStatusAndOwnerOrderByCreatedDateDesc(OrderType orderType, OrderStatus status, User owner, Pageable pageable);
     public Integer countByOwnerAndTypeAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(User owner, OrderType orderType, OrderStatus status, Date startDate, Date endDate);
 }

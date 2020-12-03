@@ -19,6 +19,9 @@ public class Const
     public final static Integer RET_OK = 0;
     public final static Integer RET_FAILED = 1;
     
+    //微信前缀
+    public final static String WX_PREFIX = "wxopenid_";
+    
     //日志记录
     public final static String LOG_CREATE = "新增";
     

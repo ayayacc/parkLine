@@ -1,5 +1,7 @@
 package com.kl.parkLine.controller;
 
+import java.math.BigDecimal;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -111,5 +113,14 @@ public class UserController
     public RestResult<MyCounts> myCounts(Authentication auth)
     {
         return RestResult.success(userService.myCounts(auth.getName()));
+    }
+    
+    @GetMapping("/my/walletBalance")
+    @ApiOperation(value="查询我的汇总信息", notes="查询我的汇总信息")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<BigDecimal> walletBalance(Authentication auth)
+    {
+        User user = userService.findByName(auth.getName());
+        return RestResult.success(user.getBalance());
     }
 }

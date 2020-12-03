@@ -79,9 +79,9 @@ public class Invoice extends AbstractEntity implements java.io.Serializable
      * 开票所包含的订单
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "invoice", cascade = {CascadeType.ALL})  
-    @OrderBy(value = "createdDate desc")
+    @OrderBy(value = "paymentTime desc")
     @JsonIgnore
-    private Set<Order> orders;
+    private Set<OrderPayment> orderPayments;
     
     /**
      * 发票定义变动备注

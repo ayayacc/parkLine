@@ -33,7 +33,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
-import com.kl.parkLine.enums.PaymentType;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -80,21 +79,21 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      * 订单类型: 停车订单/月票订单/优惠券激活订单/钱包充值订单
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", columnDefinition="varchar(255) comment '订单类型'")
+    @Column(name = "type", nullable=false, columnDefinition="varchar(255) comment '订单类型'")
     private OrderType type;
     
     /*停车订单特有字段*/
     /**
      * 停车场
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "park_id", columnDefinition="int comment '停车场Id'")
     private Park park;
     
     /**
      * 车辆
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "car_id", columnDefinition="int comment '车辆Id'")
     private Car car;
     
@@ -189,13 +188,6 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date endDate; 
     
-    /**
-     * 使用的优惠券
-     */
-    @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "used_coupon", columnDefinition="int comment '使用的优惠券'")
-    private Coupon usedCoupon;
-    
     /*优惠券激活订单特有字段*/
     /**
      * 被激活的优惠券
@@ -222,36 +214,11 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     private User owner;
     
     /**
-     * 付款时间
-     */
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "payment_time", columnDefinition="datetime comment '付款时间'")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @NeedToCompare(name = "付款时间")
-    private Date paymentTime; 
-    
-    /**
-     * 付款银行代码
-     */
-    @Column(name = "bank_type", length = 48, columnDefinition="varchar(48) comment '付款银行代码,微信返回'")
-    @NeedToCompare(name = "银行代码")
-    private String bankType;
-    
-    /**
      * 微信支付订单号
      */
     @Column(name = "wx_transaction_id", length = 48, columnDefinition="varchar(48) comment '微信支付订单号'")
     @NeedToCompare(name = "微信支付订单号")
     private String wxTransactionId;
-    
-    /**
-     * 支付方式: 微信/钱包
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_type", columnDefinition="varchar(255) comment '支付方式:wx(微信)/qb(钱包)'")
-    @NeedToCompare(name = "支付方式")
-    private PaymentType paymentType;
     
     /**
      * 金额（使用优惠券前）
@@ -268,19 +235,29 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     private BigDecimal realAmt;
     
     /**
-     * 涉及钱包操作后的钱包余额
+     * 最后一次付款时间
      */
-    @Column(name = "wallet_balance", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '涉及钱包操作后的钱包余额'")
-    @NeedToCompare(name = "涉及钱包操作后的钱包余额")
-    private BigDecimal walletBalance;
-
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "last_payment_time", columnDefinition="datetime comment '最后一次付款时间'")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @NeedToCompare(name = "最后一次付款时间")
+    private Date lastPaymentTime; 
+    
     /**
-     * 开票ID
+     * 已经支付的金额
      */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invoice_id", columnDefinition="int comment '发票Id'")
-    @NeedToCompare(name = "发票")
-    private Invoice invoice;
+    @Column(name = "payed_amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '已经支付的金额'")
+    @NeedToCompare(name = "已经支付的金额")
+    private BigDecimal payedAmt;
+    
+    /**
+     * 付款记录
+     */
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "order", cascade = {CascadeType.ALL})  
+    @OrderBy(value = "paymentTime desc")
+    @JsonIgnore
+    private List<OrderPayment> orderPayments;
     
     /**
      * 操作记录
@@ -318,14 +295,6 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
         }
         changeRemark.append(remark);
     }
-    
-    /**
-     * 是否需要自动匹配优惠券
-     */
-    @ApiModelProperty(hidden = true)
-    @Transient
-    @JsonIgnore
-    private Boolean autoCoupon;
     
     @Override
     public int hashCode()
