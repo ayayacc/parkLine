@@ -156,7 +156,7 @@ public class CarController
         try
         {
             //找到停车场信息
-            return RestResult.success(orderService.findParkingByCar(car));
+            return RestResult.success(orderService.findParkLocationByCar(car));
         }
         catch (Exception e)
         {

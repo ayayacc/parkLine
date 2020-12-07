@@ -69,11 +69,21 @@ public class OrderVo
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date outTime; 
     
-    @ApiModelProperty(name="金额(元)", value="amt")
+    @ApiModelProperty(name="车辆出场限制时间", value="outTimeLimit")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date outTimeLimit; 
+    
+    @ApiModelProperty(name="金使用优惠券前订单金额(元)", value="amt")
     private BigDecimal amt; 
     
-    @ApiModelProperty(name="使用优惠券后实付金额(元)", value="amt")
-    private BigDecimal realAmt; 
+    @ApiModelProperty(name="使用优惠券前已付款金额(元)", value="payedAmt")
+    private BigDecimal payedAmt; 
+    
+    @ApiModelProperty(name="使用优惠券后未付金额(元)", value="realUnpayedAmt")
+    private BigDecimal realUnpayedAmt; 
+    
+    @ApiModelProperty(name="使用优惠券后实际已付金额(元)", value="realPayedAmt")
+    private BigDecimal realPayedAmt; 
     
     @ApiModelProperty(name="最后付款时间", value="lastPaymentTime")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

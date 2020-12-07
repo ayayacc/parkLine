@@ -201,8 +201,8 @@ public class OrderController
      * @param car 车辆对象
      * @return
      */
-    @GetMapping(value = "/needToPayByCar/{carId}")
-    @ApiOperation(value="根据车辆Id查询到需要付款的订单", notes="根据车辆Id查询到需要付款的订单")
+    @GetMapping(value = "/parking/needToPayByCar/{carId}")
+    @ApiOperation(value="根据车辆Id查询到需要付款的停车订单", notes="根据车辆Id查询到需要付款的停车订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<OrderVo> getNeedToPayByCar(@ApiParam(name="车辆Id",type="path") @PathVariable("carId") Integer carId, 
             @ApiIgnore @PathVariable("carId") Car car)
@@ -212,7 +212,14 @@ public class OrderController
             return RestResult.failed(String.format("无效的车辆Id: %d", carId));
         }
         
-        return RestResult.success(orderService.findNeedToPayByCar(car));
+        try
+        {
+            return RestResult.success(orderService.findParkingByCar(car));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
     }
     
     /**

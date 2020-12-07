@@ -221,4 +221,17 @@ public class UserService
         
         return myCounts;
     }
+    
+    /**
+     * 设置快捷支付
+     * @param userName 用户名
+     * @return
+     */
+    public void setQuickPay(String userName, Boolean isQuickPay)
+    {
+        //找到当前用户
+        User user = userDao.findOneByName(userName);
+        user.setIsQuickPay(isQuickPay);
+        save(user);
+    }
 }

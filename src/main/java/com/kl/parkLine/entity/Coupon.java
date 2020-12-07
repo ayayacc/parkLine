@@ -89,7 +89,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      * 优惠券名称
      */
     @NeedToCompare(name = "名称")
-    @Column(name = "name", nullable = false, length = 64, unique = true, columnDefinition="varchar(64) comment '优惠券名称,默认等于优惠券定义名称'")
+    @Column(name = "name", nullable = false, length = 64, columnDefinition="varchar(64) comment '优惠券名称,默认等于优惠券定义名称'")
     @ApiModelProperty("优惠券名称")
     private String name;
     

@@ -770,7 +770,7 @@ public class OrderServiceTest
             System.out.println(code);
             Integer amt = Integer.valueOf(caseStr[1]);
             Order order = orderDao.findOneByCode(code);
-            orderService.calAmt(order);
+            orderService.setAmtAndOutTimeLimit(order);
             assertEquals(amt, order.getAmt().intValue());
         }
     }

@@ -24,13 +24,12 @@ public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredic
     public Order findOneByActId(String actId);
     public List<Order> findByTypeAndCarAndParkAndStatusOrderByStartDate(OrderType orderType, Car car, Park park, OrderStatus status);
     public Order findTopByPlateIdAndStatusOrderByInTimeDesc(Integer plateId, OrderStatus status);
-    public Order findTopByOutDeviceSnOrderByOutTimeDesc(String outDeviceSn);
+    public Order findTopByOutDeviceSnAndIsOutIsFalseOrderByOutTimeDesc(String outDeviceSn);
     public Order findOneByOrderId(Integer orderId);
     public Order findOneByCode(String code);
-    public OrderVo findTopByCarAndStatusOrderByInTimeDesc(Car car, OrderStatus status);
+    public Order findTopByCarAndTypeAndIsOutIsFalseOrderByInTimeDesc(Car car, OrderType type);
     public Boolean existsByTypeAndCarAndParkAndStatusInAndStartDateLessThanEqualAndEndDateGreaterThanEqual(OrderType type, Car car, Park park, List<OrderStatus> status, Date endDate, Date startDate);
     public Boolean existsByTypeAndCarAndStatus(OrderType type, Car car, OrderStatus status);
-    public Order findTopByTypeAndCarAndStatusOrderByInTimeDesc(OrderType type, Car car, OrderStatus status);
     public Set<Order> findByCarAndOwnerIsNull(Car car);
     public Page<OrderVo> findByTypeAndStatusAndOwnerOrderByCreatedDateDesc(OrderType orderType, OrderStatus status, User owner, Pageable pageable);
     public Integer countByOwnerAndTypeAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(User owner, OrderType orderType, OrderStatus status, Date startDate, Date endDate);

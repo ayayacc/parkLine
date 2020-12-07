@@ -78,10 +78,16 @@ public class OrderPayment implements Serializable
     private Date paymentTime; 
     
     /**
-     * 付款金额
+     * 使用优惠券前付款金额(元)
      */
-    @Column(name = "amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '付款金额'")
+    @Column(name = "amt", nullable = false, precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '付款金额'")
     private BigDecimal amt;
+    
+    /**
+     * 使用优惠券后实付款金额(元)
+     */
+    @Column(name = "real_amt", nullable = false, precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '使用优惠券后实付款金额(元)'")
+    private BigDecimal realAmt;
     
     /**
      * 涉及钱包操作后的钱包余额

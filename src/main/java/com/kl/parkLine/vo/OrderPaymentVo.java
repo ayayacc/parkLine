@@ -19,7 +19,7 @@ import lombok.Value;
 @Value
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@ApiModel("订单VO")
+@ApiModel("订单付款记录VO")
 public class OrderPaymentVo
 {
     @ApiModelProperty(name="付款Id")

@@ -20,7 +20,7 @@ import com.kl.parkLine.vo.CouponVo;
 public interface ICouponDao extends JpaRepository<Coupon, Integer>, QuerydslPredicateExecutor<CouponVo>, JpaSpecificationExecutor<CouponVo>
 {
     public Integer countByOwnerAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(User owner, CouponStatus status, Date startDate, Date endDate);
-    public boolean existsByCouponDefAndOwner(CouponDef couponDef, User owner);
+    public boolean existsByCouponDefAndOwnerAndStatus(CouponDef couponDef, User owner, CouponStatus status);
     public Coupon findOneByCouponId(Integer couponDefId);
     public Page<CouponVo> findByOwnerAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndApplicableParksContainsOrApplicableParksIsNullOrderByDiscountAscEndDateAsc(User owner, CouponStatus status, Date startDate, Date endDate, Park park, Pageable pageable);
 }

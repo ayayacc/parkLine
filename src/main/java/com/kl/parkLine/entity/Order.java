@@ -125,6 +125,13 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     private Date outTime; 
     
     /**
+     * 是否已经抬杆出场
+     */
+    @ApiModelProperty("是否已经抬杆出场")
+    @Column(name = "is_out", columnDefinition="bool comment '是否已经抬杆出场'")
+    private Boolean isOut;
+    
+    /**
      * 提前交费离开时间限制
      */
     @Temporal(TemporalType.TIMESTAMP)
@@ -221,18 +228,28 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     private String wxTransactionId;
     
     /**
-     * 金额（使用优惠券前）
+     * 使用优惠券前订单金额(元)
      */
-    @Column(name = "amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '订单金额（使用优惠券前）'")
-    @NeedToCompare(name = "金额（使用优惠券前）")
+    @Column(name = "amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '使用优惠券前订单金额(元)'")
     private BigDecimal amt;
+
+    /**
+     * 使用优惠券前已付款金额(元)
+     */
+    @Column(name = "payed_amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '使用优惠券前已付款金额(元)'")
+    private BigDecimal payedAmt;
     
     /**
-     * 实际金额（使用优惠券后）
+     * 使用优惠券后未付金额(元)
      */
-    @Column(name = "real_amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '实际金额（使用优惠券后）'")
-    @NeedToCompare(name = "金额（使用优惠券后）")
-    private BigDecimal realAmt;
+    @Column(name = "real_unpayed_amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '使用优惠券后金额(元)'")
+    private BigDecimal realUnpayedAmt;
+    
+    /**
+     * 使用优惠券后实际已付金额(元)
+     */
+    @Column(name = "real_payed_amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '使用优惠券后实际已付金额(元)'")
+    private BigDecimal realPayedAmt;
     
     /**
      * 最后一次付款时间
@@ -243,13 +260,6 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @NeedToCompare(name = "最后一次付款时间")
     private Date lastPaymentTime; 
-    
-    /**
-     * 已经支付的金额
-     */
-    @Column(name = "payed_amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '已经支付的金额'")
-    @NeedToCompare(name = "已经支付的金额")
-    private BigDecimal payedAmt;
     
     /**
      * 付款记录

@@ -211,14 +211,67 @@ public class OrderService
         return orderDao.findOneByOrderId(orderId);
     }
     
-    public OrderVo findNeedToPayByCar(Car car)
+    /**
+     * 判断订单车辆是否到达道闸
+     */
+    private Boolean arrivedGate(Order order)
     {
-        return orderDao.findTopByCarAndStatusOrderByInTimeDesc(car, OrderStatus.needToPay);
+        for (OrderLog log : order.getLogs())
+        {
+            if (log.getEvent().getType().equals(EventType.out))
+            {
+                return true;
+            }
+        }
+        return false;
     }
     
-    public ParkLocationVo findParkingByCar(Car car) throws BusinessException 
+    /**
+     * 根据最近的车辆未出场的订单
+     * @param car
+     * @return
+     * @throws BusinessException 
+     * @throws ParseException 
+     */
+    public OrderVo findParkingByCar(Car car) throws ParseException, BusinessException
     {
-        Order order = orderDao.findTopByTypeAndCarAndStatusOrderByInTimeDesc(OrderType.parking, car, OrderStatus.needToPay);
+        //找到最近的车辆在场订单
+        Order order = orderDao.findTopByCarAndTypeAndIsOutIsFalseOrderByInTimeDesc(car, OrderType.parking);
+        
+        OrderVo orderVo = null;
+        if (null == order) //无车辆在场订单,返回空
+        {
+            return null;
+        }
+        else 
+        {
+            if (!arrivedGate(order)) //车辆未到达道闸,提前支付
+            {
+                setAmtAndOutTimeLimit(order);
+                save(order);
+            }
+            orderVo = OrderVo.builder().orderId(order.getOrderId())
+                    .code(order.getCode())
+                    .amt(order.getAmt())
+                    .carCarId(order.getCar().getCarId())
+                    .carCarNo(order.getCar().getCarNo())
+                    .lastPaymentTime(order.getLastPaymentTime())
+                    .outTimeLimit(order.getOutTimeLimit())
+                    .parkName(order.getPark().getName())
+                    .parkParkId(order.getPark().getParkId())
+                    .payedAmt(order.getPayedAmt())
+                    .realPayedAmt(order.getRealPayedAmt())
+                    .realUnpayedAmt(order.getRealUnpayedAmt())
+                    .inTime(order.getInTime())
+                    .status(order.getStatus())
+                    .build();
+        }
+        return orderVo;
+    }
+    
+    public ParkLocationVo findParkLocationByCar(Car car) throws BusinessException 
+    {
+        Order order = orderDao.findTopByCarAndTypeAndIsOutIsFalseOrderByInTimeDesc(car, OrderType.parking);
         if (null == order)
         {
             throw new BusinessException("未找到车辆的入场记录");
@@ -243,9 +296,9 @@ public class OrderService
      * @param outDeviceSn
      * @return
      */
-    public Order findRecentByOutDeviceSn(String outDeviceSn) 
+    public Order findLastNotOutByOutDeviceSn(String outDeviceSn) 
     {
-        return orderDao.findTopByOutDeviceSnOrderByOutTimeDesc(outDeviceSn);
+        return orderDao.findTopByOutDeviceSnAndIsOutIsFalseOrderByOutTimeDesc(outDeviceSn);
     }
     
     /**
@@ -371,6 +424,12 @@ public class OrderService
             }
         }
         
+        //停车场无空位
+        if (0 >= park.getAvailableCnt())
+        {
+            throw new EventException("无空位");
+        }
+        
         Order order = Order.builder()
                 .code(util.makeCode(OrderType.parking))
                 .car(car)
@@ -383,6 +442,7 @@ public class OrderService
                 .plateId(event.getPlateId())
                 .inTime(event.getTimeIn())
                 .inImgCode(event.getPicUrlIn())
+                .isOut(false)
                 .build();
         //停车场空位-1
         Integer newAvailableCnt = park.getAvailableCnt() - 1;
@@ -411,7 +471,7 @@ public class OrderService
         {
             //根据事件Id找入场时生成的的订单
             order = orderDao.findOneByActId(event.getActId());
-            
+            order.setIsOut(true); //高位摄像头直接出场
         }
         else //无事件Id，道闸停车场
         {
@@ -429,18 +489,24 @@ public class OrderService
         //出场截图
         order.setOutImgCode(event.getPicUrlOut());
         
-        //计算并且设置价格
+        //设置出场时间
         order.setOutTime(event.getTimeOut());
-        this.calAmt(order);
         
-        //如果订单价格是0，则直接变成无需支付状态
-        if (order.getAmt().equals(BigDecimal.ZERO))
+        //订单未提前支付
+        if (!order.getStatus().equals(OrderStatus.payed))
         {
-            order.setStatus(OrderStatus.noNeedToPay);
-        }
-        else
-        {
-            order.setStatus(OrderStatus.needToPay);//免密支付订单
+            //计算金额以及设置出场限制
+            this.setAmtAndOutTimeLimit(order);
+            
+            //如果订单价格是0，则直接变成无需支付状态
+            if (order.getAmt().equals(BigDecimal.ZERO))
+            {
+                order.setStatus(OrderStatus.noNeedToPay);
+            }
+            else
+            {
+                order.setStatus(OrderStatus.needToPay);
+            }
         }
         
         //停车场空位+1
@@ -515,12 +581,13 @@ public class OrderService
         {
             //将订单改成入场状态
             order.setStatus(OrderStatus.in);
+            order.setIsOut(false);
             
             //金额为0
             order.setAmt(BigDecimal.ZERO);
             
             //出场时间为无效时间
-            order.setOutTime(new Date(0));
+            order.setOutTime(null);
             
             //停车场空位数量-1
             Integer newAvailableCnt = park.getAvailableCnt() - 1;
@@ -630,7 +697,7 @@ public class OrderService
      * @throws ParseException 
      * @throws BusinessException 
      */
-    public void calAmt(Order order) throws ParseException, BusinessException
+    public void setAmtAndOutTimeLimit(Order order) throws ParseException, BusinessException
     {
         Park park = order.getPark();
         Car car = order.getCar();
@@ -639,14 +706,14 @@ public class OrderService
         if (park.getIsWhitePlateFree() && car.getPlateColor().equals(PlateColor.white))
         {
             order.setAmt(BigDecimal.ZERO);
-            order.setRealAmt(BigDecimal.ZERO);
+            order.setRealUnpayedAmt(BigDecimal.ZERO);
             return;
         }
         //白名单免费
         if (parkCarItemService.existsInWhiteList(park, car))
         {
             order.setAmt(BigDecimal.ZERO);
-            order.setRealAmt(BigDecimal.ZERO);
+            order.setRealUnpayedAmt(BigDecimal.ZERO);
             return;
         }
         
@@ -661,14 +728,11 @@ public class OrderService
         {
             outTime = new DateTime(order.getOutTime());
         }
-        //设置出场时间限制,30分钟
+        //设置出场时间限制,30分钟,设置出场时间限制必须同时计算价格
         DateTime outTimeLimit = outTime.plusMinutes(Const.OUT_LIMIT_TIME_NIN);
         order.setOutTimeLimit(outTimeLimit.toDate());
-
-        //初始值
-        order.setAmt(BigDecimal.ZERO);
-        order.setRealAmt(BigDecimal.ZERO);
         
+        //结合月票，计算停车时长
         Integer minutes = this.getParkingMinutes(order, outTime);
         
         //阶梯计费
@@ -713,7 +777,12 @@ public class OrderService
             }
         }
         order.setAmt(amt);
-        order.setRealAmt(amt);
+        //提前交费超时后，补缴费
+        if (order.getStatus().equals(OrderStatus.payed))
+        {
+            //realAmt = amt-(payedAmt-realPayed)
+            order.setRealUnpayedAmt(amt.subtract(order.getPayedAmt().subtract(order.getRealPayedAmt())));
+        }
     }
     
     /**
@@ -860,9 +929,17 @@ public class OrderService
         
         //设置订单支付
         order.setStatus(OrderStatus.payed);
-        order.setPayedAmt(order.getRealAmt());
+        order.setPayedAmt(order.getAmt());
+        BigDecimal realPayedAmt = order.getRealPayedAmt();
+        if (null == realPayedAmt)
+        {
+            realPayedAmt = BigDecimal.ZERO;
+        }
+        order.setRealPayedAmt(realPayedAmt.add(order.getRealUnpayedAmt()));
+        order.setRealUnpayedAmt(BigDecimal.ZERO);
         OrderPayment orderPayment = new OrderPayment();
-        orderPayment.setAmt(order.getRealAmt());
+        orderPayment.setRealAmt(order.getRealUnpayedAmt());
+        orderPayment.setAmt(order.getAmt());
         orderPayment.setBankType(wxPayNotifyParam.getBankType());
         orderPayment.setOrder(order);
         orderPayment.setPaymentType(PaymentType.wx);
@@ -1086,7 +1163,7 @@ public class OrderService
         //创建订单
         Order order = Order.builder()
                 .code(code).car(car).park(park).amt(amt)
-                .realAmt(amt)
+                .realUnpayedAmt(amt)
                 .type(OrderType.monthlyTicket)
                 .startDate(monthlyTktParam.getStartDate())
                 .endDate(monthlyTktParam.getEndDate())
@@ -1117,7 +1194,7 @@ public class OrderService
         Order order = Order.builder()
                 .code(code)
                 .amt(walletChargeParam.getAmt())
-                .realAmt(walletChargeParam.getAmt())
+                .realUnpayedAmt(walletChargeParam.getAmt())
                 .type(OrderType.walletIn)
                 .status(OrderStatus.needToPay)
                 .owner(owner).build();
@@ -1165,7 +1242,7 @@ public class OrderService
         Order order = Order.builder()
                 .code(code)
                 .amt(activeCouponParam.getAmt())
-                .realAmt(activeCouponParam.getAmt())
+                .realUnpayedAmt(activeCouponParam.getAmt())
                 .activatedCoupon(coupon)
                 .type(OrderType.coupon)
                 .status(OrderStatus.needToPay)
@@ -1217,6 +1294,15 @@ public class OrderService
         {
             throw new BusinessException("优惠券在他人名下, 不能使用");
         }
+        
+        //检查订单是否已经用过优惠券
+        for (OrderPayment orderPayment : order.getOrderPayments())
+        {
+            if (null != orderPayment.getUsedCoupon())
+            {
+                throw new BusinessException("一张订单只能用一次优惠券");
+            }
+        }
     }
     
     /**
@@ -1233,6 +1319,40 @@ public class OrderService
     }
     
     /**
+     * 检查订单是否可以支付
+     * @param order
+     * @return
+     */
+    private boolean canBePay(Order order, Date now) 
+    {
+        //无需付款
+        if (order.getStatus().equals(OrderStatus.noNeedToPay))
+        {
+            return false;
+        }
+        
+        //车辆已经出场的订单不能付款
+        if (null != order.getIsOut() && order.getIsOut())
+        {
+            return false;
+        }
+        
+        //从未付过款
+        if (null == order.getOutTimeLimit())  
+        {
+            return true;
+        }
+        
+        //已经付过款，但是超过了出场时间限制(提前付款超时未出场)
+        if (now.after(order.getOutTimeLimit()))
+        {
+            return true;
+        }
+        
+        return false;
+    } 
+    
+    /**
      * 使用微信支付
      * @param order
      * @throws Exception 
@@ -1246,10 +1366,9 @@ public class OrderService
             throw new BusinessException(String.format("无效的订单Id: %d", payParam.getOrderId()));
         }
         //检查订单状态
-        if (!order.getStatus().equals(OrderStatus.needToPay))
+        if (!canBePay(order, new Date()))
         {
-            throw new BusinessException(String.format("订单: %s 处于: %s 状态, 无需支付", 
-                    order.getCode(), order.getStatus().getText()));
+            throw new BusinessException(String.format("订单: %s 无需支付", order.getCode()));
         }
         
         //订单拥有者是付款人
@@ -1286,10 +1405,9 @@ public class OrderService
         order.setOwner(payer);
         
         //检查订单状态
-        if (!order.getStatus().equals(OrderStatus.needToPay))
+        if (!canBePay(order, new Date()))
         {
-            throw new BusinessException(String.format("订单: %s 处于: %s 状态, 无需支付", 
-                    order.getCode(), order.getStatus().getText()));
+            throw new BusinessException(String.format("订单: %s 无需支付", order.getCode()));
         }
         
         //只有停车订单才能使用优惠券
@@ -1320,10 +1438,9 @@ public class OrderService
     public void quickPayByWallet(Order order) throws Exception
     {
         //检查订单状态
-        if (!order.getStatus().equals(OrderStatus.needToPay))
+        if (!canBePay(order, new Date()))
         {
-            throw new BusinessException(String.format("订单: %s 处于: %s 状态, 无需支付", 
-                    order.getCode(), order.getStatus().getText()));
+            throw new BusinessException(String.format("订单: %s 无需支付", order.getCode()));
         }
         
         //找到最合适的优惠券
@@ -1351,10 +1468,10 @@ public class OrderService
         }
         
         //余额不足
-        if (0 > owner.getBalance().compareTo(order.getRealAmt()))
+        if (0 > owner.getBalance().compareTo(order.getRealUnpayedAmt()))
         {
             throw new BusinessException(String.format("钱包余额: %.2f 元不足, 应付金额: %.2f 元",
-                    owner.getBalance().floatValue(), order.getRealAmt().floatValue()));
+                    owner.getBalance().floatValue(), order.getRealUnpayedAmt().floatValue()));
         }
         
         //设置coupon
@@ -1363,21 +1480,29 @@ public class OrderService
             //消耗优惠券
             couponService.useCoupon(coupon, order.getCode());
             //设置订单实付款金额
-            order.setRealAmt(calRealAmt(order, coupon));
+            order.setRealUnpayedAmt(calRealAmt(order, coupon));
             order.appedChangeRemark(String.format("使用优惠券: %s; ", coupon.getCode()));
         }
 
         //扣减钱包余额
-        BigDecimal newBlance = owner.getBalance().subtract(order.getRealAmt()).setScale(2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal newBlance = owner.getBalance().subtract(order.getRealUnpayedAmt()).setScale(2, BigDecimal.ROUND_HALF_UP);
         order.appedChangeRemark(String.format("余额: %.2f 元 --> %.2f 元",  owner.getBalance().floatValue(), newBlance.floatValue()));
         owner.setBalance(newBlance);
         
         //设置订单支付
         order.setStatus(OrderStatus.payed);
-        order.setPayedAmt(order.getRealAmt());
+        order.setPayedAmt(order.getAmt());
+        BigDecimal realPayedAmt = order.getRealPayedAmt();
+        if (null == realPayedAmt)
+        {
+            realPayedAmt = BigDecimal.ZERO;
+        }
+        order.setRealPayedAmt(realPayedAmt.add(order.getRealUnpayedAmt()));
+        order.setRealUnpayedAmt(BigDecimal.ZERO);
         OrderPayment orderPayment = new OrderPayment();
         orderPayment.setUsedCoupon(coupon);
-        orderPayment.setAmt(order.getRealAmt());
+        orderPayment.setAmt(order.getAmt());
+        orderPayment.setRealAmt(order.getRealUnpayedAmt());
         orderPayment.setOrder(order);
         orderPayment.setPaymentType(PaymentType.qb);
         orderPayment.setPaymentTime(new Date());
@@ -1423,5 +1548,32 @@ public class OrderService
         Date today = new DateTime().withTimeAtStartOfDay().toDate();
         return orderDao.countByOwnerAndTypeAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
                 owner, OrderType.monthlyTicket, OrderStatus.payed, today, today);
+    }
+    
+    /**
+     * 设置车辆是否抬杆出场
+     * @param order
+     * @throws BusinessException 
+     */
+    public void setOut(Order order, boolean isOut) throws BusinessException
+    {
+        order.setIsOut(isOut);
+        this.save(order);
+    }
+    
+    /**
+     * 超时后，重新计算金额和出场时间
+     * @param order
+     * @throws BusinessException 
+     * @throws ParseException 
+     */
+    public void resetAmtAndOutTimeLimit(Order order) throws ParseException, BusinessException
+    {
+        setAmtAndOutTimeLimit(order);
+        if (0 > order.getPayedAmt().compareTo(order.getAmt())) //产生新的费用
+        {
+            order.setStatus(OrderStatus.needToPay);
+        }
+        save(order);
     }
 }

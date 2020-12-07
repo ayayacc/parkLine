@@ -15,10 +15,10 @@ import com.kl.parkLine.dao.ICouponDao;
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.CouponDef;
 import com.kl.parkLine.entity.Order;
+import com.kl.parkLine.entity.OrderPayment;
 import com.kl.parkLine.entity.QCoupon;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CouponStatus;
-import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.predicate.CouponPredicates;
 import com.kl.parkLine.vo.CouponVo;
@@ -82,8 +82,8 @@ public class CouponService
             throw new BusinessException("领取失败，优惠券已领完");
         }
         
-        //检查是否已经有同类优惠券
-        if (couponDao.existsByCouponDefAndOwner(couponDef, user))
+        //检查是否已经有同类未使用优惠券
+        if (couponDao.existsByCouponDefAndOwnerAndStatus(couponDef, user, CouponStatus.valid))
         {
             throw new BusinessException("请勿重复领取");
         }
@@ -169,6 +169,12 @@ public class CouponService
      */
     public Coupon findBest4Order(Order order)
     {
+        //一张订单只能使用一次优惠券
+        if (usedCoupon(order))
+        {
+            return null;
+        }
+        
         Predicate searchPred = couponPredicates.applicable4Order(order);
         QCoupon qCoupon = QCoupon.coupon;
         Coupon coupon = jpaQueryFactory
@@ -215,15 +221,32 @@ public class CouponService
     }
 
     /**
+     * 检查order是否使用过优惠券
+     * @param order
+     * @return
+     */
+    private Boolean usedCoupon(Order order)
+    {
+        for (OrderPayment orderPayment : order.getOrderPayments())
+        {
+            if (null != orderPayment.getUsedCoupon())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
      * 根据订单找到可用的优惠券
      * @param order
      * @return
      */
     public Page<CouponVo> available4Order(Order order, Pageable pageable) throws BusinessException
     {
-        if (!order.getStatus().equals(OrderStatus.needToPay))
+        //一张订单只能使用一次优惠券
+        if (usedCoupon(order))
         {
-            throw new BusinessException(String.format("不能查询 %s 状态订单的可用优惠券", order.getStatus().getText()));
+            return new PageImpl<>(null, pageable, 0);
         }
         
         Predicate searchPred = couponPredicates.applicable4Order(order);

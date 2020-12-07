@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.User;
@@ -116,11 +117,20 @@ public class UserController
     }
     
     @GetMapping("/my/walletBalance")
-    @ApiOperation(value="查询我的汇总信息", notes="查询我的汇总信息")
+    @ApiOperation(value="查询我的钱包余额", notes="查询我的钱包余额")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<BigDecimal> walletBalance(Authentication auth)
     {
         User user = userService.findByName(auth.getName());
         return RestResult.success(user.getBalance());
+    }
+    
+    @GetMapping("/my/setQuickPay")
+    @ApiOperation(value="设置快捷支付", notes="设置快捷支付")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<BigDecimal> setQuickPay(Authentication auth, @ApiParam(name="是否开通", required=true) @RequestParam(value="isQuickPay") Boolean isQuickPay)
+    {
+        userService.setQuickPay(auth.getName(), isQuickPay);
+        return RestResult.success();
     }
 }
