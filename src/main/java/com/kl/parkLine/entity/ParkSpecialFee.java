@@ -21,8 +21,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.enums.CarType;
 
 import lombok.Getter;
@@ -57,7 +56,7 @@ public class ParkSpecialFee implements java.io.Serializable
      */
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
     @JoinColumn(name = "park_id", columnDefinition="int comment '停车场Id'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Park park;
     
     /**
@@ -72,7 +71,7 @@ public class ParkSpecialFee implements java.io.Serializable
      */
     @Temporal(TemporalType.TIME)       
     @DateTimeFormat(pattern = "HH:mm" )
-    @JsonFormat(pattern="HH:mm",timezone="GMT+8")
+    @JSONField(format="HH:mm")
     @Column(name = "start_time", nullable = false, columnDefinition="time comment '起始时间'")
     private Date startTime;
     
@@ -81,7 +80,7 @@ public class ParkSpecialFee implements java.io.Serializable
      */
     @Temporal(TemporalType.TIME)       
     @DateTimeFormat(pattern = "HH:mm" )
-    @JsonFormat(pattern="HH:mm",timezone="GMT+8")
+    @JSONField(format="HH:mm")
     @Column(name = "end_time", nullable = false, columnDefinition="time comment '结束时间'")
     private Date endTime;
         

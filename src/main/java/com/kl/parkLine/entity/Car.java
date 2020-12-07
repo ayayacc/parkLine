@@ -25,7 +25,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.enums.CarType;
 import com.kl.parkLine.enums.PlateColor;
 
@@ -80,7 +80,7 @@ public class Car extends AbstractDateEntity implements java.io.Serializable
     
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "user_id", columnDefinition="int comment '车辆绑定的用户'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private User user;
 
     /**
@@ -102,7 +102,7 @@ public class Car extends AbstractDateEntity implements java.io.Serializable
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "car", cascade = {CascadeType.ALL})  
     @OrderBy(value = "createdDate desc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     @ApiModelProperty(hidden = true)
     private List<CarLog> logs;
     

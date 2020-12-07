@@ -17,8 +17,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -49,7 +48,7 @@ public class SmsCode extends AbstractEntity implements java.io.Serializable
     @Id
     @Column(name = "sms_code_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonIgnore
+    @JSONField(serialize = false)
     @ApiModelProperty(hidden = true)
     private Integer smsCodeId;
     
@@ -72,7 +71,7 @@ public class SmsCode extends AbstractEntity implements java.io.Serializable
      */
     @Temporal(TemporalType.TIMESTAMP)       
     @Column(name = "expier_time", nullable = false, columnDefinition="datetime comment '过期时间'")
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")     
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")     
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("过期时间")
     private Date expierTime;

@@ -28,8 +28,8 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
@@ -217,7 +217,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      */
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "owner_id", columnDefinition="int comment '拥有者'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private User owner;
     
     /**
@@ -266,7 +266,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "order", cascade = {CascadeType.ALL})  
     @OrderBy(value = "paymentTime desc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private List<OrderPayment> orderPayments;
     
     /**
@@ -274,14 +274,14 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "order", cascade = {CascadeType.ALL})  
     @OrderBy(value = "createdDate desc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private List<OrderLog> logs;
 
     /**
      * 订单变动备注
      */
     @ApiModelProperty(hidden = true)
-    @JsonIgnore
+    @JSONField(serialize = false)
     @Transient
     private StringBuilder changeRemark;
     

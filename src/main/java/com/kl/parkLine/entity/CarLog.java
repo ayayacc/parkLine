@@ -17,7 +17,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -36,12 +36,12 @@ public class CarLog extends AbstractLog implements Serializable
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "car_log_id")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Integer carLogId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
     @JoinColumn(name = "car_id", columnDefinition="int comment '车辆Id'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Car car;
     
     @Override

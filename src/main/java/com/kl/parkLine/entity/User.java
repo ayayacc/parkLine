@@ -29,7 +29,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.enums.Gender;
 import com.kl.parkLine.enums.RoleType;
 
@@ -103,7 +103,7 @@ public class User extends AbstractDateEntity implements UserDetails
     private Boolean isQuickPay;
     
     @Column(name = "password", length = 16, columnDefinition="varchar(16) comment '用户密码,MD5散列'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     @ApiModelProperty(hidden = true)
     private String password;
     
@@ -194,35 +194,35 @@ public class User extends AbstractDateEntity implements UserDetails
         return authorities;
     }
 
-    @JsonIgnore
+    @JSONField(serialize = false)
     @Override
     public String getUsername()
     {
         return name;
     }
 
-    @JsonIgnore
+    @JSONField(serialize = false)
     @Override
     public boolean isAccountNonExpired()
     {
         return isEnabled;
     }
 
-    @JsonIgnore
+    @JSONField(serialize = false)
     @Override
     public boolean isAccountNonLocked()
     {
         return isEnabled;
     }
 
-    @JsonIgnore
+    @JSONField(serialize = false)
     @Override
     public boolean isCredentialsNonExpired()
     {
         return isEnabled;
     }
 
-    @JsonIgnore
+    @JSONField(serialize = false)
     @Override
     public boolean isEnabled()
     {

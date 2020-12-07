@@ -18,8 +18,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kl.parkLine.boyue.BoyueEvent;
 import com.kl.parkLine.boyue.BoyueRespWrap;
 import com.kl.parkLine.service.CouponService;
@@ -51,12 +51,11 @@ public class BoyueControllerTest
         //车辆入场
         Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
         InputStream is = resource.getInputStream();
-        ObjectMapper mapper = new ObjectMapper();  
         BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
         is.close();
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post(path)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(boyueEventIn))
+                .content(JSON.toJSONString(boyueEventIn))
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();

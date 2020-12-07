@@ -17,7 +17,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.DeviceUseage;
 
@@ -54,7 +54,7 @@ public class Device implements java.io.Serializable
      */
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
     @JoinColumn(name = "park_id", columnDefinition="int comment '所属停车场Id'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Park park;
     
     /**

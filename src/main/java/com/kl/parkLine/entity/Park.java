@@ -26,7 +26,7 @@ import org.hibernate.annotations.Where;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.ChargeType;
 
@@ -147,7 +147,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
     @Where(clause="park_car_type='white'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private List<ParkCarItem> whiteList;
     
     /**
@@ -155,7 +155,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
     @Where(clause="park_car_type='black'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private List<ParkCarItem> blackList;
     
     /**
@@ -183,7 +183,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
     @Where(clause="car_type='fuel'")
     @OrderBy(value = "startMin asc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private List<ParkSpecialFee> fuelSpecialFees;
     
     /**
@@ -192,7 +192,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
     @Where(clause="car_type='fuel'")
     @OrderBy(value = "startMin asc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private List<ParkStepFee> fuelStepFees;
     
     /**
@@ -208,7 +208,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
     @Where(clause="car_type='newEnergy'")
     @OrderBy(value = "startMin asc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private List<ParkSpecialFee> newEnergySpecialFees;
     
     /**
@@ -217,7 +217,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
     @Where(clause="car_type='newEnergy'")
     @OrderBy(value = "startMin asc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private List<ParkStepFee> newEnergyStepFees;
     
     @NeedToCompare(name = "月票说明")
@@ -237,7 +237,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
     @OrderBy(value = "name desc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private List<Device> devices;
     
     /**
@@ -245,7 +245,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})  
     @OrderBy(value = "createdDate desc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private List<ParkLog> logs;
 
     @Override

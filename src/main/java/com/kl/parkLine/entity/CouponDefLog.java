@@ -17,7 +17,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -36,12 +36,12 @@ public class CouponDefLog extends AbstractLog implements Serializable
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "coupon_def_log_id")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Integer couponDefLogId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
     @JoinColumn(name = "coupon_def_id", columnDefinition="int comment '优惠券定义Id'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private CouponDef couponDef;
 
     @Override

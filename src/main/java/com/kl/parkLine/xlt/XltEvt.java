@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.ArrayList;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +22,7 @@ public class XltEvt
     private String parkingActId;
     
     //事件发生时间 yyyy-MM-dd HH:mm:ss
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     private Date happenTime;
     
     //车牌号码
@@ -65,14 +65,14 @@ public class XltEvt
     private String geo;
     
     //入场时间
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     private Date timeIn;
     
     //入场鉴定图片，地址为图片绝对地址，如：http://10.7.7.15:8880/group1.jpg
     private String picUrlIn;
     
     //出场时间
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     private Date timeOut;
     
     //出场鉴定图片，地址为图片绝对地址，如：http://10.7.7.15:8880/group1.jpg

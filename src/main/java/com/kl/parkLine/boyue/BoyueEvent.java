@@ -1,6 +1,6 @@
 package com.kl.parkLine.boyue;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,6 +8,6 @@ import lombok.Setter;
 @Setter
 public class BoyueEvent
 {
-    @JsonProperty("AlarmInfoPlate")
+    @JSONField(name="AlarmInfoPlate")
     AlarmInfoPlate alarmInfoPlate;
 }

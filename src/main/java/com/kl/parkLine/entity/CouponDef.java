@@ -27,8 +27,8 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.annotation.NeedToCompare;
 
 import io.swagger.annotations.ApiModel;
@@ -184,7 +184,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "couponDef", cascade = {CascadeType.ALL})  
     @OrderBy(value = "createdDate desc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     @ApiModelProperty(hidden = true)
     private List<CouponDefLog> logs;
 

@@ -23,7 +23,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.enums.InvoiceStatus;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -80,7 +80,7 @@ public class Invoice extends AbstractEntity implements java.io.Serializable
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "invoice", cascade = {CascadeType.ALL})  
     @OrderBy(value = "paymentTime desc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Set<OrderPayment> orderPayments;
     
     /**
@@ -95,7 +95,7 @@ public class Invoice extends AbstractEntity implements java.io.Serializable
      */
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "invoice", cascade = {CascadeType.ALL})  
     @OrderBy(value = "createdDate desc")
-    @JsonIgnore
+    @JSONField(serialize = false)
     @ApiModelProperty(hidden = true)
     private List<InvoiceLog> logs;
 

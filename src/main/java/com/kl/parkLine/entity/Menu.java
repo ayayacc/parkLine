@@ -22,7 +22,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -60,7 +60,7 @@ public class Menu extends AbstractEntity implements java.io.Serializable
     @ManyToMany(mappedBy = "menus", fetch = FetchType.EAGER)
     private Set<Role> roles;
 
-    @JsonIgnore
+    @JSONField(serialize = false)
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "parentMenu", cascade = {CascadeType.PERSIST,CascadeType.MERGE,CascadeType.REFRESH})  
     @OrderBy(value="sort_idx asc") 
     private Set<Menu> childMenus; 

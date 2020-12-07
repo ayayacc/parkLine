@@ -1,7 +1,7 @@
 package com.kl.parkLine.boyue;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +18,7 @@ public class BoyueResp
     /**
      * 当前车牌id
      */
-    @JsonProperty("plateid")
+    @JSONField(name="plateid")
     private Integer plateId;
     
     /**
@@ -29,6 +29,6 @@ public class BoyueResp
     /**
      * 是否付款
      */
-    @JsonProperty("is_pay")
+    @JSONField(name="is_pay")
     private Boolean isPay;
 }

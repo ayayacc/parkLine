@@ -1,6 +1,6 @@
 package com.kl.parkLine.boyue;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -9,6 +9,6 @@ import lombok.Setter;
 public class BoyueResult
 {
     //车牌识别结果
-    @JsonProperty("PlateResult")
+    @JSONField(name="PlateResult")
     PlateResult plateResult;
 }

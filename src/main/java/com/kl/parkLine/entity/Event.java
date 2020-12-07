@@ -25,7 +25,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.ParkAbnormal;
 import com.kl.parkLine.enums.PlateColor;
@@ -88,7 +88,7 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
     //事件发生时间 yyyy-MM-dd HH:mm:ss
     @Temporal(TemporalType.TIMESTAMP)       
     @Column(name = "happen_time", nullable = false, columnDefinition="datetime comment '事件发生时间 '")
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")     
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")     
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date happenTime;
     
@@ -154,7 +154,7 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
     //入场时间
     @Temporal(TemporalType.TIMESTAMP)       
     @Column(name = "time_in", columnDefinition="datetime comment '入场时间'")
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")     
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")     
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date timeIn;
     
@@ -165,7 +165,7 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
     //出场时间
     @Temporal(TemporalType.TIMESTAMP)       
     @Column(name = "time_out", columnDefinition="datetime comment '出场时间'")
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")     
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")     
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date timeOut;
     
@@ -196,7 +196,7 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
     
     @Temporal(TemporalType.TIMESTAMP)            
     @Column(name="created_date", nullable=false, columnDefinition="datetime comment '创建时间'")
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss" )
     @CreatedDate
     @ApiModelProperty(hidden = true)

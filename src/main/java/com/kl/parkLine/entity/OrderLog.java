@@ -18,7 +18,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,12 +43,12 @@ public class OrderLog extends AbstractLog implements Serializable
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_log_id")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Integer orderLogId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
     @JoinColumn(name = "order_id", columnDefinition="int comment '订单Id'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Order order;
     
     @OneToOne(fetch=FetchType.LAZY)

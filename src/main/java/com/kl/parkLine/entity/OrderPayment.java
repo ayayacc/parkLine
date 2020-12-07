@@ -24,8 +24,8 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.PaymentType;
 
@@ -52,12 +52,12 @@ public class OrderPayment implements Serializable
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_payment_id")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Integer orderPaymentId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
     @JoinColumn(name = "order_id", columnDefinition="int comment '订单Id'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Order order;
     
 

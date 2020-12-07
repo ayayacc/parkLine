@@ -17,7 +17,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -36,7 +36,7 @@ public class ParkLog extends AbstractLog implements Serializable
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "park_log_id")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Integer parkLogId;
     
     /**
@@ -44,7 +44,7 @@ public class ParkLog extends AbstractLog implements Serializable
      */
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
     @JoinColumn(name = "park_id", columnDefinition="int comment '停车场Id'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Park park;
     
     @Override

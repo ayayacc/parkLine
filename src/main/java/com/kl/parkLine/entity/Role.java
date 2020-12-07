@@ -22,7 +22,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.enums.RoleType;
 
 import lombok.Getter;
@@ -60,7 +60,7 @@ public class Role extends AbstractEntity implements java.io.Serializable
     @ManyToMany(fetch=FetchType.LAZY, cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.REFRESH}) 
     @JoinTable(name="tr_role_menu", joinColumns={ @JoinColumn(name ="roleId") }, inverseJoinColumns={ @JoinColumn(name="menuId") })  
     @OrderBy("sortIdx asc")
-    @JsonIgnore 
+    @JSONField(serialize = false) 
     private Set<Menu> menus;
 
     @Override

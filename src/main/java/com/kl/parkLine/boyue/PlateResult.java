@@ -2,7 +2,7 @@ package com.kl.parkLine.boyue;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +11,7 @@ import lombok.Setter;
 public class PlateResult
 {
     //车牌号码
-    @JsonProperty("license")
+    @JSONField(name="license")
     private String plateNo;
     
     //车牌颜色
@@ -24,7 +24,7 @@ public class PlateResult
     private Integer triggerType;
     
     //识别结果车牌ID
-    @JsonProperty("plateid")
+    @JSONField(name="plateid")
     private Integer plateId;
     
     //截图

@@ -17,7 +17,7 @@ import javax.persistence.Table;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.enums.CarType;
 
 import lombok.Getter;
@@ -52,7 +52,7 @@ public class ParkStepFee implements java.io.Serializable
      */
     @ManyToOne(optional = false, fetch = FetchType.LAZY) 
     @JoinColumn(name = "park_id", columnDefinition="int comment '停车场Id'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     private Park park;
     
     /**

@@ -26,8 +26,8 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.CouponStatus;
 
@@ -74,7 +74,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      */
     @ManyToOne
     @JoinColumn(name = "coupon_def", columnDefinition="int comment '优惠券所属优惠券定义'")
-    @JsonIgnore
+    @JSONField(serialize = false)
     @ApiModelProperty(hidden = true)
     private CouponDef couponDef; 
     
@@ -174,7 +174,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
     /**
      * 拥有者
      */
-    @JsonIgnore
+    @JSONField(serialize = false)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner", nullable = false, columnDefinition="int comment '拥有者'")
     @ApiModelProperty("拥有者")
