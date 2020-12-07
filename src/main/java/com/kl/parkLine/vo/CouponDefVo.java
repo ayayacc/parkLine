@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -15,7 +14,6 @@ import lombok.Value;
 @Builder
 @Value
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("优惠券定义VO")
 public class CouponDefVo
 {

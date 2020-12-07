@@ -1,6 +1,5 @@
 package com.kl.parkLine.json;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.kl.parkLine.util.Const;
 
 import io.swagger.annotations.ApiModel;
@@ -11,7 +10,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @ApiModel("api通用返回数据")
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RestResult<T>
 {
     @ApiModelProperty("标识代码,0表示成功，非0表示出错")

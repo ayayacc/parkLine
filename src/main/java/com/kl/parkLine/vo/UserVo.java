@@ -2,7 +2,6 @@ package com.kl.parkLine.vo;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.kl.parkLine.enums.Gender;
 
 import io.swagger.annotations.ApiModel;
@@ -14,7 +13,6 @@ import lombok.Value;
 @Builder
 @Value
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("用户VO")
 public class UserVo
 {

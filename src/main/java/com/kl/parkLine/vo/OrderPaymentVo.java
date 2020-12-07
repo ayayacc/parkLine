@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
@@ -18,7 +17,6 @@ import lombok.Value;
 @Builder
 @Value
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("订单付款记录VO")
 public class OrderPaymentVo
 {

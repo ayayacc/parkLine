@@ -2,8 +2,6 @@ package com.kl.parkLine.vo;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -13,7 +11,6 @@ import lombok.Value;
 @Builder
 @Value
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("发票VO")
 public class InvoiceVo
 {

@@ -6,7 +6,6 @@ import java.util.Date;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kl.parkLine.enums.CouponStatus;
 
@@ -28,7 +27,6 @@ import lombok.Value;
 @Builder
 @Value
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @ApiModel("优惠券实例VO")
 public class CouponVo
 {
