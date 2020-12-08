@@ -141,7 +141,7 @@ public class CarController
      * @param auth 当前登录用户
      * @return 查询结果
      */
-    @GetMapping("/getParkLocation")
+    @GetMapping("/getParkLocation/{carId}")
     @ApiOperation(value="根据车牌号查找停车地点", notes="根据车牌号查找停车地点")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<ParkLocationVo> getParkLocation(@ApiParam(name="车辆Id") @PathVariable(name = "carId", required = true) Integer carId,

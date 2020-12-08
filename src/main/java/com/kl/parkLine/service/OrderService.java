@@ -919,6 +919,10 @@ public class OrderService
             //realAmt = amt-(payedAmt-realPayed)
             order.setRealUnpayedAmt(amt.subtract(order.getPayedAmt().subtract(order.getRealPayedAmt())));
         }
+        else
+        {
+            order.setRealUnpayedAmt(amt);
+        }
     }
     
     /**
@@ -1072,7 +1076,6 @@ public class OrderService
             realPayedAmt = BigDecimal.ZERO;
         }
         order.setRealPayedAmt(realPayedAmt.add(order.getRealUnpayedAmt()));
-        order.setRealUnpayedAmt(BigDecimal.ZERO);
         OrderPayment orderPayment = new OrderPayment();
         orderPayment.setRealAmt(order.getRealUnpayedAmt());
         orderPayment.setAmt(order.getAmt());
@@ -1081,6 +1084,11 @@ public class OrderService
         orderPayment.setPaymentType(PaymentType.wx);
         orderPayment.setPaymentTime(wxPayNotifyParam.getTimeEnd());
         order.setLastPaymentTime(wxPayNotifyParam.getTimeEnd());
+        order.setRealUnpayedAmt(BigDecimal.ZERO);
+        if (null == order.getOrderPayments())
+        {
+            order.setOrderPayments(new ArrayList<OrderPayment>());
+        }
         order.getOrderPayments().add(orderPayment);
         
         switch (order.getType())
@@ -1473,14 +1481,14 @@ public class OrderService
             return false;
         }
         
-        //从未付过款
-        if (null == order.getOutTimeLimit())  
+        //需要付款
+        if (order.getStatus().equals(OrderStatus.needToPay))  
         {
             return true;
         }
         
         //已经付过款，但是超过了出场时间限制(提前付款超时未出场)
-        if (now.after(order.getOutTimeLimit()))
+        if (order.getStatus().equals(OrderStatus.payed) && now.after(order.getOutTimeLimit()))
         {
             return true;
         }
@@ -1634,7 +1642,6 @@ public class OrderService
             realPayedAmt = BigDecimal.ZERO;
         }
         order.setRealPayedAmt(realPayedAmt.add(order.getRealUnpayedAmt()));
-        order.setRealUnpayedAmt(BigDecimal.ZERO);
         OrderPayment orderPayment = new OrderPayment();
         orderPayment.setUsedCoupon(coupon);
         orderPayment.setAmt(order.getAmt());
@@ -1643,7 +1650,12 @@ public class OrderService
         orderPayment.setPaymentType(PaymentType.qb);
         orderPayment.setPaymentTime(new Date());
         orderPayment.setWalletBalance(newBlance);
+        order.setRealUnpayedAmt(BigDecimal.ZERO);
         order.setLastPaymentTime(orderPayment.getPaymentTime());
+        if (null == order.getOrderPayments())
+        {
+            order.setOrderPayments(new ArrayList<OrderPayment>());
+        }
         order.getOrderPayments().add(orderPayment);
         
         //记录备注
