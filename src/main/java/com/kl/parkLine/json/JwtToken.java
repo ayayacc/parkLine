@@ -7,7 +7,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-
 @ApiModel("JwtToken")
 public class JwtToken
 {

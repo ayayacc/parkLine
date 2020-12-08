@@ -14,6 +14,8 @@ import java.util.Set;
 import org.joda.time.DateTime;
 import org.joda.time.Days;
 import org.joda.time.Minutes;
+import org.joda.time.Period;
+import org.joda.time.PeriodType;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.w3c.dom.events.EventException;
 
 import com.kl.parkLine.component.AliYunCmpt;
 import com.kl.parkLine.component.Utils;
@@ -53,9 +56,9 @@ import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PaymentType;
 import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.exception.BusinessException;
-import com.kl.parkLine.exception.EventException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.ChargeWalletParam;
+import com.kl.parkLine.json.EventResult;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.TimePoint;
@@ -365,25 +368,75 @@ public class OrderService
      * @throws BusinessException 
      * @throws EventException 
      */
-    public Order processEvent(Event event) throws BusinessException, EventException, NoSuchFieldException, SecurityException, ParseException
+    public EventResult processEvent(Event event) throws BusinessException, NoSuchFieldException, ParseException
     {
-        Order order = null;
+        EventResult eventResult = null;
         switch (event.getType())
         {
             case in:  //入场事件,创建订单
-                order = carIn(event);
+                eventResult = carIn(event);
                 break;
             case complete: //停车完成,订单计费,完成订单
-                order = carComplete(event);
+                eventResult = carComplete(event);
                 break;
             case cancel:
-                order = eventCancel(event);
+                eventResult = eventCancel(event);
                 break;
             default:
                 break;
         }
         
-        return order;
+        return eventResult;
+    }
+    
+    /**
+     * 处理道闸设备轮询
+     * @param deviceSn 道闸设备编号
+     * @return
+     * @throws BusinessException 
+     */
+    public EventResult processComet(String deviceSn) throws BusinessException
+    {
+        Date now = new Date();
+        EventResult eventResult = EventResult.notOpen();
+        Order order = findLastNotOutByOutDeviceSn(deviceSn); //找到最近的车辆未开闸出场订单
+        if (null == order) //未找到订单，不开闸
+        {
+            return EventResult.notOpen();
+        }
+        else 
+        {
+            if (order.getStatus().equals(OrderStatus.noNeedToPay)) //无需付款，开闸
+            {
+                eventResult = EventResult.open(String.format("一路顺风:%s", order.getCar().getCarNo()));
+            }
+            else if (order.getStatus().equals(OrderStatus.payed)) //已经支付
+            {
+                //未超过出场时限
+                if (!now.after(order.getOutTimeLimit()))
+                {
+                    eventResult = EventResult.open(String.format("已支付, 一路顺风:%s", order.getCar().getCarNo()));
+                }
+            }
+        }
+        
+        //如果开闸
+        if (eventResult.getOpen())
+        {
+            //停车场空位+1
+            Park park = order.getPark();
+            Integer newAvailableCnt = park.getAvailableCnt() + 1;
+            park.setChangeRemark(String.format("停车完成, 停车场可用车位变化: %d --> %d", 
+                    park.getAvailableCnt(), newAvailableCnt));
+            park.setAvailableCnt(newAvailableCnt);
+            parkService.save(park);
+            
+            //订单已经出场
+            order.setIsOut(true);
+            //保存
+            this.save(order);
+        }
+        return eventResult;
     }
     
     
@@ -393,7 +446,7 @@ public class OrderService
      * @throws BusinessException 
      * @throws EventException 
      */
-    public Order carIn(Event event) throws BusinessException, EventException 
+    public EventResult carIn(Event event) throws BusinessException 
     {
         //停车场
         Park park = null;
@@ -413,21 +466,18 @@ public class OrderService
         //检查是否在黑名单
         if (parkCarItemService.existsInBlackList(park, car))
         {
-            throw new EventException("黑名单车辆");
+            return EventResult.notOpen(String.format("%s 黑名单车辆", event.getPlateNo()));
         }
         //检查车辆是否存在待交费订单
-        if (park.getIsForbidenOwe())
+        if (park.getIsForbidenOwe()
+                &&orderDao.existsByTypeAndCarAndStatus(OrderType.parking, car, OrderStatus.needToPay))
         {
-            if (orderDao.existsByTypeAndCarAndStatus(OrderType.parking, car, OrderStatus.needToPay))
-            {
-                throw new EventException("欠费车辆");
-            }
+            return EventResult.notOpen(String.format("%s 欠费车辆", event.getPlateNo()));
         }
-        
         //停车场无空位
         if (0 >= park.getAvailableCnt())
         {
-            throw new EventException("无空位");
+            return EventResult.notOpen("车位已满");
         }
         
         Order order = Order.builder()
@@ -453,7 +503,7 @@ public class OrderService
         
         //保存 订单
         this.save(order, event);
-        return order;
+        return EventResult.open(String.format("欢迎光临:%s", event.getPlateNo()));
     }
     
     /**
@@ -464,8 +514,10 @@ public class OrderService
      * @throws NoSuchFieldException 
      * @throws ParseException 
      */
-    public Order carComplete(Event event) throws BusinessException, NoSuchFieldException, SecurityException, ParseException
+    public EventResult carComplete(Event event) throws BusinessException, NoSuchFieldException, SecurityException, ParseException
     {
+        Date now = new Date();
+        EventResult eventResult = new EventResult();
         Order order = null;
         if (null != event.getActId()) //有事件Id，高位摄像头停车场
         {
@@ -478,9 +530,10 @@ public class OrderService
             //找到最近的入场订单
             order = orderDao.findTopByPlateIdAndStatusOrderByInTimeDesc(event.getPlateId(), OrderStatus.in);
         }
-        if (null == order)
+        
+        if (null == order) //无入场记录,开闸
         {
-            return null;
+            return EventResult.open(String.format("%s无入场", event.getPlateNo())) ;
         }
 
         //设置出场抓拍设备
@@ -492,35 +545,119 @@ public class OrderService
         //设置出场时间
         order.setOutTime(event.getTimeOut());
         
-        //订单未提前支付
+        //订单未支付
         if (!order.getStatus().equals(OrderStatus.payed))
         {
             //计算金额以及设置出场限制
             this.setAmtAndOutTimeLimit(order);
             
             //如果订单价格是0，则直接变成无需支付状态
-            if (order.getAmt().equals(BigDecimal.ZERO))
+            if (order.getAmt().equals(BigDecimal.ZERO))  //无需付款,直接开闸
             {
                 order.setStatus(OrderStatus.noNeedToPay);
+                eventResult = EventResult.open(String.format("一路顺风:%s", event.getPlateNo()));
             }
-            else
+            else  //产生费用
             {
-                order.setStatus(OrderStatus.needToPay);
+                DateTime inTime = new DateTime(order.getInTime());
+                DateTime outTime = new DateTime(order.getOutTime());
+                Period period = new Period(inTime, outTime, PeriodType.time());
+                //用户开通了无感支付
+                if (null!=order.getOwner() && order.getOwner().getIsQuickPay())
+                {
+                    try
+                    {
+                        this.quickPayByWallet(order); //无感支付, 钱包支付订单
+                        eventResult = EventResult.open(String.format("停车时长%d小时%d分，无感支付%.2f元", 
+                                period.getHours(), period.getMinutes(), order.getAmt().floatValue()));
+                    }
+                    catch (Exception e)
+                    {
+                        OrderLog log = OrderLog.builder().order(order).build();
+                        log.setRemark(String.format("%s, 无感支付失败: %s", order.getChangeRemark(), e.getMessage()));
+                        order.getLogs().add(log);
+                        order.setStatus(OrderStatus.needToPay);
+                        eventResult = EventResult.notOpen(String.format("停车时长%d小时%d分，请交费%.2f元", 
+                                period.getHours(), period.getMinutes(), order.getAmt().floatValue()));
+                    }
+                }
+                else //用户未开通无感支付
+                {
+                    order.setStatus(OrderStatus.needToPay);
+                    eventResult = EventResult.notOpen(String.format("停车时长%d小时%d分,请交费%.2f元", 
+                            period.getHours(), period.getMinutes(), order.getAmt().floatValue()));
+                }
+            }
+        }
+        else //订单已经支付
+        {
+            //检查是否已经超过出场限制
+            if (!now.after(order.getOutTimeLimit())) //未超过时间限制
+            {
+                eventResult = EventResult.open(String.format("已支付，一路顺风:%s", event.getPlateNo()));
+            }
+            else //超过离场时间限制
+            {
+                DateTime startTime = new DateTime(order.getOutTimeLimit());
+                DateTime endTime = new DateTime(now);
+                Period period = new Period(startTime, endTime, PeriodType.time());
+                //计算需要补缴的费用
+                resetAmtAndOutTimeLimit(order);
+                if (order.getStatus().equals(OrderStatus.needToPay))  //产生新的费用
+                {
+                    BigDecimal unPayedAmt = order.getAmt().subtract(order.getPayedAmt());
+                    //用户开通了无感支付
+                    if (order.getOwner().getIsQuickPay())
+                    {
+                        try
+                        {
+                            this.quickPayByWallet(order); //无感支付, 钱包支付订单
+                            eventResult = EventResult.open(String.format("超时%d小时%d分, 无感支付%.2f元", 
+                                    period.getHours(), period.getMinutes(), unPayedAmt.floatValue()));
+                        }
+                        catch (Exception e)
+                        {
+                            OrderLog log = OrderLog.builder().order(order).build();
+                            log.setRemark(String.format("%s, 无感支付失败: %s", order.getChangeRemark(), e.getMessage()));
+                            order.getLogs().add(log);
+                            order.setStatus(OrderStatus.needToPay);
+                            eventResult = EventResult.notOpen(String.format("停车时长%d小时%d分, 请补交费%.2f元", 
+                                    period.getHours(), period.getMinutes(), unPayedAmt.floatValue()));
+                        }
+                    }
+                    else //用户未开通无感支付
+                    {
+                        order.setStatus(OrderStatus.needToPay);
+                        eventResult = EventResult.notOpen(String.format("超时%d小时%d分,请补交费%.2f元", 
+                                period.getHours(), period.getMinutes(), unPayedAmt.floatValue()));
+                    }
+                }
+                else  //超时未产生新的费用
+                {
+                    eventResult = EventResult.open(String.format("已支付，一路顺风:%s", event.getPlateNo()));
+                }
             }
         }
         
-        //停车场空位+1
-        Park park = order.getPark();
-        Integer newAvailableCnt = park.getAvailableCnt() + 1;
-        park.setChangeRemark(String.format("停车完成, 停车场可用车位变化: %d --> %d, 事件: %s", 
-                park.getAvailableCnt(), newAvailableCnt, event.getGuid()));
-        park.setAvailableCnt(newAvailableCnt);
-        parkService.save(park);
+        //如果开闸
+        if (eventResult.getOpen())
+        {
+            //停车场空位+1
+            Park park = order.getPark();
+            Integer newAvailableCnt = park.getAvailableCnt() + 1;
+            park.setChangeRemark(String.format("停车完成, 停车场可用车位变化: %d --> %d, 事件: %s", 
+                    park.getAvailableCnt(), newAvailableCnt, event.getGuid()));
+            park.setAvailableCnt(newAvailableCnt);
+            parkService.save(park);
+            
+            //订单已经出场
+            order.setIsOut(true);
+        }
 
         //保存
         this.save(order, event);
         
-        return order;
+        return eventResult;
     }
     
     /**
@@ -529,13 +666,13 @@ public class OrderService
      * @throws SecurityException 
      * @throws NoSuchFieldException 
      */
-    public Order eventCancel(Event event) throws BusinessException, NoSuchFieldException, SecurityException
+    public EventResult eventCancel(Event event) throws BusinessException, NoSuchFieldException, SecurityException
     {
         //涉及到的订单
         Order order = orderDao.findOneByActId(event.getActId());
         if (null == order)
         {
-            return null;
+            return EventResult.notOpen(String.format("无效事件Id: %s", event.getActId()));
         }
         
         //取消targetEvent
@@ -543,7 +680,7 @@ public class OrderService
         Event targetEvent = eventService.findOneByGuidAndParkCode(event.getTargetGuid(), park.getCode());
         if (null == targetEvent) //未找到被取消的事件
         {
-            return null;
+            return EventResult.notOpen(String.format("无效事件Id: %s", event.getActId()));
         }
         
         //如果订单已经付款以及后续状态，返回失败
@@ -552,7 +689,7 @@ public class OrderService
             String msg = String.format("停车订单【%s】处于【%s】状态, 无法撤销", 
                     order.getCode(), order.getStatus().getText());
             event.setRemark(msg);
-            throw new BusinessException(msg);
+            return EventResult.notOpen(msg);
         }
         
         // 取消的是入场事件，取消订单
@@ -562,7 +699,6 @@ public class OrderService
             order.setAmt(BigDecimal.ZERO);
             
             //当前订单状态是入场，停车场空位数量+1
-            
             if (OrderStatus.in.getValue() == order.getStatus().getValue())
             {
                 Integer newAvailableCnt = park.getAvailableCnt() + 1;
@@ -605,7 +741,7 @@ public class OrderService
         //禁用目标事件
         targetEvent.setEnabled("N");
         eventService.save(targetEvent);
-        return order;
+        return EventResult.open("处理成功");
     }
     
     /**

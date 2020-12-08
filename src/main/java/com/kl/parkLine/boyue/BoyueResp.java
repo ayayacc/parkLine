@@ -23,10 +23,4 @@ public class BoyueResp
      * 显示屏内容
      */
     private String content;
-    
-    /**
-     * 是否付款
-     */
-    @JSONField(name="is_pay")
-    private Boolean isPay;
 }
