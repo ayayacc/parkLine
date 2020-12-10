@@ -128,7 +128,7 @@ public class UserController
     @GetMapping("/my/setQuickPay")
     @ApiOperation(value="设置快捷支付", notes="设置快捷支付")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<BigDecimal> setQuickPay(Authentication auth, @ApiParam(name="是否开通", required=true) @RequestParam(value="isQuickPay") Boolean isQuickPay)
+    public RestResult<Object> setQuickPay(Authentication auth, @ApiParam(name="是否开通", required=true) @RequestParam(value="isQuickPay") Boolean isQuickPay)
     {
         userService.setQuickPay(auth.getName(), isQuickPay);
         return RestResult.success();

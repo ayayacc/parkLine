@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
+import javax.annotation.Resource;
+
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +29,7 @@ import com.aliyuncs.exceptions.ServerException;
 import com.aliyuncs.ocr.model.v20191230.RecognizeDrivingLicenseRequest;
 import com.aliyuncs.ocr.model.v20191230.RecognizeDrivingLicenseResponse;
 import com.aliyuncs.ocr.model.v20191230.RecognizeDrivingLicenseResponse.Data.FaceResult;
+import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.DrivingLicenseVo;
 
 @Component
@@ -35,8 +38,11 @@ public class AliYunCmpt
     @Autowired
     private OSS ossClient;
     
-    @Autowired
-    private DefaultAcsClient acsClient;
+    @Resource(name="ascClientSh")
+    private DefaultAcsClient ascClientSh;
+    
+    @Resource(name="ascClientHz")
+    private DefaultAcsClient ascClientHz;
     
     @Autowired
     private FileUtils fileUtils;
@@ -163,7 +169,7 @@ public class AliYunCmpt
         RecognizeDrivingLicenseRequest req = new RecognizeDrivingLicenseRequest();
         req.setSide("face"); //首页
         req.setImageURL(imgUrl);
-        RecognizeDrivingLicenseResponse resp = acsClient.getAcsResponse(req);
+        RecognizeDrivingLicenseResponse resp = ascClientSh.getAcsResponse(req);
         FaceResult faceResult = resp.getData().getFaceResult();
         DrivingLicenseVo drivingLicenseVo = DrivingLicenseVo.builder().address(faceResult.getAddress())
             .engineNumber(faceResult.getEngineNumber())
@@ -178,4 +184,36 @@ public class AliYunCmpt
         return drivingLicenseVo;
     }
     
+    /**
+     * 发送短信
+     * @param mobile 手机号码
+     * @param txt 文字信息
+     * @throws BusinessException 
+     */
+    public void sendValidCode(String mobile, String code) throws BusinessException 
+    {
+        //TODO: 真实的发送短信
+        /*//组装请求对象-具体描述见控制台-文档部分内容
+        SendSmsRequest request = new SendSmsRequest();
+        //必填:待发送手机号
+        request.setPhoneNumbers(mobile);
+        //必填:短信签名-可在短信控制台中找到
+        request.setSignName("");
+        //必填:短信模板-可在短信控制台中找到
+        request.setTemplateCode("");
+        //可选:模板中的变量替换JSON串,如模板内容为"您的验证码为${code}"...时,此处的值为
+        request.setTemplateParam("{\"code\":\""+code+"\"}");
+
+        try 
+        {
+            SendSmsResponse sendSmsResponse = ascClientHz.getAcsResponse(request);
+            if (!sendSmsResponse.getCode().equalsIgnoreCase("OK"))
+            {
+                throw new BusinessException(sendSmsResponse.getMessage());
+            }
+        } catch (Exception e) 
+        {
+            throw new BusinessException(String.format("验证码发送失败: %s, 请稍后再试", e.getMessage()));
+        } */
+    }
 }

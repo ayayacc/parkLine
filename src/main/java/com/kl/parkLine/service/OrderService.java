@@ -54,7 +54,6 @@ import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PaymentType;
-import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.ChargeWalletParam;
@@ -221,7 +220,7 @@ public class OrderService
     {
         for (OrderLog log : order.getLogs())
         {
-            if (log.getEvent().getType().equals(EventType.out))
+            if (null!=log.getEvent() && log.getEvent().getType().equals(EventType.out))
             {
                 return true;
             }
@@ -462,22 +461,21 @@ public class OrderService
         
         //车辆信息
         Car car = carService.getCar(event.getPlateNo(), event.getPlateColor());
-        
-        //检查是否在黑名单
-        if (parkCarItemService.existsInBlackList(park, car))
-        {
-            return EventResult.notOpen(String.format("%s 黑名单车辆", event.getPlateNo()));
-        }
-        //检查车辆是否存在待交费订单
-        if (park.getIsForbidenOwe()
-                &&orderDao.existsByTypeAndCarAndStatus(OrderType.parking, car, OrderStatus.needToPay))
-        {
-            return EventResult.notOpen(String.format("%s 欠费车辆", event.getPlateNo()));
-        }
+
         //停车场无空位
         if (0 >= park.getAvailableCnt())
         {
             return EventResult.notOpen("车位已满");
+        }
+        
+        //车辆不在白名单中才检查黑名单情况,也就是说，如果车辆在白名单中，则直接放行
+        if (!parkCarItemService.existsInWhiteList(park, car))
+        {
+            //检查是否在黑名单
+            if (parkCarItemService.existsInBlackList(park, car))
+            {
+                return EventResult.notOpen(String.format("%s 黑名单车辆", event.getPlateNo()));
+            }
         }
         
         Order order = Order.builder()
@@ -504,6 +502,15 @@ public class OrderService
         //保存 订单
         this.save(order, event);
         return EventResult.open(String.format("欢迎光临:%s", event.getPlateNo()));
+    }
+    
+    /**
+     * 检查是否存在订单
+     * @return
+     */
+    public Boolean existsByTypeAndCarAndStatus(OrderType orderType, Car car, OrderStatus orderStatus)
+    {
+        return orderDao.existsByTypeAndCarAndStatus(OrderType.parking, car, OrderStatus.needToPay);
     }
     
     /**
@@ -559,6 +566,7 @@ public class OrderService
             }
             else  //产生费用
             {
+                order.setStatus(OrderStatus.needToPay);
                 DateTime inTime = new DateTime(order.getInTime());
                 DateTime outTime = new DateTime(order.getOutTime());
                 Period period = new Period(inTime, outTime, PeriodType.time());
@@ -838,13 +846,6 @@ public class OrderService
         Park park = order.getPark();
         Car car = order.getCar();
         
-        //白牌车免费
-        if (park.getIsWhitePlateFree() && car.getPlateColor().equals(PlateColor.white))
-        {
-            order.setAmt(BigDecimal.ZERO);
-            order.setRealUnpayedAmt(BigDecimal.ZERO);
-            return;
-        }
         //白名单免费
         if (parkCarItemService.existsInWhiteList(park, car))
         {
@@ -1621,10 +1622,10 @@ public class OrderService
         //设置coupon
         if (null != coupon)
         {
-            //消耗优惠券
-            couponService.useCoupon(coupon, order.getCode());
             //设置订单实付款金额
             order.setRealUnpayedAmt(calRealAmt(order, coupon));
+            //消耗优惠券
+            couponService.useCoupon(coupon, order);
             order.appedChangeRemark(String.format("使用优惠券: %s; ", coupon.getCode()));
         }
 

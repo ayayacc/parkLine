@@ -170,7 +170,7 @@ public class CouponService
     public Coupon findBest4Order(Order order)
     {
         //一张订单只能使用一次优惠券
-        if (usedCoupon(order))
+        if (hasUsedCoupon(order))
         {
             return null;
         }
@@ -191,7 +191,7 @@ public class CouponService
      * @return
      * @throws BusinessException 
      */
-    public void useCoupon(Coupon coupon, String orderCode) throws BusinessException
+    public void useCoupon(Coupon coupon, Order order) throws BusinessException
     {
         //检查优惠券状态
         if (!coupon.getStatus().equals(CouponStatus.valid))
@@ -205,12 +205,13 @@ public class CouponService
         
         //优惠券使用时间
         coupon.setUsedDate(new Date());
+        coupon.setUsedAmt(order.getAmt().subtract(order.getRealUnpayedAmt()));
          
         //更新优惠券定义
         CouponDef couponDef = coupon.getCouponDef();
         Integer usedCnt = couponDef.getUsedCnt() + 1;
         couponDef.setChangeRemark(String.format("优惠券: %s 被订单: %s 使用, 使用数量: %d --> %d",
-                coupon.getCode(), orderCode, couponDef.getUsedCnt(), usedCnt));
+                coupon.getCode(), order.getCode(), couponDef.getUsedCnt(), usedCnt));
         couponDef.setUsedCnt(usedCnt);
         
         couponDefService.save(couponDef);
@@ -225,8 +226,12 @@ public class CouponService
      * @param order
      * @return
      */
-    private Boolean usedCoupon(Order order)
+    private Boolean hasUsedCoupon(Order order)
     {
+        if (null == order.getOrderPayments())
+        {
+            return false;
+        }
         for (OrderPayment orderPayment : order.getOrderPayments())
         {
             if (null != orderPayment.getUsedCoupon())
@@ -244,7 +249,7 @@ public class CouponService
     public Page<CouponVo> available4Order(Order order, Pageable pageable) throws BusinessException
     {
         //一张订单只能使用一次优惠券
-        if (usedCoupon(order))
+        if (hasUsedCoupon(order))
         {
             return new PageImpl<>(null, pageable, 0);
         }

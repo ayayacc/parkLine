@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kl.parkLine.component.SmsCmpt;
+import com.kl.parkLine.component.AliYunCmpt;
 import com.kl.parkLine.dao.ISmsCodeDao;
 import com.kl.parkLine.entity.SmsCode;
 import com.kl.parkLine.exception.BusinessException;
@@ -26,7 +26,7 @@ public class SmsCodeService
     private ISmsCodeDao smsCodeDao;
     
     @Autowired
-    private SmsCmpt smsCmpt;
+    private AliYunCmpt aliYunCmpt;
     
     /**
      * 
@@ -44,12 +44,13 @@ public class SmsCodeService
         if (null != lastSmsCode)
         {
             //校验是否频繁发送
-            DateTime lastSendDate = new DateTime(lastSmsCode.getCreatedDate());
+            //TODO: 打开频率校验
+            /*DateTime lastSendDate = new DateTime(lastSmsCode.getCreatedDate());
             DateTime resendLine = lastSendDate.plusMinutes(Const.VALID_CODE_MIN_INTERVAL); //能够重新发送的最早时间
             if (resendLine.isAfterNow()) //未到可以重发时间
             {
                 throw new BusinessException("请求验证码过于频繁");
-            }
+            }*/
             
             //禁用已经存在的验证码
             Set<SmsCode> smsCodes = smsCodeDao.findByMobileAndEnabled(mobile, "Y");
@@ -72,7 +73,7 @@ public class SmsCodeService
         smsCodeDao.save(newCode);
         
         //发送消息
-        smsCmpt.sendSms(mobile, String.format("【停车线】您的验证码:%s，感谢使用", code));
+        aliYunCmpt.sendValidCode(mobile, code.toString());
         
         return newCode;
     }

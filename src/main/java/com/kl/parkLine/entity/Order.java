@@ -79,7 +79,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      * 订单类型: 停车订单/月票订单/优惠券激活订单/钱包充值订单
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable=false, columnDefinition="varchar(255) comment '订单类型'")
+    @Column(name = "type", nullable=false, columnDefinition="varchar(255) comment '订单类型:parking(停车订单)/monthlyTicket(月票)/coupon(优惠券激活)/walletIn(钱包充值)'")
     private OrderType type;
     
     /*停车订单特有字段*/

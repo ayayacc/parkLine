@@ -159,16 +159,16 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     private List<ParkCarItem> blackList;
     
     /**
-     * 白色车牌是否免费
+     * 白名单是否包含白色车牌
      */
-    @Column(name = "is_white_plate_free", nullable = false, columnDefinition="bool default true comment '白色车牌是否免费'")
-    private Boolean isWhitePlateFree;
+    @Column(name = "white_list_include_white_plate", nullable = false, columnDefinition="bool default true comment '白色车牌是否免费'")
+    private Boolean whiteListIncludeWhitePlate;
     
     /**
-     * 是否禁止欠费车辆
+     * 黑名单是否包含欠费车辆
      */
-    @Column(name = "is_forbiden_owe", nullable = false, columnDefinition="bool default true comment '是否禁止欠费车辆'")
-    private Boolean isForbidenOwe;
+    @Column(name = "black_list_include_owe", nullable = false, columnDefinition="bool default true comment '黑名单是否包含欠费车辆'")
+    private Boolean blackListIncludeOwe;
 
     /**
      * 燃油车固定计费规则

@@ -30,10 +30,18 @@ public class AliyunConfig
         return ossClient;
     }
     
-    @Bean
-    public DefaultAcsClient aliYunAcsClient()
+    @Bean(name="ascClientSh")
+    public DefaultAcsClient aliYunAcsShClient()
     {
         DefaultProfile profile = DefaultProfile.getProfile("cn-shanghai", accessKey, secretKey);
+        DefaultAcsClient acsClient = new DefaultAcsClient(profile);
+        return acsClient;
+    }
+    
+    @Bean(name="ascClientHz")
+    public DefaultAcsClient aliYunAcsHzClient()
+    {
+        DefaultProfile profile = DefaultProfile.getProfile("cn-hangzhou", accessKey, secretKey);
         DefaultAcsClient acsClient = new DefaultAcsClient(profile);
         return acsClient;
     }
@@ -41,6 +49,6 @@ public class AliyunConfig
     @Bean
     public FileUtils fileUtils() throws ClientException 
     {
-        return FileUtils.getInstance(accessKey,secretKey);
+        return FileUtils.getInstance(accessKey, secretKey);
     }
 }

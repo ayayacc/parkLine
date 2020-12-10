@@ -18,7 +18,6 @@ public class TimePoint implements Comparable<TimePoint>
     @Override
     public int compareTo(TimePoint o)
     {
-        // TODO Auto-generated method stub
         return this.getDateTime().compareTo(o.dateTime);
     }
 }
