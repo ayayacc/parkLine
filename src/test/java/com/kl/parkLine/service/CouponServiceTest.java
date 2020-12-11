@@ -7,6 +7,7 @@ import java.text.ParseException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kl.parkLine.entity.Coupon;
@@ -30,4 +31,10 @@ public class CouponServiceTest
         assertEquals(coupon.getCode(), "YHJ1606120006999");
     }
     
+    @Test
+    @Rollback(true)
+    public void testUpdateExpiredStatus()
+    {
+        couponService.updateExpiredStatus();
+    }
 }

@@ -15,8 +15,8 @@ public class ScheduleTask
     /**
      * 每天00:00:01秒执行,更新优惠券以及优惠券定义过期状态
      */
-    @Scheduled(cron = "1 0 0 * * ? *")
-    public void test()
+    @Scheduled(cron = "1 00 00 * * ?")
+    public void updateCouponStatus()
     {
         //刷新优惠券状态
         couponService.updateExpiredStatus();
