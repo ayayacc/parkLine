@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @ApiModel("短信登录参数")
-public class SmsLoginParam
+public class SmsCheckParam
 {
     @ApiModelProperty("手机号")
     private String mobile;

@@ -19,6 +19,7 @@ import com.kl.parkLine.entity.User;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.MyCounts;
 import com.kl.parkLine.json.RestResult;
+import com.kl.parkLine.json.SmsCheckParam;
 import com.kl.parkLine.service.UserService;
 import com.kl.parkLine.vo.UserVo;
 
@@ -132,5 +133,30 @@ public class UserController
     {
         userService.setQuickPay(auth.getName(), isQuickPay);
         return RestResult.success();
+    }
+    
+    @PostMapping("/my/bindMobile")
+    @ApiOperation(value="绑定手机号", notes="绑定手机号")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Object> checkValidCode(Authentication auth, @RequestBody SmsCheckParam smsCheckParam)
+    {
+        try
+        {
+            userService.checkValidCode(auth.getName(), smsCheckParam);
+            return RestResult.success();
+        }
+        catch (Exception e)
+        {
+            return RestResult.success(String.format("短信验证码失败: %s", e.getMessage()));
+        }
+        
+    }
+    
+    @GetMapping("/isMobileBinded")
+    @ApiOperation(value="检查用户是否绑定了手机号", notes="检查用户是否绑定了手机号")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<Boolean> isMobileProvided(Authentication auth)
+    {
+        return RestResult.success(userService.isMobileProvided(auth.getName()));
     }
 }

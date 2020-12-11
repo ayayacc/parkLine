@@ -1,6 +1,7 @@
 package com.kl.parkLine.dao;
 
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,4 +24,5 @@ public interface ICouponDao extends JpaRepository<Coupon, Integer>, QuerydslPred
     public boolean existsByCouponDefAndOwnerAndStatus(CouponDef couponDef, User owner, CouponStatus status);
     public Coupon findOneByCouponId(Integer couponDefId);
     public Page<CouponVo> findByOwnerAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndApplicableParksContainsOrApplicableParksIsNullOrderByDiscountAscEndDateAsc(User owner, CouponStatus status, Date startDate, Date endDate, Park park, Pageable pageable);
+    public List<Coupon> findByStatusAndEndDateLessThan(CouponStatus status, Date endDate);
 }

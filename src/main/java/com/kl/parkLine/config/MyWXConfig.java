@@ -17,6 +17,9 @@ public class MyWXConfig implements WXPayConfig
     @Value("${wx.app.secret}")
     private String appSecret;
     
+    @Value("${wx.app.mch.id}")
+    private String mchId;
+    
     @Override
     public String getAppID()
     {
@@ -26,8 +29,7 @@ public class MyWXConfig implements WXPayConfig
     @Override
     public String getMchID()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return mchId;
     }
 
     @Override
@@ -39,8 +41,7 @@ public class MyWXConfig implements WXPayConfig
     @Override
     public InputStream getCertStream()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return getClass().getClassLoader().getResourceAsStream("apiclient_cert.p12");
     }
 
     @Override

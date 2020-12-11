@@ -24,6 +24,8 @@ import com.aliyun.oss.model.ObjectMetadata;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
 import com.aliyuncs.DefaultAcsClient;
+import com.aliyuncs.dysmsapi.model.v20170525.SendSmsRequest;
+import com.aliyuncs.dysmsapi.model.v20170525.SendSmsResponse;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
 import com.aliyuncs.ocr.model.v20191230.RecognizeDrivingLicenseRequest;
@@ -58,7 +60,10 @@ public class AliYunCmpt
     
     @Value("${cloud.aliyun.oss.endpoint}")
     private String endpoint;
-
+    
+    @Value("${spring.profiles.active}")
+    private String active;
+    
     /**
      * 将输入流上传到OSS
      * @param inputStream 输入流
@@ -192,15 +197,20 @@ public class AliYunCmpt
      */
     public void sendValidCode(String mobile, String code) throws BusinessException 
     {
-        //TODO: 真实的发送短信
-        /*//组装请求对象-具体描述见控制台-文档部分内容
+        if (active.equalsIgnoreCase("dev"))
+        {
+            //开发环境，不真实的发短信
+            return;
+        }
+        
+        //组装请求对象-具体描述见控制台-文档部分内容
         SendSmsRequest request = new SendSmsRequest();
         //必填:待发送手机号
         request.setPhoneNumbers(mobile);
         //必填:短信签名-可在短信控制台中找到
-        request.setSignName("");
+        request.setSignName("科联停车线");
         //必填:短信模板-可在短信控制台中找到
-        request.setTemplateCode("");
+        request.setTemplateCode("SMS_205770229");
         //可选:模板中的变量替换JSON串,如模板内容为"您的验证码为${code}"...时,此处的值为
         request.setTemplateParam("{\"code\":\""+code+"\"}");
 
@@ -214,6 +224,6 @@ public class AliYunCmpt
         } catch (Exception e) 
         {
             throw new BusinessException(String.format("验证码发送失败: %s, 请稍后再试", e.getMessage()));
-        } */
+        } 
     }
 }

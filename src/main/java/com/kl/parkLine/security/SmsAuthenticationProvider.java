@@ -1,7 +1,5 @@
 package com.kl.parkLine.security;
 
-import java.util.Date;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
@@ -9,7 +7,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.kl.parkLine.entity.SmsCode;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.service.SmsCodeService;
 import com.kl.parkLine.service.UserService;
@@ -35,23 +32,14 @@ public class SmsAuthenticationProvider implements AuthenticationProvider
         String mobile = smsAuthenticationToken.getName();
         String validCode = smsAuthenticationToken.getValidCode();
         
-        //找到验证码
-        SmsCode smsCode = smsCodeService.findLastByMobile(mobile);
-        if (null == smsCode)
+        //校验验证码
+        try
         {
-            throw new SmsAuthenticationException("无效验证码");
+            smsCodeService.checkValidCode(mobile, validCode);
         }
-        
-        //比对验证码有效期和值
-        Date now = new Date();
-        if (smsCode.getExpierTime().before(now))
+        catch (Exception e)
         {
-            throw new SmsAuthenticationException("验证码已过期，请重新获取");
-        }
-        
-        if (!smsCode.getCode().equalsIgnoreCase(validCode))
-        {
-            throw new SmsAuthenticationException("验证码不正确");
+            throw new SmsAuthenticationException(e.getMessage());
         }
 
         //根据用户手机号查询用户

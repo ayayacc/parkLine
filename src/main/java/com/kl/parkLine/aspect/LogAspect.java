@@ -13,7 +13,7 @@ public class LogAspect
 {
     private final static Logger logger = LoggerFactory.getLogger(LogAspect.class);
      
-    @Pointcut("execution(* com.kl.parkLine.controller..*.*(..))")
+    @Pointcut("execution(* com.kl.parkLine.controller..*.*(..)) && !execution(* com.kl.parkLine.controller.BoyueController.comet(..)) ")
     public void log()
     {}
     

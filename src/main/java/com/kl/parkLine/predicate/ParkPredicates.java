@@ -29,23 +29,6 @@ public class ParkPredicates
             where.and(qPark.name.containsIgnoreCase(parkVo.getName()));
         }
         
-        //区分用户权限
-        where.and(roleFilter(user));
-        
-        return where;
-    }
-    
-    //TODO:角色过滤，停车场管理员只能看到自己的停车场
-    private Predicate roleFilter(User user) 
-    {
-        BooleanBuilder where = new BooleanBuilder();
-        /*QPark qPark = QPark.park;
-        
-        if (user.hasRole(RoleCode.PARK_ADMIN))
-        {
-            where.and(qPark.car.in(user.getCars()));
-        }*/
-        
         return where;
     }
 }

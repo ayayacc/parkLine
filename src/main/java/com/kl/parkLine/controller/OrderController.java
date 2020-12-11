@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.github.wxpay.sdk.WXPay;
 import com.github.wxpay.sdk.WXPayUtil;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Order;
@@ -54,6 +56,12 @@ public class OrderController
     
     @Autowired
     private HttpServletRequest request;
+    
+    @Value("${spring.profiles.active}")
+    private String active;
+    
+    @Autowired
+    private WXPay wxPay;
     
     /**
      * 查询月票价格
@@ -302,12 +310,14 @@ public class OrderController
             String notifyData = sb.toString();
             Map<String, String> notifyMap = WXPayUtil.xmlToMap(notifyData);  // 转换成map
             
-            //TODO: 打开校验
-            /*if (!wxPay.isPayResultNotifySignatureValid(notifyMap)) 
+            if (active.equalsIgnoreCase("pro"))
             {
-                // 签名错误，如果数据里没有sign字段，也认为是签名错误
-                throw new Exception("签名错误");
-            }*/
+                if (!wxPay.isPayResultNotifySignatureValid(notifyMap)) 
+                {
+                    // 签名错误，如果数据里没有sign字段，也认为是签名错误
+                    throw new Exception("签名错误");
+                }
+            }
             
             // 签名正确,进行处理
             String return_code = (String) notifyMap.get("return_code");

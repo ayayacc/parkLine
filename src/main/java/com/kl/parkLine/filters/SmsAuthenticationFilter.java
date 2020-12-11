@@ -14,7 +14,7 @@ import org.springframework.security.web.authentication.AbstractAuthenticationPro
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.alibaba.fastjson.JSONObject;
-import com.kl.parkLine.json.SmsLoginParam;
+import com.kl.parkLine.json.SmsCheckParam;
 import com.kl.parkLine.security.SmsAuthenticationToken;
 
 public class SmsAuthenticationFilter
@@ -38,7 +38,7 @@ public class SmsAuthenticationFilter
             body.append(inputStr);
         }
         
-        SmsLoginParam smsLoginParam = JSONObject.parseObject(body.toString(), SmsLoginParam.class);
+        SmsCheckParam smsLoginParam = JSONObject.parseObject(body.toString(), SmsCheckParam.class);
         
         SmsAuthenticationToken authRequest = new SmsAuthenticationToken(smsLoginParam);
         authRequest.setDetails(authenticationDetailsSource.buildDetails(request));

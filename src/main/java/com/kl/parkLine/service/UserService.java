@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.dao.IUserDao;
 import com.kl.parkLine.entity.Car;
@@ -18,7 +19,9 @@ import com.kl.parkLine.entity.QUser;
 import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.Gender;
+import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.MyCounts;
+import com.kl.parkLine.json.SmsCheckParam;
 import com.kl.parkLine.json.WxUserInfo;
 import com.kl.parkLine.predicate.UserPredicates;
 import com.kl.parkLine.util.RoleCode;
@@ -53,6 +56,9 @@ public class UserService
     
     @Autowired
     private OrderService orderService;
+    
+    @Autowired
+    private SmsCodeService smsCodeService;
     
     /**
      * 保存用户
@@ -197,7 +203,6 @@ public class UserService
      */
     public boolean hasPermission(User reqData, User user, String permission) 
     {
-        //TODO: 实现用户访问权限控制
         return reqData.getUsername().equals(user.getName());
     }
     
@@ -233,5 +238,37 @@ public class UserService
         User user = userDao.findOneByName(userName);
         user.setIsQuickPay(isQuickPay);
         save(user);
+    }
+    
+    /**
+     * 设置快捷支付
+     * @param userName 用户名
+     * @return
+     */
+    public void checkValidCode(String userName, SmsCheckParam smsCheckParam) throws BusinessException
+    {
+        //找到当前用户
+        User user = userDao.findOneByName(userName);
+        
+        //检查验证码
+        smsCodeService.checkValidCode(smsCheckParam.getMobile(), smsCheckParam.getValidCode());
+        
+        //保存用户手机号
+        user.setMobile(smsCheckParam.getMobile());
+        save(user);
+    }
+    
+    /**
+     * 检查手机号是否提供
+     * @param userName 用户名
+     * @return
+     */
+    public Boolean isMobileProvided(String userName)
+    {
+        //找到当前用户
+        User user = userDao.findOneByName(userName);
+        
+        //检查用户是否提供了手机号
+        return !StringUtils.isEmpty(user.getMobile());
     }
 }

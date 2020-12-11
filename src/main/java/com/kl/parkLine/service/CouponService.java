@@ -2,6 +2,7 @@ package com.kl.parkLine.service;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -290,5 +291,18 @@ public class CouponService
     {
         Date today = new DateTime().withTimeAtStartOfDay().toDate();
         return couponDao.countByOwnerAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(owner, CouponStatus.valid, today, today);
+    }
+    
+    /**
+     * 将超过时间的优惠券设置成Expired状态
+     */
+    public void updateExpiredStatus()
+    {
+        List<Coupon> expireds = couponDao.findByStatusAndEndDateLessThan(CouponStatus.valid, new Date());
+        for (Coupon coupon : expireds)
+        {
+            coupon.setStatus(CouponStatus.invalid);
+        }
+        couponDao.saveAll(expireds);
     }
 }

@@ -11,7 +11,7 @@ import com.kl.parkLine.entity.SmsCode;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.JwtToken;
 import com.kl.parkLine.json.RestResult;
-import com.kl.parkLine.json.SmsLoginParam;
+import com.kl.parkLine.json.SmsCheckParam;
 import com.kl.parkLine.service.SmsCodeService;
 import com.kl.parkLine.vo.SmsCodeVo;
 
@@ -36,7 +36,7 @@ public class SmsController
      */
     @PostMapping("/login")
     @ApiOperation(value="短信登录", notes="使用之前获取的短信验证码登录  若用户首次登录，则自动注册，登录成功后返回token，后续通过Authorization消息头标识用户，token有效期为1小时，快过期时，通过New-Token获取新令牌", tags="短信登录")
-    public JwtToken smsLogin(@ApiParam @RequestBody SmsLoginParam SmsLoginParam)
+    public JwtToken smsLogin(@ApiParam @RequestBody SmsCheckParam SmsLoginParam)
     {
         return null;
     }

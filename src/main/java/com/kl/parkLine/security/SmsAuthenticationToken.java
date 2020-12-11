@@ -5,7 +5,7 @@ import java.util.Collection;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
-import com.kl.parkLine.json.SmsLoginParam;
+import com.kl.parkLine.json.SmsCheckParam;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +18,7 @@ public class SmsAuthenticationToken extends AbstractAuthenticationToken
     private final Object principal;
     private String validCode;
 
-    public SmsAuthenticationToken(SmsLoginParam loginParam) 
+    public SmsAuthenticationToken(SmsCheckParam loginParam) 
     {
         super(null);
         this.principal = loginParam.getMobile();

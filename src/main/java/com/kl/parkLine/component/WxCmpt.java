@@ -40,6 +40,9 @@ public class WxCmpt
     @Autowired
     private WXPay wxPay;
     
+    @Value("${spring.profiles.active}")
+    private String active;
+    
     @Autowired
     private WXMappingJackson2HttpMessageConverter jsonConverter;
     
@@ -88,12 +91,18 @@ public class WxCmpt
         reqData.put("openid", order.getOwner().getWxOpenId());
         
         //调用接口
-        //TODO: 使用真实付款接口
-        //Map<String, String> result = wxPay.unifiedOrder(reqData);
-        Map<String, String> result = new HashMap<String, String>();
-        result.put("return_code", Const.WX_SUCCESS);
-        result.put("result_code", Const.WX_SUCCESS);
-        result.put("prepay_id", "prepay_id01234");
+        Map<String, String> result = null;
+        if (active.equalsIgnoreCase("pro"))
+        {
+            result = wxPay.unifiedOrder(reqData);
+        }
+        else 
+        {
+            result = new HashMap<String, String>();
+            result.put("return_code", Const.WX_SUCCESS);
+            result.put("result_code", Const.WX_SUCCESS);
+            result.put("prepay_id", "prepay_id01234");
+        }
         
         //通信标识
         String return_code = (String) result.get("return_code");

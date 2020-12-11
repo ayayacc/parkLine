@@ -36,7 +36,7 @@ import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.JwtToken;
 import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.RestResult;
-import com.kl.parkLine.json.SmsLoginParam;
+import com.kl.parkLine.json.SmsCheckParam;
 import com.kl.parkLine.service.CarService;
 import com.kl.parkLine.service.DeviceService;
 import com.kl.parkLine.service.OrderService;
@@ -86,7 +86,7 @@ public class BoyueControllerTest
         assertEquals(Const.RET_OK, smsCodeResult.getRetCode());
         
         //登录
-        SmsLoginParam smsLoginParam = new SmsLoginParam();
+        SmsCheckParam smsLoginParam = new SmsCheckParam();
         smsLoginParam.setMobile(mobile);
         smsLoginParam.setValidCode(smsCodeResult.getData().getCode());
         mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/sms/login")

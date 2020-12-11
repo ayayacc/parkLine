@@ -4,7 +4,7 @@
     <springProperty scope="context" name="druid.url" source="spring.datasource.druid.url"/>
     <springProperty scope="context" name="druid.username" source="spring.datasource.druid.username"/>
     <springProperty scope="context" name="druid.password" source="spring.datasource.druid.password"/>
-    <property name="log.dir" value="d:\\parkLine\\log" />
+    <property name="log.dir" value="./parkLineLog" />
     
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender"> 
         <encoder charset="UTF-8">  
@@ -42,12 +42,12 @@
     </appender> -->
     
     <logger name="org.springframework.web" level="INFO"/>
-    <!-- show parameters for hibernate sql 专为 Hibernate 定制 -->  
+    <!-- show parameters for hibernate sql 专为 Hibernate 定制 
     <logger name="org.hibernate.type.descriptor.sql.BasicBinder"  level="TRACE" />  
     <logger name="org.hibernate.type.descriptor.sql.BasicExtractor"  level="DEBUG" />  
     <logger name="org.hibernate.SQL" level="DEBUG" />  
     <logger name="org.hibernate.engine.QueryParameters" level="DEBUG" />  
-    <logger name="org.hibernate.engine.query.HQLQueryPlan" level="DEBUG" />  
+    <logger name="org.hibernate.engine.query.HQLQueryPlan" level="DEBUG" />  -->  
     
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>  
