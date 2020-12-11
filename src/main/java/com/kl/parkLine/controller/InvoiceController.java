@@ -26,7 +26,7 @@ import io.swagger.annotations.ApiParam;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@RequestMapping(value="/invoices")
+@RequestMapping(value="/invoices", produces="application/json;charset=utf-8")
 @Api(tags = "发票管理")
 public class InvoiceController
 {

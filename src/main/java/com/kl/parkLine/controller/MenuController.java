@@ -26,7 +26,7 @@ import io.swagger.annotations.ApiParam;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@RequestMapping(value="/menus")
+@RequestMapping(value="/menus", produces="application/json;charset=utf-8")
 @Api(tags = "菜单管理")
 public class MenuController
 {

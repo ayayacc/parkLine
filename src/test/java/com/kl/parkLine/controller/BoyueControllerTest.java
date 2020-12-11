@@ -629,7 +629,152 @@ public class BoyueControllerTest
     @Transactional
     @Rollback(true)
     public void testAdvancePay() throws Exception
-    {}
+    {
+        DateTime inTime = new DateTime().minusMinutes(100); //100分钟前入场,提前支付100分钟停车费
+        DateTime outTime = inTime.plusMinutes(125); //出场时, 停车125分钟跨到下个计费周期，但是由于提前交费未超时，只交一个周期费用
+        Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
+        InputStream is = resource.getInputStream();
+        BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
+        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(inTime.getMillis());
+        is.close();
+        Car car = carService.getCar(boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo(), PlateColor.blue);
+        
+        //记录入场前停车场数量
+        Device device = deviceService.findOneBySerialNo(boyueEventIn.getAlarmInfoPlate().getSerialno());
+        Park park = device.getPark();
+        Integer availableCnt = park.getAvailableCnt();
+        
+        //车辆入场
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JSON.toJSONString(boyueEventIn))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        String retContent = result.getResponse().getContentAsString();
+        //检查开闸入场
+        BoyueRespWrap boyueRespWrap = JSONObject.parseObject(retContent, BoyueRespWrap.class);
+        assertEquals("ok", boyueRespWrap.getBoyueResp().getInfo());
+        
+        //检查停车场空位数量-1
+        park = parkService.findOneById(park.getParkId());
+        assertEquals(--availableCnt, park.getAvailableCnt());
+        
+        //登录
+        String token = login();
+        
+        //绑定车辆
+        CarParam bindCarParam = new CarParam();
+        bindCarParam.setCarNo(car.getCarNo());
+        bindCarParam.setPlateColor(car.getPlateColor());
+        result = mockMvc.perform(MockMvcRequestBuilders.post("/cars/bind")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", token)
+                .content(JSON.toJSONString(bindCarParam))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        retContent = result.getResponse().getContentAsString();
+        
+        //反向寻车
+        result = mockMvc.perform(MockMvcRequestBuilders.get(String.format("/cars/getParkLocation/%d", car.getCarId()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", token)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        retContent = result.getResponse().getContentAsString();
+        RestResult<ParkLocationVo> parkLocationResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<ParkLocationVo>>(){});
+        //检查停车场
+        assertEquals("parkNameFixed", parkLocationResult.getData().getName());
+        
+        //获取付款前钱包余额
+        result = mockMvc.perform(MockMvcRequestBuilders.get("/users/my/walletBalance")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", token)
+                .content(JSON.toJSONString(boyueEventIn))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        retContent = result.getResponse().getContentAsString();
+        RestResult<BigDecimal> balanceResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<BigDecimal>>(){});
+        BigDecimal balance = balanceResult.getData();
+        
+        //检查订单费用
+        result = mockMvc.perform(MockMvcRequestBuilders.get(String.format("/orders/parking/needToPayByCar/%d", car.getCarId()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", token)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        retContent = result.getResponse().getContentAsString();
+        RestResult<OrderVo> orderVoResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<OrderVo>>(){});
+        assertEquals(new BigDecimal(5).setScale(2), orderVoResult.getData().getAmt());
+        assertEquals(new BigDecimal(5).setScale(2), orderVoResult.getData().getRealUnpayedAmt());
+        
+        //不使用优惠券付费
+        PayOrderParam payParam = new PayOrderParam();
+        payParam.setOrderId(orderVoResult.getData().getOrderId());
+        result = mockMvc.perform(MockMvcRequestBuilders.post("/orders/walletPay")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", token)
+                .content(JSON.toJSONString(payParam))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        retContent = result.getResponse().getContentAsString();
+        RestResult<Object> payResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<Object>>(){});
+        assertEquals(Const.RET_OK, payResult.getRetCode());
+        
+        //校验订单金额
+        Order order = orderService.findOneByOrderId(orderVoResult.getData().getOrderId());
+        assertEquals(new BigDecimal(5).setScale(2), order.getAmt());
+        assertEquals(new BigDecimal(5).setScale(2), order.getPayedAmt());
+        assertEquals(new BigDecimal(5).setScale(2), order.getRealPayedAmt());
+        assertEquals(BigDecimal.ZERO, order.getRealUnpayedAmt());
+        
+        //获取付款后钱包余额
+        result = mockMvc.perform(MockMvcRequestBuilders.get("/users/my/walletBalance")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", token)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        retContent = result.getResponse().getContentAsString();
+        balanceResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<BigDecimal>>(){});
+        assertEquals(balance.subtract(order.getPayedAmt()), balanceResult.getData());
+        
+        //车辆出场, 抬杆
+        resource = new ClassPathResource("/testData/boyue/carOut.json");
+        is = resource.getInputStream();
+        BoyueEvent boyueEventOut = JSONObject.parseObject(is, BoyueEvent.class);
+        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(outTime.getMillis());
+        is.close();
+        result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JSON.toJSONString(boyueEventOut))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        retContent = result.getResponse().getContentAsString();
+        boyueRespWrap = JSONObject.parseObject(retContent, BoyueRespWrap.class);
+        assertEquals("notok", boyueRespWrap.getBoyueResp().getInfo());
+        
+        //检查停车场空位数量+1
+        park = parkService.findOneById(parkLocationResult.getData().getParkId());
+        assertEquals(++availableCnt, park.getAvailableCnt());
+        
+        //检查轮询不抬杆
+        result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/comet")
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("serialno", boyueEventOut.getAlarmInfoPlate().getSerialno())
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+        retContent = result.getResponse().getContentAsString();
+        boyueRespWrap = JSONObject.parseObject(retContent, BoyueRespWrap.class);
+        assertEquals("notok", boyueRespWrap.getBoyueResp().getInfo());
+    }
     
     /**
      * 提前支付超时

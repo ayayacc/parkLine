@@ -26,7 +26,7 @@ import io.swagger.annotations.ApiParam;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@RequestMapping(value="/roles")
+@RequestMapping(value="/roles", produces="application/json;charset=utf-8")
 @Api(tags = "角色管理")
 public class RoleController
 {

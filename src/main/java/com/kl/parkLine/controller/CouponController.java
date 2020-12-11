@@ -25,7 +25,7 @@ import io.swagger.annotations.ApiParam;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@RequestMapping(value="/coupons")
+@RequestMapping(value="/coupons", produces="application/json;charset=utf-8")
 @Api(tags = "优惠券实例")
 public class CouponController
 {

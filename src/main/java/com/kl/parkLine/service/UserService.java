@@ -20,7 +20,7 @@ import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.Gender;
 import com.kl.parkLine.exception.BusinessException;
-import com.kl.parkLine.json.MyCounts;
+import com.kl.parkLine.json.MyInfo;
 import com.kl.parkLine.json.SmsCheckParam;
 import com.kl.parkLine.json.WxUserInfo;
 import com.kl.parkLine.predicate.UserPredicates;
@@ -211,20 +211,24 @@ public class UserService
      * @param userName 用户名
      * @return
      */
-    public MyCounts myCounts(String userName)
+    public MyInfo myInfo(String userName)
     {
-        MyCounts myCounts = new MyCounts();
-        
+        MyInfo myInfo = new MyInfo();
+        //用户名称
+        myInfo.setUserId(userName);
         //找到当前用户
         User user = userDao.findOneByName(userName);
-        
         //查询优惠券数量
-        myCounts.setCouponCnt(couponService.countValidByOwner(user));
-        
+        myInfo.setCouponCnt(couponService.countValidByOwner(user));
         //查询月票数量
-        myCounts.setMonthlyTktCnt(orderService.countValidMonthlyTktByOwner(user));
+        myInfo.setMonthlyTktCnt(orderService.countValidMonthlyTktByOwner(user));
+        //钱包余额
+        myInfo.setWalletBalance(user.getBalance());
+        //是否开通了快捷支付
+        myInfo.setIsQuickPay(user.getIsQuickPay());
         
-        return myCounts;
+        
+        return myInfo;
     }
     
     /**

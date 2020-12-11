@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.kl.parkLine.json.WxCode2SessionResult;
 
-@FeignClient(name="wxFeignClient", url="https://api.weixin.qq.com", fallback=FeignClientFallback.class)
+@FeignClient(name="wxFeignClient", url="https://api.weixin.qq.com")
 public interface IWxFeignClient
 {
     //"https://api.weixin.qq.com/sns/jscode2session?appid={APPID}&secret={APPSECRET}&js_code={JSCODE}&grant_type=authorization_code";

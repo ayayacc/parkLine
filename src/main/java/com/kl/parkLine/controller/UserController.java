@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.exception.BusinessException;
-import com.kl.parkLine.json.MyCounts;
+import com.kl.parkLine.json.MyInfo;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.json.SmsCheckParam;
 import com.kl.parkLine.service.UserService;
@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiParam;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@RequestMapping(value="/users")
+@RequestMapping(value="/users", produces="application/json;charset=utf-8")
 @Api(tags = "用户管理")
 public class UserController
 {
@@ -112,9 +112,9 @@ public class UserController
     @GetMapping("/my")
     @ApiOperation(value="查询我的汇总信息", notes="查询我的汇总信息")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<MyCounts> myCounts(Authentication auth)
+    public RestResult<MyInfo> myInfo(Authentication auth)
     {
-        return RestResult.success(userService.myCounts(auth.getName()));
+        return RestResult.success(userService.myInfo(auth.getName()));
     }
     
     @GetMapping("/my/walletBalance")

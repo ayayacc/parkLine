@@ -20,7 +20,7 @@ import com.kl.parkLine.service.EventService;
 import com.kl.parkLine.service.OrderService;
 
 @RestController
-@RequestMapping(value="/boyue")
+@RequestMapping(value="/boyue", produces="application/json;charset=utf-8")
 public class BoyueController
 {
     @Autowired

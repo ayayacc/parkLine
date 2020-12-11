@@ -31,7 +31,7 @@ import springfox.documentation.annotations.ApiIgnore;
 
 
 @RestController
-@RequestMapping(value="/cars")
+@RequestMapping(value="/cars", produces="application/json;charset=utf-8")
 @Api(tags = "车辆管理")
 public class CarController
 {

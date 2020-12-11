@@ -47,7 +47,7 @@ import io.swagger.annotations.ApiParam;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@RequestMapping(value="/orders")
+@RequestMapping(value="/orders", produces="application/json;charset=utf-8")
 @Api(tags="订单管理")
 public class OrderController
 {

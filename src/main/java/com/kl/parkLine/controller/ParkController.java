@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiParam;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@RequestMapping(value="/parks")
+@RequestMapping(value="/parks", produces="application/json;charset=utf-8")
 @Api(tags = "停车场管理")
 public class ParkController
 {

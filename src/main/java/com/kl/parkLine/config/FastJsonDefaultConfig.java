@@ -26,6 +26,7 @@ public class FastJsonDefaultConfig
         //处理中文乱码问题
         List<MediaType> fastMediaTypes = new ArrayList<>();
         fastMediaTypes.add(MediaType.APPLICATION_JSON);
+        fastMediaTypes.add(MediaType.TEXT_PLAIN);
         fastConverter.setSupportedMediaTypes(fastMediaTypes);
 
         fastConverter.setFastJsonConfig(fastJsonConfig);

@@ -1,6 +1,7 @@
 package com.kl.parkLine.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,12 +23,15 @@ import io.swagger.annotations.ApiParam;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
-@RequestMapping(value="/sms")
+@RequestMapping(value="/sms", produces="application/json;charset=utf-8")
 @Api(tags = "短信登录")
 public class SmsController
 {
     @Autowired
     private SmsCodeService smsCodeService;
+    
+    @Value("${spring.profiles.active}")
+    private String active;
     
     /**
      * 无实际意义，为了生成文档使用
@@ -57,7 +61,14 @@ public class SmsController
             String mobile = (String) o.get("mobile");
             SmsCode smsCode = smsCodeService.sendSmsCode(mobile);
             SmsCodeVo codeVo = SmsCodeVo.builder().code(smsCode.getCode()).build();
-            return RestResult.success(codeVo);
+            if (active.equalsIgnoreCase("pro"))
+            {
+                return RestResult.success();  //正式机不返回验证码给前端
+            }
+            else
+            {
+                return RestResult.success(codeVo);
+            }
         }
         catch (Exception e)
         {

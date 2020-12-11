@@ -15,7 +15,7 @@ import com.kl.parkLine.xlt.XltEvt;
 import com.kl.parkLine.xlt.XltEvtResult;
 
 @RestController
-@RequestMapping(value="/MchApi")
+@RequestMapping(value="/MchApi", produces="application/json;charset=utf-8")
 public class XltController
 {
     @Autowired
