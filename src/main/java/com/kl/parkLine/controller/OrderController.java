@@ -310,7 +310,7 @@ public class OrderController
             String notifyData = sb.toString();
             Map<String, String> notifyMap = WXPayUtil.xmlToMap(notifyData);  // 转换成map
             
-            if (active.equalsIgnoreCase("pro"))
+            if (!active.equalsIgnoreCase("dev"))
             {
                 if (!wxPay.isPayResultNotifySignatureValid(notifyMap)) 
                 {

@@ -29,7 +29,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
@@ -102,7 +101,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "in_time", columnDefinition="datetime comment '入场时间'")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @NeedToCompare(name = "入场时间")
     private Date inTime; 
@@ -119,7 +118,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "out_time", columnDefinition="datetime comment '出场时间'")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @NeedToCompare(name = "出场时间")
     private Date outTime; 
@@ -136,7 +135,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "out_time_limit", columnDefinition="datetime comment '提前交费离开时间限制'")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @NeedToCompare(name = "提前交费离开时间限制")
     private Date outTimeLimit; 
@@ -182,7 +181,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      */
     @Temporal(TemporalType.DATE)
     @Column(name = "start_time", columnDefinition="date comment '月票开始时间'")
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date startDate; 
     
@@ -191,7 +190,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      */
     @Temporal(TemporalType.DATE)
     @Column(name = "end_time", columnDefinition="date comment '月票结束时间'")
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date endDate; 
     
@@ -256,7 +255,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "last_payment_time", columnDefinition="datetime comment '最后一次付款时间'")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @NeedToCompare(name = "最后一次付款时间")
     private Date lastPaymentTime; 

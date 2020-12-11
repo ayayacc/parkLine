@@ -92,7 +92,7 @@ public class WxCmpt
         
         //调用接口
         Map<String, String> result = null;
-        if (active.equalsIgnoreCase("pro"))
+        if (!active.equalsIgnoreCase("dev"))
         {
             result = wxPay.unifiedOrder(reqData);
         }

@@ -3,7 +3,7 @@ package com.kl.parkLine.vo;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -71,14 +71,14 @@ public class CouponDefVo
     /**
      * 有效期开始时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @ApiModelProperty(name="有效期开始时间", position=7)
     private Date startDate;
     
     /**
      * 有效期结束时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @ApiModelProperty(name="有效期结束时间", position=8)
     private Date endDate;
     

@@ -61,7 +61,7 @@ public class SmsController
             String mobile = (String) o.get("mobile");
             SmsCode smsCode = smsCodeService.sendSmsCode(mobile);
             SmsCodeVo codeVo = SmsCodeVo.builder().code(smsCode.getCode()).build();
-            if (active.equalsIgnoreCase("pro"))
+            if (!active.equalsIgnoreCase("dev"))
             {
                 return RestResult.success();  //正式机不返回验证码给前端
             }

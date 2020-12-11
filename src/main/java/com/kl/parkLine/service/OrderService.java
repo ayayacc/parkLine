@@ -535,7 +535,7 @@ public class OrderService
         else //无事件Id，道闸停车场
         {
             //找到最近的入场订单
-            order = orderDao.findTopByPlateIdAndStatusOrderByInTimeDesc(event.getPlateId(), OrderStatus.in);
+            order = orderDao.findTopByPlateIdOrderByInTimeDesc(event.getPlateId());
         }
         
         if (null == order) //无入场记录,开闸
@@ -1470,20 +1470,14 @@ public class OrderService
      */
     private boolean canBePay(Order order, Date now) 
     {
-        //无需付款
-        if (order.getStatus().equals(OrderStatus.noNeedToPay))
-        {
-            return false;
-        }
-        
-        //车辆已经出场的订单不能付款
-        if (null != order.getIsOut() && order.getIsOut())
-        {
-            return false;
-        }
-        
         //需要付款
         if (order.getStatus().equals(OrderStatus.needToPay))  
+        {
+            return true;
+        }
+        
+        //车辆在场,从未付过款,可以提前支付
+        if (order.getStatus().equals(OrderStatus.in))
         {
             return true;
         }
@@ -1557,20 +1551,17 @@ public class OrderService
         
         //只有停车订单才能使用优惠券
         Coupon coupon = null;
-        if (order.getType().equals(OrderType.parking))
+        if (order.getType().equals(OrderType.parking) && null!=payParam.getCouponId())
         {
-            if (null != payParam.getCouponId()) //明确指定优惠券
+            //查找优惠券
+            coupon = couponService.findOneById(payParam.getCouponId());
+            if (null == coupon)
             {
-                //查找优惠券
-                coupon = couponService.findOneById(payParam.getCouponId());
-                if (null == coupon)
-                {
-                    throw new BusinessException(String.format("无效的优惠券Id: %d", payParam.getCouponId()));
-                }
-                
-                //检查优惠券是否可用
-                checkCoupon(order, coupon, payer);
+                throw new BusinessException(String.format("无效的优惠券Id: %d", payParam.getCouponId()));
             }
+            
+            //检查优惠券是否可用
+            checkCoupon(order, coupon, payer);
         }
         payByWallet(order, coupon);
     }

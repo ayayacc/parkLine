@@ -16,7 +16,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -55,7 +55,7 @@ public class DrivingLicense extends AbstractDateEntity implements java.io.Serial
     private String engineNumber;
     
     @ApiModelProperty("发证日期, 格式:yyyy-MM-dd") 
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @Temporal(TemporalType.DATE)            
     @Column(name = "issue_date", nullable = false, columnDefinition="date comment '发证日期, 格式:yyyy-MM-dd'")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -70,7 +70,7 @@ public class DrivingLicense extends AbstractDateEntity implements java.io.Serial
     private String owner;
     
     @ApiModelProperty("注册日期, 格式:yyyy-MM-dd")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @Temporal(TemporalType.DATE)            
     @Column(name = "register_date", nullable = false, columnDefinition="date comment '注册日期, 格式:yyyy-MM-dd'")
     @DateTimeFormat(pattern = "yyyy-MM-dd")

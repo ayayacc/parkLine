@@ -2,7 +2,7 @@ package com.kl.parkLine.json;
 
 import java.util.Date;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -23,7 +23,7 @@ public class DrivingLicenseVo
     private String engineNumber;
     
     @ApiModelProperty("发证日期, 格式:yyyy-MM-dd") 
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     private Date issueDate;
     
     @ApiModelProperty("品牌型号")
@@ -36,7 +36,7 @@ public class DrivingLicenseVo
     private String plateNumber;
     
     @ApiModelProperty("注册日期, 格式:yyyy-MM-dd")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     private Date registerDate;
     
     @ApiModelProperty("使用性质")

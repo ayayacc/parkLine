@@ -28,7 +28,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.kl.parkLine.annotation.NeedToCompare;
 
 import io.swagger.annotations.ApiModel;
@@ -138,7 +137,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      */
     @Temporal(TemporalType.DATE)            
     @Column(name = "start_date", nullable = false, columnDefinition="date comment '有效期开始时间(含当天)'")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @NeedToCompare(name = "有效期开始时间")
     @ApiModelProperty("有效期开始时间")
@@ -149,7 +148,7 @@ public class CouponDef extends AbstractDateEntity implements java.io.Serializabl
      */
     @Temporal(TemporalType.DATE)            
     @Column(name = "end_date", nullable = false, columnDefinition="date comment '有效期结束时间(含当天)'")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @NeedToCompare(name = "有效期结束时间")
     @ApiModelProperty("有效期结束时间")

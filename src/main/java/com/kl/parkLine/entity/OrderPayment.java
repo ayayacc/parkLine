@@ -25,7 +25,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.PaymentType;
 
@@ -73,7 +72,7 @@ public class OrderPayment implements Serializable
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "payment_time", columnDefinition="datetime comment '付款时间'")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date paymentTime; 
     

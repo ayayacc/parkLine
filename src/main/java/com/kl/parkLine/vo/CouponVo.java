@@ -5,7 +5,7 @@ import java.util.Date;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kl.parkLine.enums.CouponStatus;
 
@@ -68,17 +68,17 @@ public class CouponVo
     @ApiModelProperty("优惠券状态")
     private CouponStatus status;
     
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @ApiModelProperty("有效期开始时间")
     private Date startDate;
     
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @ApiModelProperty("有效期结束时间")
     private Date endDate;
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @ApiModelProperty("使用时间")
     private Date usedDate;
 }

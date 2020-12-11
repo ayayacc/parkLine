@@ -2,7 +2,7 @@ package com.kl.parkLine.json;
 
 import java.util.Date;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -23,14 +23,14 @@ public class MonthlyTktParam
     /**
      * 有效期开始时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @ApiModelProperty(required = true, name = "有效期开始时间")
     private Date startDate;
     
     /**
      * 有效期结束时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @ApiModelProperty(required = true, name = "有效期结束时间")
     private Date endDate;
 }

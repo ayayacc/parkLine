@@ -27,7 +27,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.CouponStatus;
 
@@ -138,7 +137,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      */
     @Temporal(TemporalType.DATE)            
     @Column(name = "start_date", nullable = false, columnDefinition="date comment '有效期开始时间(含当天)'")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @ApiModelProperty("有效期开始时间")
     private Date startDate;
@@ -148,7 +147,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      */
     @Temporal(TemporalType.DATE)            
     @Column(name = "end_date", nullable = false, columnDefinition="date comment '有效期结束时间(含当天)'")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @ApiModelProperty("有效期结束时间")
     private Date endDate;
@@ -158,7 +157,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
      */
     @Temporal(TemporalType.TIMESTAMP)            
     @Column(name = "used_date", columnDefinition="datetime comment '使用时间'")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @ApiModelProperty("使用时间")
     private Date usedDate;

@@ -758,7 +758,7 @@ public class BoyueControllerTest
                 .andReturn();
         retContent = result.getResponse().getContentAsString();
         boyueRespWrap = JSONObject.parseObject(retContent, BoyueRespWrap.class);
-        assertEquals("notok", boyueRespWrap.getBoyueResp().getInfo());
+        assertEquals("ok", boyueRespWrap.getBoyueResp().getInfo());
         
         //检查停车场空位数量+1
         park = parkService.findOneById(parkLocationResult.getData().getParkId());

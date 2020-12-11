@@ -23,7 +23,7 @@ public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredic
 {
     public Order findOneByActId(String actId);
     public List<Order> findByTypeAndCarAndParkAndStatusOrderByStartDate(OrderType orderType, Car car, Park park, OrderStatus status);
-    public Order findTopByPlateIdAndStatusOrderByInTimeDesc(Integer plateId, OrderStatus status);
+    public Order findTopByPlateIdOrderByInTimeDesc(Integer plateId);
     public Order findTopByOutDeviceSnAndIsOutIsFalseOrderByOutTimeDesc(String outDeviceSn);
     public Order findOneByOrderId(Integer orderId);
     public Order findOneByCode(String code);

@@ -3,7 +3,7 @@ package com.kl.parkLine.vo;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
@@ -60,15 +60,15 @@ public class OrderVo
     private String carCarNo;
     
     @ApiModelProperty(name="车辆入场时间", value="inTime")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     private Date inTime; 
     
     @ApiModelProperty(name="车辆出场时间", value="outTime")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     private Date outTime; 
     
     @ApiModelProperty(name="车辆出场限制时间", value="outTimeLimit")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     private Date outTimeLimit; 
     
     @ApiModelProperty(name="金使用优惠券前订单金额(元)", value="amt")
@@ -84,18 +84,18 @@ public class OrderVo
     private BigDecimal realPayedAmt; 
     
     @ApiModelProperty(name="最后付款时间", value="lastPaymentTime")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss")
     @JsonProperty(value = "paymentTime")
     private Date lastPaymentTime; 
     
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd")
     @ApiModelProperty(name="月票开始时间", value="startDate")
     private Date startDate; 
     
     /**
      * 结束时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    @JSONField(format="yyyy-MM-dd")
     @ApiModelProperty(name="结束时间", value="startDate")
     private Date endDate; 
     
