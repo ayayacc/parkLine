@@ -301,7 +301,7 @@ public class CouponService
         List<Coupon> expireds = couponDao.findByStatusAndEndDateLessThan(CouponStatus.valid, new Date());
         for (Coupon coupon : expireds)
         {
-            coupon.setStatus(CouponStatus.invalid);
+            coupon.setStatus(CouponStatus.expired);
         }
         couponDao.saveAll(expireds);
     }
