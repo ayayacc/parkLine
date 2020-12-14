@@ -43,15 +43,8 @@ public class WxAuthenticationProvider implements AuthenticationProvider
         {
             throw new WxAuthenticationException(result.getErrmsg());
         }
-        String userName = Const.WX_PREFIX + result.getOpenid();
-        User user = userDetailsService.loadUserByUsername(userName);
         WxAuthenticationToken wxAuthenticationToken = (WxAuthenticationToken)authentication;
-        //微信用户第一次使用本系统
-        if (null == user)
-        {
-            //自动创建用户
-            user = userService.createEndUser(userName, wxAuthenticationToken.getWxUserInfo());
-        }
+        User user = userService.setupUser(result, wxAuthenticationToken.getWxUserInfo());
         
         WxAuthenticationToken token = new WxAuthenticationToken(user.getUsername(), user.getAuthorities());
         token.setDetails(authentication.getDetails());

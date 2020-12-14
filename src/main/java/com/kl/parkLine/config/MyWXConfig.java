@@ -14,10 +14,10 @@ public class MyWXConfig implements WXPayConfig
     @Value("${wx.app.id}")
     private String appId;
     
-    @Value("${wx.app.secret}")
-    private String appSecret;
+    @Value("${wx.pay.key}")
+    private String wxPayKey;
     
-    @Value("${wx.app.mch.id}")
+    @Value("${wx.pay.mch.id}")
     private String mchId;
     
     @Override
@@ -35,7 +35,7 @@ public class MyWXConfig implements WXPayConfig
     @Override
     public String getKey()
     {
-        return appSecret;
+        return wxPayKey;
     }
 
     @Override

@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.DecryptionParam;
+import com.kl.parkLine.json.DecryptionResult;
 import com.kl.parkLine.json.MyInfo;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.json.SmsCheckParam;
@@ -129,7 +131,7 @@ public class UserController
     @GetMapping("/my/setQuickPay")
     @ApiOperation(value="设置快捷支付", notes="设置快捷支付")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Object> setQuickPay(Authentication auth, @ApiParam(name="是否开通", required=true) @RequestParam(value="isQuickPay") Boolean isQuickPay)
+    public RestResult<Object> setQuickPay(Authentication auth, @ApiParam(name="是否开通", required=true) @RequestParam(value="isQuickPay",required=true) Boolean isQuickPay)
     {
         userService.setQuickPay(auth.getName(), isQuickPay);
         return RestResult.success();
@@ -138,7 +140,7 @@ public class UserController
     @PostMapping("/my/bindMobile")
     @ApiOperation(value="绑定手机号", notes="绑定手机号")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Object> checkValidCode(Authentication auth, @RequestBody SmsCheckParam smsCheckParam)
+    public RestResult<Object> checkValidCode(Authentication auth, @ApiParam(name="绑定手机号码参数", required=true) @RequestBody(required=true) SmsCheckParam smsCheckParam)
     {
         try
         {
@@ -158,5 +160,20 @@ public class UserController
     public RestResult<Boolean> isMobileProvided(Authentication auth)
     {
         return RestResult.success(userService.isMobileProvided(auth.getName()));
+    }
+    
+    @PostMapping("/decryption")
+    @ApiOperation(value="解密微信获取的敏感信息", notes="检查用户是否绑定了手机号")
+    @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
+    public RestResult<DecryptionResult> decryption(Authentication auth, @ApiParam(name="解密参数", required=true) @RequestBody(required=true) DecryptionParam decryptionParam)
+    {
+        try
+        {
+            return RestResult.success(userService.decryption(auth.getName(), decryptionParam));
+        }
+        catch (Exception e)
+        {
+            return RestResult.success(String.format("解密用户手机号失败: %s", e.getMessage()));
+        }
     }
 }

@@ -65,7 +65,16 @@ public class User extends AbstractDateEntity implements UserDetails
      */
     @Column(name = "wx_open_id", length = 64, unique = true, columnDefinition="varchar(64) comment '微信用户openid'")
     @ApiModelProperty("微信用户openid")
+    @JSONField(serialize = false)
     private String wxOpenId;
+    
+    /**
+     * 微信用户登录的session_key
+     */
+    @Column(name = "wx_session_key", length = 64, unique = true, columnDefinition="varchar(64) comment '微信用户登录的session_key'")
+    @ApiModelProperty("微信用户登录的session_key")
+    @JSONField(serialize = false)
+    private String wxSessionKey;
     
     /**
      * 用户唯一标识

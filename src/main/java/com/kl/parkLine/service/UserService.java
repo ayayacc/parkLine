@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.alibaba.fastjson.JSON;
+import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IUserDao;
 import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.QUser;
@@ -20,10 +22,14 @@ import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.Gender;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.DecryptionParam;
+import com.kl.parkLine.json.DecryptionResult;
 import com.kl.parkLine.json.MyInfo;
 import com.kl.parkLine.json.SmsCheckParam;
+import com.kl.parkLine.json.WxCode2SessionResult;
 import com.kl.parkLine.json.WxUserInfo;
 import com.kl.parkLine.predicate.UserPredicates;
+import com.kl.parkLine.util.Const;
 import com.kl.parkLine.util.RoleCode;
 import com.kl.parkLine.vo.UserVo;
 import com.querydsl.core.QueryResults;
@@ -60,6 +66,9 @@ public class UserService
     @Autowired
     private SmsCodeService smsCodeService;
     
+    @Autowired
+    private Utils utils;
+    
     /**
      * 保存用户
      * @param user
@@ -94,17 +103,24 @@ public class UserService
     }
     
     /**
-     * 创建新的用户
+     * 设置微信用户
      * @param wxUserInfo 微信登录信息
      */
-    public User createEndUser(String name, WxUserInfo wxUserInfo)
+    public User setupUser(WxCode2SessionResult sessionResult, WxUserInfo wxUserInfo)
     {
-        User user = new User();
-        user.setName(name);
+        String userName = Const.WX_PREFIX + sessionResult.getOpenid();
+        User user = findByName(userName);
+        if (null == user)
+        {
+            user = new User();
+        }
+        user.setName(userName);
         user.setNickName(wxUserInfo.getNickName());
+        user.setWxOpenId(sessionResult.getOpenid());
         user.setCountry(wxUserInfo.getCountry());
         user.setProvince(wxUserInfo.getProvince());
         user.setCity(wxUserInfo.getCity());
+        user.setWxSessionKey(sessionResult.getSessionKey());
         switch (wxUserInfo.getGender())
         {
             case 1:
@@ -215,7 +231,7 @@ public class UserService
     {
         MyInfo myInfo = new MyInfo();
         //用户名称
-        myInfo.setUserId(userName);
+        myInfo.setUserName(userName);
         //找到当前用户
         User user = userDao.findOneByName(userName);
         //查询优惠券数量
@@ -274,5 +290,20 @@ public class UserService
         
         //检查用户是否提供了手机号
         return !StringUtils.isEmpty(user.getMobile());
+    }
+    
+    /**
+     * 解密微信用户手机号
+     * @param auth
+     * @param decryptionParam
+     * @return
+     * @throws Exception 
+     */
+    public DecryptionResult decryption(String userName, DecryptionParam decryptionParam) throws Exception
+    {
+        User user = findByName(userName);
+        String text = utils.decrypt(user.getWxSessionKey(), decryptionParam.getIv(), decryptionParam.getEncryptedData());
+        
+        return JSON.parseObject(text, DecryptionResult.class);
     }
 }

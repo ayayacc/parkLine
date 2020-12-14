@@ -74,6 +74,8 @@ public class WxCmpt
             reqData.put("device_info", order.getPark().getCode());
         }
         
+        String nonceStr = WXPayUtil.generateNonceStr();
+        reqData.put("nonce_str", nonceStr);
         //body
         reqData.put("body", order.getType().getText());
         //out_trade_no
@@ -120,7 +122,7 @@ public class WxCmpt
         
         //二次签名
         Map<String, String> signParams = new HashMap<String, String>();
-        String nonceStr = WXPayUtil.generateNonceStr();
+        nonceStr = WXPayUtil.generateNonceStr();
         signParams.put("nonceStr", nonceStr);
         String pack = String.format("prepay_id=%s", result.get("prepay_id"));
         signParams.put("package", pack);

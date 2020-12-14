@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 
@@ -24,7 +23,7 @@ public class OrderPaymentVo
     private Integer orderPaymentId;
     
     @ApiModelProperty(name="订单Id")
-    @JsonProperty(value = "orderId")
+    @JSONField(name="orderId")
     private Integer orderOrderId;
     
     @ApiModelProperty(name="订单编码")
@@ -40,45 +39,43 @@ public class OrderPaymentVo
      * 停车场Id
      */
     @ApiModelProperty(name="停车场Id", value="parkId")
-    @JsonProperty(value = "parkId")
+    @JSONField(name="parkId")
     private Integer orderParkParkId;
     
     /**
      * 停车场名称
      */
     @ApiModelProperty(name="停车场名称")
-    @JsonProperty(value = "parkName")
+    @JSONField(name="parkName")
     private String orderParkName;
     
     /**
      * 车辆Id
      */
     @ApiModelProperty(name="车辆Id", value="carId")
-    @JsonProperty(value = "carId")
+    @JSONField(name="carId")
     private Integer orderCarCarId;
     
     /**
      * 车牌号码
      */
     @ApiModelProperty(name="车牌号码", value="carNo")
-    @JsonProperty(value = "carNo")
+    @JSONField(name="carNo")
     private String orderCarCarNo;
     
     @ApiModelProperty(name="车辆入场时间", value="inTime")
-    @JSONField(format="yyyy-MM-dd HH:mm:ss")
-    @JsonProperty(value = "inTime")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss", name="inTime")
     private Date orderInTime; 
     
     @ApiModelProperty(name="车辆出场时间", value="outTime")
-    @JSONField(format="yyyy-MM-dd HH:mm:ss")
-    @JsonProperty(value = "outTime")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss",name="outTime")
     private Date orderOutTime; 
     
     @ApiModelProperty(name="金额(元)", value="amt")
     private BigDecimal orderAmt; 
     
     @ApiModelProperty(name="使用优惠券后实付金额(元)", value="amt")
-    @JsonProperty(value = "payedAmt")
+    @JSONField(name="payedAmt")
     private BigDecimal amt; 
     
     @ApiModelProperty(name="钱包余额(元)", value="walletBalance")
@@ -88,28 +85,26 @@ public class OrderPaymentVo
     @JSONField(format="yyyy-MM-dd HH:mm:ss")
     private Date paymentTime; 
     
-    @JSONField(format="yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd",name="startDate")
     @ApiModelProperty(name="月票开始时间", value="startDate")
-    @JsonProperty(value = "startDate")
     private Date orderStartDate; 
     
     /**
      * 结束时间
      */
-    @JSONField(format="yyyy-MM-dd")
+    @JSONField(format="yyyy-MM-dd",name="endDate")
     @ApiModelProperty(name="结束时间", value="startDate")
-    @JsonProperty(value = "endDate")
     private Date orderEndDate; 
     
     /**
      * 入场截图url
      */
-    @JsonProperty(value = "inImgCode")
+    @JSONField(name="inImgCode")
     private String orderInImgCode;
     
     /**
      * 出场截图url
      */
-    @JsonProperty(value = "outImgCode")
+    @JSONField(name="outImgCode")
     private String orderOutImgCode;
 }

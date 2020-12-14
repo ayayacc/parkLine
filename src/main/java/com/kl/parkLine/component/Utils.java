@@ -4,12 +4,16 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.security.spec.AlgorithmParameterSpec;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
@@ -265,5 +269,27 @@ public class Utils
         }
         is = new ByteArrayInputStream(b); 
         return is;
+    }
+    
+    /**
+     * 解密用户手机号
+     * @param keyStr sessionkey
+     * @param ivStr  ivData
+     * @param encDataStr 带解密数据
+     * @return
+     * @throws Exception
+     * @date 2019年05月08日
+     */
+    public String decrypt(String keyStr, String ivStr, String encDataStr)throws Exception 
+    {
+        byte[] encData = Base64.decodeBase64(encDataStr);
+        byte[] iv = Base64.decodeBase64(ivStr);
+        byte[] key = Base64.decodeBase64(keyStr);
+ 
+        AlgorithmParameterSpec ivSpec = new IvParameterSpec(iv);
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+        return new String(cipher.doFinal(encData),"UTF-8");
     }
 }

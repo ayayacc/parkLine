@@ -13,7 +13,7 @@ import lombok.Setter;
 public class MyInfo
 {
     @ApiModelProperty("用户Id")
-    private String userId;
+    private String userName;
     
     @ApiModelProperty("月票数量")
     private Integer monthlyTktCnt;

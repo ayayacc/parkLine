@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 
@@ -36,7 +35,7 @@ public class OrderVo
      * 停车场Id
      */
     @ApiModelProperty(name="停车场Id", value="parkId")
-    @JsonProperty(value = "parkId")
+    @JSONField(name="parkId")
     private Integer parkParkId;
     
     /**
@@ -49,14 +48,14 @@ public class OrderVo
      * 车辆Id
      */
     @ApiModelProperty(name="车辆Id", value="carId")
-    @JsonProperty(value = "carId")
+    @JSONField(name="carId")
     private Integer carCarId;
     
     /**
      * 车牌号码
      */
     @ApiModelProperty(name="车牌号码", value="carNo")
-    @JsonProperty(value = "carNo")
+    @JSONField(name="carNo")
     private String carCarNo;
     
     @ApiModelProperty(name="车辆入场时间", value="inTime")
@@ -84,8 +83,7 @@ public class OrderVo
     private BigDecimal realPayedAmt; 
     
     @ApiModelProperty(name="最后付款时间", value="lastPaymentTime")
-    @JSONField(format="yyyy-MM-dd HH:mm:ss")
-    @JsonProperty(value = "paymentTime")
+    @JSONField(format="yyyy-MM-dd HH:mm:ss", name="paymentTime")
     private Date lastPaymentTime; 
     
     @JSONField(format="yyyy-MM-dd")

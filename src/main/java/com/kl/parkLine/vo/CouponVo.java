@@ -6,7 +6,6 @@ import java.util.Date;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.kl.parkLine.enums.CouponStatus;
 
 import io.swagger.annotations.ApiModel;
@@ -34,7 +33,7 @@ public class CouponVo
     private Integer couponId;
     
     @ApiModelProperty(name="所属优惠券定义Id", value="couponDefId")
-    @JsonProperty(value = "couponDefId")
+    @JSONField(name="couponDefId")
     private Integer couponDefCouponDefId;
     
     @ApiModelProperty("所属优惠券定义编号")
@@ -50,7 +49,7 @@ public class CouponVo
     private String name;
     
     @ApiModelProperty(name="优惠券拥有者", value="couponDefCode")
-    @JsonProperty(value = "ownerName")
+    @JSONField(name="ownerName")
     private String ownerName;
     
     @ApiModelProperty("折扣（例如8折）")

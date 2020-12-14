@@ -1,5 +1,7 @@
 package com.kl.parkLine.json;
 
+import com.alibaba.fastjson.annotation.JSONField;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +10,7 @@ import lombok.Setter;
 public class WxCode2SessionResult extends WxResultBase
 {
     private String openid;  
-    private String session_key;  
+    @JSONField(name="session_key")
+    private String sessionKey;  
     private String unionid;  
 }

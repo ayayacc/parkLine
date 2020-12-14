@@ -1,6 +1,6 @@
 package com.kl.parkLine.json;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.alibaba.fastjson.annotation.JSONField;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -18,7 +18,7 @@ public class WxUnifiedOrderResult
     private String appId;
     
     @ApiModelProperty("数据包")
-    @JsonProperty(value = "package")
+    @JSONField(name="package")
     private String pack;
     
     @ApiModelProperty("时间戳")
