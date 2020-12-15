@@ -26,29 +26,15 @@
         </encoder>  
     </appender>  
     
-    <!--数据库日志-->
-    <!-- <appender name="DB" class="ch.qos.logback.classic.db.DBAppender">
-        <connectionSource class="ch.qos.logback.core.db.DriverManagerConnectionSource">
-            <driverClass>com.mysql.cj.jdbc.Driver</driverClass>
-            <url>jdbc:mysql://localhost:3306/parking-line?characterEncoding=UTF-8</url>
-            <user>root</user>
-            <password>LuZhaiAudit2wsx#EDC</password>
-        </connectionSource>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>error</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender> -->
-    
     <logger name="org.springframework.web" level="INFO"/>
     <!-- show parameters for hibernate sql 专为 Hibernate 定制 -->  
-    <logger name="org.hibernate.type.descriptor.sql.BasicBinder"  level="TRACE" />  
-    <logger name="org.hibernate.type.descriptor.sql.BasicExtractor"  level="DEBUG" />  
-    <logger name="org.hibernate.SQL" level="DEBUG" />  
-    <logger name="org.hibernate.engine.QueryParameters" level="DEBUG" />  
-    <logger name="org.hibernate.engine.query.HQLQueryPlan" level="DEBUG" />  
-    
+    <springprofile name="dev,pre">
+	    <logger name="org.hibernate.type.descriptor.sql.BasicBinder"  level="TRACE" />  
+	    <logger name="org.hibernate.type.descriptor.sql.BasicExtractor"  level="DEBUG" />  
+	    <logger name="org.hibernate.SQL" level="DEBUG" />  
+	    <logger name="org.hibernate.engine.QueryParameters" level="DEBUG" />  
+	    <logger name="org.hibernate.engine.query.HQLQueryPlan" level="DEBUG" />  
+    </springprofile>
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>  
         <appender-ref ref="FILE"/>  
