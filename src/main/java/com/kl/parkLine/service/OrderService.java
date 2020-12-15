@@ -220,7 +220,7 @@ public class OrderService
     {
         for (OrderLog log : order.getLogs())
         {
-            if (null!=log.getEvent() && log.getEvent().getType().equals(EventType.out))
+            if (null!=log.getEvent() && log.getEvent().getType().equals(EventType.complete))
             {
                 return true;
             }
@@ -600,15 +600,15 @@ public class OrderService
         else //订单已经支付
         {
             //检查是否已经超过出场限制
-            if (!now.after(order.getOutTimeLimit())) //未超过时间限制
+            if (!order.getOutTime().after(order.getOutTimeLimit())) //未超过时间限制
             {
                 eventResult = EventResult.open(String.format("已支付，一路顺风:%s", event.getPlateNo()));
             }
             else //超过离场时间限制
             {
-                DateTime startTime = new DateTime(order.getOutTimeLimit());
+                DateTime outTimeLimit = new DateTime(order.getOutTimeLimit());
                 DateTime endTime = new DateTime(now);
-                Period period = new Period(startTime, endTime, PeriodType.time());
+                Period period = new Period(endTime, outTimeLimit, PeriodType.time());
                 //计算需要补缴的费用
                 resetAmtAndOutTimeLimit(order);
                 if (order.getStatus().equals(OrderStatus.needToPay))  //产生新的费用
@@ -917,8 +917,8 @@ public class OrderService
         //提前交费超时后，补缴费
         if (order.getStatus().equals(OrderStatus.payed))
         {
-            //realAmt = amt-(payedAmt-realPayed)
-            order.setRealUnpayedAmt(amt.subtract(order.getPayedAmt().subtract(order.getRealPayedAmt())));
+            //realUnpayedAmt = amt-payedAmt
+            order.setRealUnpayedAmt(amt.subtract(order.getPayedAmt()));
         }
         else
         {
@@ -1441,11 +1441,14 @@ public class OrderService
         }
         
         //检查订单是否已经用过优惠券
-        for (OrderPayment orderPayment : order.getOrderPayments())
+        if (null != order.getOrderPayments())
         {
-            if (null != orderPayment.getUsedCoupon())
+            for (OrderPayment orderPayment : order.getOrderPayments())
             {
-                throw new BusinessException("一张订单只能用一次优惠券");
+                if (null != orderPayment.getUsedCoupon())
+                {
+                    throw new BusinessException("一张订单只能用一次优惠券");
+                }
             }
         }
     }
