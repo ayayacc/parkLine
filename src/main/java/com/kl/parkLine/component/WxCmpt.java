@@ -43,6 +43,9 @@ public class WxCmpt
     @Value("${spring.profiles.active}")
     private String active;
     
+    @Value("${wx.pay.key}")
+    private String wxPayKey;
+    
     @Autowired
     private WXMappingJackson2HttpMessageConverter jsonConverter;
     
@@ -73,15 +76,12 @@ public class WxCmpt
         {
             reqData.put("device_info", order.getPark().getCode());
         }
-        
-        String nonceStr = WXPayUtil.generateNonceStr();
-        reqData.put("nonce_str", nonceStr);
         //body
         reqData.put("body", order.getType().getText());
         //out_trade_no
         reqData.put("out_trade_no", order.getCode());
         //total_fee, 将单位从元转换成分
-        reqData.put("total_fee", order.getRealUnpayedAmt().multiply(new BigDecimal(100)).toString());
+        reqData.put("total_fee", order.getRealUnpayedAmt().multiply(new BigDecimal(100)).setScale(0).toString());
         //spbill_create_ip
         InetAddress address = InetAddress.getLocalHost();
         reqData.put("spbill_create_ip", address.getHostAddress());
@@ -121,8 +121,8 @@ public class WxCmpt
         }
         
         //二次签名
+        String nonceStr = result.get("nonce_str");
         Map<String, String> signParams = new HashMap<String, String>();
-        nonceStr = WXPayUtil.generateNonceStr();
         signParams.put("nonceStr", nonceStr);
         String pack = String.format("prepay_id=%s", result.get("prepay_id"));
         signParams.put("package", pack);
@@ -130,8 +130,7 @@ public class WxCmpt
         signParams.put("appId", appId);
         Long timeStamp = System.currentTimeMillis() / 1000;
         signParams.put("timeStamp", timeStamp.toString());
-        String paySign = WXPayUtil.generateSignature(signParams, appSecret);
-        signParams.put("paySign", paySign);
+        String paySign = WXPayUtil.generateSignature(signParams, wxPayKey);
         
         return WxUnifiedOrderResult.builder().nonceStr(nonceStr)
             .pack(pack).signType("MD5").appId(appId).timeStamp(timeStamp.toString())
