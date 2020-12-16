@@ -81,6 +81,7 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         .antMatchers("/**/*.woff2")
         .antMatchers("/**/*.otf")
         .antMatchers("/**/*.ico")
+        .antMatchers("/8UhH21Oxmj.txt")
         .antMatchers("/swagger-ui.html")
         .antMatchers("/swagger-ui/*")
         .antMatchers("/swagger-resources/**")
@@ -109,7 +110,6 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         wxAuthenticationFilter.setAuthenticationFailureHandler(failureHandler);
         wxAuthenticationFilter.setAuthenticationManager(authenticationManager); 
         wxAuthenticationFilter.setContinueChainBeforeSuccessfulAuthentication(false); 
-        wxAuthenticationProvider.setUserDetailsService(myUserDetailsService);
         
         //短信认证 过滤器
         SmsAuthenticationFilter smsAuthenticationFilter = new SmsAuthenticationFilter(); 
