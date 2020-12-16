@@ -585,8 +585,8 @@ public class OrderService
                         log.setRemark(String.format("%s, 无感支付失败: %s", order.getChangeRemark(), e.getMessage()));
                         order.getLogs().add(log);
                         order.setStatus(OrderStatus.needToPay);
-                        eventResult = EventResult.notOpen(String.format("停车时长%d小时%d分，请交费%.2f元", 
-                                period.getHours(), period.getMinutes(), order.getAmt().floatValue()));
+                        eventResult = EventResult.notOpen(String.format("无感支付失败:%s, 停车时长%d小时%d分，请交费%.2f元", 
+                                e.getMessage(), period.getHours(), period.getMinutes(), order.getAmt().floatValue()));
                     }
                 }
                 else //用户未开通无感支付
@@ -1606,13 +1606,6 @@ public class OrderService
             throw new BusinessException(String.format("订单: %s 是无主, 不能使用钱包支付", order.getCode()));
         }
         
-        //余额不足
-        if (0 > owner.getBalance().compareTo(order.getRealUnpayedAmt()))
-        {
-            throw new BusinessException(String.format("钱包余额: %.2f 元不足, 应付金额: %.2f 元",
-                    owner.getBalance().floatValue(), order.getRealUnpayedAmt().floatValue()));
-        }
-        
         //设置coupon
         if (null != coupon)
         {
@@ -1621,6 +1614,13 @@ public class OrderService
             //消耗优惠券
             couponService.useCoupon(coupon, order);
             order.appedChangeRemark(String.format("使用优惠券: %s; ", coupon.getCode()));
+        }
+        
+        //余额不足
+        if (0 > owner.getBalance().compareTo(order.getRealUnpayedAmt()))
+        {
+            throw new BusinessException(String.format("钱包余额: %.2f 元不足, 应付金额: %.2f 元",
+                    owner.getBalance().floatValue(), order.getRealUnpayedAmt().floatValue()));
         }
 
         //扣减钱包余额

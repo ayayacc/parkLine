@@ -13,7 +13,6 @@ import com.kl.parkLine.entity.User;
 import com.kl.parkLine.feign.IWxFeignClient;
 import com.kl.parkLine.json.WxCode2SessionResult;
 import com.kl.parkLine.service.UserService;
-import com.kl.parkLine.util.Const;
 
 @Component
 public class WxAuthenticationProvider implements AuthenticationProvider
@@ -23,8 +22,6 @@ public class WxAuthenticationProvider implements AuthenticationProvider
     
     @Value("${wx.app.secret}")
     private String appSecret;
-    
-    private MyUserDetailsService userDetailsService;
     
     @Autowired
     private IWxFeignClient wxFeignClient;
@@ -56,10 +53,4 @@ public class WxAuthenticationProvider implements AuthenticationProvider
     {
         return (WxAuthenticationToken.class.isAssignableFrom(authentication));
     }
-    
-    public void setUserDetailsService(MyUserDetailsService userDetailsService)
-    {
-        this.userDetailsService = userDetailsService;
-    }
-
 }
