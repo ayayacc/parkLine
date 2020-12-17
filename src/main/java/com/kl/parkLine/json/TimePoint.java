@@ -6,9 +6,11 @@ import com.kl.parkLine.entity.Order;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 public class TimePoint implements Comparable<TimePoint>
 {
     private String key;

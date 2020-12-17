@@ -7,10 +7,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @Builder
+@ToString
 @ApiModel("微信uniorder成功参数")
 public class WxUnifiedOrderResult
 {

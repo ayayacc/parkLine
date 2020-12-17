@@ -8,10 +8,12 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.ToString;
 import lombok.Value;
 
 @Builder
 @Value
+@ToString
 @AllArgsConstructor
 @ApiModel("行驶证信息")
 public class DrivingLicenseVo

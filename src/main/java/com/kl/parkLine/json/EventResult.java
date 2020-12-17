@@ -3,9 +3,11 @@ package com.kl.parkLine.json;
 import io.swagger.annotations.ApiModel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 @ApiModel("事件处理结果")
 public class EventResult
 {
