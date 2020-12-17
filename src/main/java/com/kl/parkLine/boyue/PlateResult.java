@@ -38,4 +38,19 @@ public class PlateResult
     
     //识别结果对应帧的时间戳
     private TimeStamp timeStamp;
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("PlateResult [plateNo=").append(plateNo)
+                .append(", colorType=").append(colorType)
+                .append(", confidence=").append(confidence)
+                .append(", triggerType=").append(triggerType)
+                .append(", plateId=").append(plateId).append(", isoffline=")
+                .append(isoffline).append(", timeStamp=").append(timeStamp)
+                .append("]");
+        return builder.toString();
+    }
+    
 }
