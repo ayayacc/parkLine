@@ -475,7 +475,7 @@ public class OrderService
             //检查是否在黑名单
             if (parkCarItemService.existsInBlackList(park, car))
             {
-                return EventResult.notOpen(String.format("%s 黑名单车辆", event.getPlateNo()));
+                return EventResult.notOpen(String.format("%s 黑名单或欠费车辆", event.getPlateNo()));
             }
         }
         
@@ -536,7 +536,7 @@ public class OrderService
         else //无事件Id，道闸停车场
         {
             //找到最近的入场订单
-            order = orderDao.findTopByPlateIdOrderByInTimeDesc(event.getPlateId());
+            order = orderDao.findTopByPlateIdOrderByInTimeDescCreatedDateDesc(event.getPlateId());
         }
         
         if (null == order) //无入场记录,开闸
@@ -560,7 +560,7 @@ public class OrderService
             this.setAmtAndOutTimeLimit(order);
             
             //如果订单价格是0，则直接变成无需支付状态
-            if (order.getAmt().equals(BigDecimal.ZERO))  //无需付款,直接开闸
+            if (0 == order.getAmt().compareTo(BigDecimal.ZERO))  //无需付款,直接开闸
             {
                 order.setStatus(OrderStatus.noNeedToPay);
                 eventResult = EventResult.open(String.format("一路顺风:%s", event.getPlateNo()));
