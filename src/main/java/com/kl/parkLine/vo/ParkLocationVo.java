@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.Value;
 
 @Builder
@@ -13,6 +14,7 @@ import lombok.Value;
 @Getter
 @Setter
 @AllArgsConstructor
+@ToString
 @ApiModel("停车场Vo")
 public class ParkLocationVo
 {
