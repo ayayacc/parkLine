@@ -10,10 +10,6 @@ public class Const
     public final static String JWT_CLAIM_ROLES = "JWT_CLAIM_ROLES";
     public final static Integer JWT_EXPIRED_TIME_MIN = 60; //60分钟jwt过期
     
-    //rest返回值
-    public final static Integer RET_OK = 0;
-    public final static Integer RET_FAILED = 1;
-    
     //微信前缀
     public final static String WX_PREFIX = "wxopenid_";
     

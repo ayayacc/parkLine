@@ -54,6 +54,7 @@ import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PaymentType;
+import com.kl.parkLine.enums.RetCode;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.ChargeWalletParam;
@@ -1529,7 +1530,7 @@ public class OrderService
      * @param order
      * @throws Exception 
      */
-    public void payByWallet(PayOrderParam payParam, String payerName) throws Exception
+    public void payByWallet(PayOrderParam payParam, String payerName) throws BusinessException
     {
         //查找订单
         Order order = this.findOneByOrderId(payParam.getOrderId());
@@ -1619,7 +1620,7 @@ public class OrderService
         //余额不足
         if (0 > owner.getBalance().compareTo(order.getRealUnpayedAmt()))
         {
-            throw new BusinessException(String.format("钱包余额: %.2f 元不足, 应付金额: %.2f 元",
+            throw new BusinessException(RetCode.balanceNotEnough, String.format("钱包余额: %.2f 元不足, 应付金额: %.2f 元",
                     owner.getBalance().floatValue(), order.getRealUnpayedAmt().floatValue()));
         }
 

@@ -263,9 +263,9 @@ public class OrderController
             orderService.payByWallet(payParam, auth.getName());
             return RestResult.success();
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
-            return RestResult.failed(e.getMessage());
+            return RestResult.failed(e.getRetCode(), e.getMessage());
         }
     }
     

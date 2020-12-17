@@ -1,6 +1,6 @@
 package com.kl.parkLine.json;
 
-import com.kl.parkLine.util.Const;
+import com.kl.parkLine.enums.RetCode;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -13,7 +13,7 @@ import lombok.Setter;
 public class RestResult<T>
 {
     @ApiModelProperty("标识代码,0表示成功，非0表示出错")
-    private Integer retCode;
+    private RetCode retCode;
 
     @ApiModelProperty("提示信息,供报错时使用")
     private String msg;
@@ -29,7 +29,7 @@ public class RestResult<T>
     public static <T> RestResult<T> success()
     {
         RestResult<T> result = new RestResult<T>();
-        result.setRetCode(Const.RET_OK);
+        result.setRetCode(RetCode.ok);
         result.setMsg("操作成功");
         return result;
     }
@@ -42,7 +42,7 @@ public class RestResult<T>
     public static <T> RestResult<T> success(String msg) 
     {
         RestResult<T> result = new RestResult<T>();
-        result.setRetCode(Const.RET_OK);
+        result.setRetCode(RetCode.ok);
         result.setMsg(msg);
         return result;
     }
@@ -55,7 +55,7 @@ public class RestResult<T>
     public static <T> RestResult<T> success(String msg, T obj) 
     {
         RestResult<T> result = new RestResult<T>();
-        result.setRetCode(Const.RET_OK);
+        result.setRetCode(RetCode.ok);
         result.setMsg("success");
         result.setData(obj);
         return result;
@@ -69,7 +69,7 @@ public class RestResult<T>
     public static <T> RestResult<T> success(T obj) 
     {
         RestResult<T> result = new RestResult<T>();
-        result.setRetCode(Const.RET_OK);
+        result.setRetCode(RetCode.ok);
         result.setMsg("success");
         result.setData(obj);
         return result;
@@ -83,7 +83,7 @@ public class RestResult<T>
     public static <T> RestResult<T> failed()
     {
         RestResult<T> result = new RestResult<T>();
-        result.setRetCode(Const.RET_FAILED);
+        result.setRetCode(RetCode.failed);
         result.setMsg("操作失败");
         return result;
     }
@@ -96,7 +96,7 @@ public class RestResult<T>
     public static <T> RestResult<T> failed(T obj, String msg) 
     {
         RestResult<T> result = new RestResult<T>();
-        result.setRetCode(Const.RET_FAILED);
+        result.setRetCode(RetCode.failed);
         result.setMsg(msg);
         result.setData(obj);
         return result;
@@ -111,7 +111,21 @@ public class RestResult<T>
     public static <T> RestResult<T> failed(String msg) 
     {
         RestResult<T> result = new RestResult<T>();
-        result.setRetCode(Const.RET_FAILED);
+        result.setRetCode(RetCode.failed);
+        result.setMsg(msg);
+        return result;
+    }
+    
+    /**
+     * 处理异常返回
+     *
+     * @param msg
+     * @return
+     */
+    public static <T> RestResult<T> failed(RetCode retCode, String msg) 
+    {
+        RestResult<T> result = new RestResult<T>();
+        result.setRetCode(retCode);
         result.setMsg(msg);
         return result;
     }

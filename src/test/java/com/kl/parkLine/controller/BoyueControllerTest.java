@@ -35,6 +35,7 @@ import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PlateColor;
+import com.kl.parkLine.enums.RetCode;
 import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.JwtToken;
 import com.kl.parkLine.json.PayOrderParam;
@@ -45,7 +46,6 @@ import com.kl.parkLine.service.DeviceService;
 import com.kl.parkLine.service.OrderService;
 import com.kl.parkLine.service.ParkService;
 import com.kl.parkLine.service.UserService;
-import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.OrderVo;
 import com.kl.parkLine.vo.ParkLocationVo;
 import com.kl.parkLine.vo.SmsCodeVo;
@@ -93,7 +93,7 @@ public class BoyueControllerTest
                 .andReturn();
         String retContent = mvcResult.getResponse().getContentAsString();
         RestResult<SmsCodeVo> smsCodeResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<SmsCodeVo>>(){});
-        assertEquals(Const.RET_OK, smsCodeResult.getRetCode());
+        assertEquals(RetCode.ok, smsCodeResult.getRetCode());
         
         //登录
         SmsCheckParam smsLoginParam = new SmsCheckParam();
@@ -107,7 +107,7 @@ public class BoyueControllerTest
                 .andReturn();
         retContent = mvcResult.getResponse().getContentAsString();
         RestResult<JwtToken> jwtTokenResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<JwtToken>>(){});
-        assertEquals(Const.RET_OK, jwtTokenResult.getRetCode());
+        assertEquals(RetCode.ok, jwtTokenResult.getRetCode());
         return jwtTokenResult.getData().getToken();
     }
     
@@ -260,7 +260,7 @@ public class BoyueControllerTest
                 .andReturn();
         retContent = result.getResponse().getContentAsString();
         RestResult<Object> payResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<Object>>(){});
-        assertEquals(Const.RET_OK, payResult.getRetCode());
+        assertEquals(RetCode.ok, payResult.getRetCode());
         
         //校验订单金额
         Order order = orderService.findOneByOrderId(orderVoResult.getData().getOrderId());
@@ -832,7 +832,7 @@ public class BoyueControllerTest
                 .andReturn();
         retContent = result.getResponse().getContentAsString();
         RestResult<Object> payResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<Object>>(){});
-        assertEquals(Const.RET_OK, payResult.getRetCode());
+        assertEquals(RetCode.ok, payResult.getRetCode());
         
         //校验订单金额
         Order order = orderService.findOneByOrderId(orderVoResult.getData().getOrderId());
@@ -987,7 +987,7 @@ public class BoyueControllerTest
                 .andReturn();
         retContent = result.getResponse().getContentAsString();
         RestResult<Object> payResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<Object>>(){});
-        assertEquals(Const.RET_OK, payResult.getRetCode());
+        assertEquals(RetCode.ok, payResult.getRetCode());
         
         //校验订单金额
         Order order = orderService.findOneByOrderId(orderVoResult.getData().getOrderId());
@@ -1142,7 +1142,7 @@ public class BoyueControllerTest
                 .andReturn();
         retContent = result.getResponse().getContentAsString();
         RestResult<Object> payResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<Object>>(){});
-        assertEquals(Const.RET_OK, payResult.getRetCode());
+        assertEquals(RetCode.ok, payResult.getRetCode());
         
         //校验订单金额
         Order order = orderService.findOneByOrderId(orderVoResult.getData().getOrderId());
@@ -1204,7 +1204,7 @@ public class BoyueControllerTest
                 .andReturn();
         retContent = result.getResponse().getContentAsString();
         payResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<Object>>(){});
-        assertEquals(Const.RET_OK, payResult.getRetCode());
+        assertEquals(RetCode.ok, payResult.getRetCode());
         
         //校验订单金额
         order = orderService.findOneByOrderId(orderVoResult.getData().getOrderId());
@@ -1355,7 +1355,7 @@ public class BoyueControllerTest
                 .andReturn();
         retContent = result.getResponse().getContentAsString();
         RestResult<Object> payResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<Object>>(){});
-        assertEquals(Const.RET_OK, payResult.getRetCode());
+        assertEquals(RetCode.ok, payResult.getRetCode());
         
         //校验订单金额
         Order order = orderService.findOneByOrderId(orderVoResult.getData().getOrderId());
@@ -1421,7 +1421,7 @@ public class BoyueControllerTest
                 .andReturn();
         retContent = result.getResponse().getContentAsString();
         payResult = JSONObject.parseObject(retContent, new TypeReference<RestResult<Object>>(){});
-        assertEquals(Const.RET_OK, payResult.getRetCode());
+        assertEquals(RetCode.ok, payResult.getRetCode());
         
         //校验订单金额
         order = orderService.findOneByOrderId(orderVoResult.getData().getOrderId());

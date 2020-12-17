@@ -1,6 +1,7 @@
 package com.kl.parkLine.filters;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -14,10 +15,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.alibaba.fastjson.JSON;
 import com.kl.parkLine.component.JwtCmpt;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.RetCode;
+import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.security.JWTAuthenticationToken;
 import com.kl.parkLine.security.MyUserDetailsService;
 import com.kl.parkLine.util.Const;
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 
 public class JWTAuthorizationFilter extends OncePerRequestFilter 
@@ -62,7 +66,7 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
             User user = userDetailsService.loadUserByName(username);
             if (null == user)
             {
-                throw new Exception(String.format("无效的用户: %s", username));
+                throw new BusinessException(String.format("无效的用户: %s", username));
             }
             
             JWTAuthenticationToken token = new JWTAuthenticationToken(username, user.getAuthorities());
@@ -78,14 +82,17 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
             chain.doFilter(request, response);
             return;
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
-            //这里也可以filterChain.doFilter(request,response)然后return,那最后就会调用
-            //.exceptionHandling().authenticationEntryPoint,也就是本列中的"需要登陆"
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write(JSON.toJSONString(RestResult.failed(e.getMessage())));
+            response.getWriter().write(JSON.toJSONString(RestResult.failed(e.getRetCode(), e.getMessage())));
+            return;
+        }
+        catch (ParseException | JOSEException e)
+        {
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write(JSON.toJSONString(RestResult.failed(RetCode.invalidToken, e.getMessage())));
             return;
         }
     }
-
 }
