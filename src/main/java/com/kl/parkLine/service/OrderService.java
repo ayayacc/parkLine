@@ -1462,8 +1462,8 @@ public class OrderService
     private BigDecimal calRealAmt(Order order, Coupon coupon)
     {
         BigDecimal discount = order.getAmt().multiply(new BigDecimal(10).subtract(coupon.getDiscount()).divide(new BigDecimal(10), 2, RoundingMode.HALF_UP));
-        BigDecimal realDiscount = coupon.getMaxAmt().min(discount);
-        return order.getAmt().subtract(realDiscount).setScale(2);
+        BigDecimal realDiscount = coupon.getMaxAmt().min(discount).setScale(2, RoundingMode.HALF_UP);
+        return order.getAmt().subtract(realDiscount).setScale(2, RoundingMode.HALF_UP);
     }
     
     /**
