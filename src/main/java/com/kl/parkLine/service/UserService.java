@@ -115,7 +115,7 @@ public class UserService
             user = new User();
         }
         user.setName(userName);
-        user.setNickName(wxUserInfo.getNickName());
+        user.setNickName(wxUserInfo.getNickName().replace("\\", "\\\\"));
         user.setWxOpenId(sessionResult.getOpenid());
         user.setCountry(wxUserInfo.getCountry());
         user.setProvince(wxUserInfo.getProvince());
