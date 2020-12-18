@@ -140,6 +140,7 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         .addFilterBefore(smsAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .addFilterAfter(jwtAuthorizationFilter, AccountAuthenticationFilter.class)
         .csrf().disable()  // 禁用 Spring Security 自带的跨域处理
+        .cors().disable()
          // 调整为让 Spring Security 不创建和使用 session;    
         .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
