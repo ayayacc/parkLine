@@ -7,10 +7,10 @@ import java.text.SimpleDateFormat;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -149,13 +149,22 @@ public class AliYunCmpt
     public byte[] getBytes(String key) throws IOException 
     {
         GetObjectRequest getObjectRequest = new GetObjectRequest(bucket, key);
-        HttpHeaders httpHeaders = new HttpHeaders();
         OSSObject OSSObject = ossClient.getObject(getObjectRequest);
         InputStream objectInputStream = OSSObject.getObjectContent();
         byte[] bytes = IOUtils.toByteArray(objectInputStream);
         objectInputStream.close();
-        httpHeaders.setContentLength(bytes.length);
         return bytes;
+    }
+    
+    /**
+     * 获取awsOSS上的文件数据
+     * @param key 文件代码
+     * @return
+     * @throws IOException
+     */
+    public String getBase64(String key) throws IOException 
+    {
+        return new String(Base64.encodeBase64(getBytes(key)));
     }
     
     /**

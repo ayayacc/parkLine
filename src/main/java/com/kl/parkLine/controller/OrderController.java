@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +28,7 @@ import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.enums.DeviceUseage;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
+import com.kl.parkLine.json.Base64Img;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
@@ -442,25 +442,25 @@ public class OrderController
      * 获取某次订单的入场记录截图
      * @throws IOException 
      */
-    @GetMapping(value = "/image/in/{orderId}", produces = MediaType.IMAGE_JPEG_VALUE)
+    @GetMapping(value = "/image/in/{orderId}")
     @ApiOperation(value="获取某次订单的入场记录截图", notes="获取某次订单的入场记录截图")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public byte[] getInImage(@ApiParam(name="订单Id",type="path") @PathVariable("orderId") Integer orderId,
+    public RestResult<Base64Img> getInImage(@ApiParam(name="订单Id",type="path") @PathVariable("orderId") Integer orderId,
             @ApiIgnore @PathVariable("orderId") Order order) throws IOException
     {
-        return orderService.getOrderImage(order, DeviceUseage.in);
+        return RestResult.success(orderService.getOrderImage(order, DeviceUseage.in));
     }
     
     /**
      * 获取某次订单的出场记录截图
      * @throws IOException 
      */
-    @GetMapping(value = "/image/out/{orderId}", produces = MediaType.IMAGE_JPEG_VALUE)
+    @GetMapping(value = "/image/out/{orderId}")
     @ApiOperation(value="获取某次订单的出场记录截图", notes="获取某次订单的出场记录截图")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public byte[] getOutImage(@ApiParam(name="订单Id",type="path") @PathVariable("orderId") Integer orderId,
+    public RestResult<Base64Img> getOutImage(@ApiParam(name="订单Id",type="path") @PathVariable("orderId") Integer orderId,
             @ApiIgnore @PathVariable("orderId") Order order) throws IOException
     {
-        return orderService.getOrderImage(order, DeviceUseage.out);
+        return RestResult.success(orderService.getOrderImage(order, DeviceUseage.out));
     }
 }

@@ -83,7 +83,7 @@ public class User extends AbstractDateEntity implements UserDetails
     @ApiModelProperty("用户唯一标识")
     private String name;
     
-    @Column(name = "nick_name", length = 64, columnDefinition="varchar(64) comment '用户昵称'")
+    @Column(name = "nick_name", length = 1024, columnDefinition="varchar(1024) comment '用户昵称'")
     @ApiModelProperty("用户昵称")
     private String nickName;
     

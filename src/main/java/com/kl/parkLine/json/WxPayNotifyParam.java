@@ -27,19 +27,4 @@ public class WxPayNotifyParam
     private String attach;  
     //支付完成时间
     private Date timeEnd;  
-    
-
-    @Override
-    public String toString()
-    {
-        StringBuilder builder = new StringBuilder();
-        builder.append("WxPayNotifyParam [openId=").append(openId)
-                .append(", isSubscribe=").append(isSubscribe)
-                .append(", bankType=").append(bankType)
-                .append(", transactionId=").append(transactionId)
-                .append(", outTradeNo=").append(outTradeNo).append(", attach=")
-                .append(attach).append(", timeEnd=").append(timeEnd)
-                .append("]");
-        return builder.toString();
-    }
 }

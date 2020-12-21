@@ -1,5 +1,7 @@
 package com.kl.parkLine.security;
 
+import java.io.UnsupportedEncodingException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -41,7 +43,15 @@ public class WxAuthenticationProvider implements AuthenticationProvider
             throw new WxAuthenticationException(result.getErrmsg());
         }
         WxAuthenticationToken wxAuthenticationToken = (WxAuthenticationToken)authentication;
-        User user = userService.setupUser(result, wxAuthenticationToken.getWxUserInfo());
+        User user;
+        try
+        {
+            user = userService.setupUser(result, wxAuthenticationToken.getWxUserInfo());
+        }
+        catch (UnsupportedEncodingException e)
+        {
+            throw new WxAuthenticationException(result.getErrmsg());
+        }
         
         WxAuthenticationToken token = new WxAuthenticationToken(user.getUsername(), user.getAuthorities());
         token.setDetails(authentication.getDetails());

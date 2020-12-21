@@ -80,7 +80,7 @@ public class BoyueEventAdapter implements IEventAdapter<BoyueEvent, BoyueResp>
         retEvent.setDeviceSn(serialNo);
 
         //发生时间
-        Long timeStamp = boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().getSec();
+        Long timeStamp = boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().getUsec();
         Date happenTime = new Date(timeStamp);
         retEvent.setHappenTime(happenTime);
 

@@ -57,6 +57,7 @@ import com.kl.parkLine.enums.PaymentType;
 import com.kl.parkLine.enums.RetCode;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
+import com.kl.parkLine.json.Base64Img;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.EventResult;
 import com.kl.parkLine.json.MonthlyTktParam;
@@ -1665,7 +1666,7 @@ public class OrderService
      * @return
      * @throws IOException
      */
-    public byte[] getOrderImage(Order order, DeviceUseage deviceUseage) throws IOException
+    public Base64Img getOrderImage(Order order, DeviceUseage deviceUseage) throws IOException
     {
         String code = "";
         switch (deviceUseage)
@@ -1679,7 +1680,9 @@ public class OrderService
             default:
                 break;
         }
-        return aliYunOssCmpt.getBytes(code);
+        Base64Img base64Img = new Base64Img();
+        base64Img.setImg(aliYunOssCmpt.getBase64(code));
+        return base64Img;
     }
     
     /**

@@ -1,10 +1,12 @@
 package com.kl.parkLine.service;
 
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -105,8 +107,9 @@ public class UserService
     /**
      * 设置微信用户
      * @param wxUserInfo 微信登录信息
+     * @throws UnsupportedEncodingException 
      */
-    public User setupUser(WxCode2SessionResult sessionResult, WxUserInfo wxUserInfo)
+    public User setupUser(WxCode2SessionResult sessionResult, WxUserInfo wxUserInfo) throws UnsupportedEncodingException
     {
         String userName = Const.WX_PREFIX + sessionResult.getOpenid();
         User user = findByName(userName);
@@ -115,7 +118,7 @@ public class UserService
             user = new User();
         }
         user.setName(userName);
-        user.setNickName(wxUserInfo.getNickName().replace("\\", "\\\\"));
+        user.setNickName(Base64.encodeBase64String(wxUserInfo.getNickName().getBytes("utf-8")));
         user.setWxOpenId(sessionResult.getOpenid());
         user.setCountry(wxUserInfo.getCountry());
         user.setProvince(wxUserInfo.getProvince());
