@@ -3,7 +3,9 @@ package com.kl.parkLine.controller;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,6 +31,7 @@ import com.kl.parkLine.enums.DeviceUseage;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.Base64Img;
+import com.kl.parkLine.json.ChargeOpts;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
@@ -462,5 +465,25 @@ public class OrderController
             @ApiIgnore @PathVariable("orderId") Order order) throws IOException
     {
         return RestResult.success(orderService.getOrderImage(order, DeviceUseage.out));
+    }
+    
+    /**
+     * 获取可以充值的金额选项清单
+     * @throws IOException 
+     */
+    @GetMapping(value = "/charge/opts")
+    @ApiOperation(value="获取可以充值的金额选项清单", notes="获取可以充值的金额选项清单")
+    public RestResult<ChargeOpts> getChargeOpts()
+    {
+        //50,100,200,300,500
+        ChargeOpts chargeOpts = new ChargeOpts();
+        List<Integer> opts = new ArrayList<Integer>();
+        opts.add(50);
+        opts.add(100);
+        opts.add(200);
+        opts.add(300);
+        opts.add(500);
+        chargeOpts.setOpts(opts);
+        return RestResult.success(chargeOpts);
     }
 }

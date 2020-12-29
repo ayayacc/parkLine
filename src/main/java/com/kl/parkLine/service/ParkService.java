@@ -10,6 +10,8 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -48,6 +50,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 @Transactional(rollbackFor = Exception.class)
 public class ParkService
 {
+    private final static Logger logger = LoggerFactory.getLogger(ParkService.class);
+    
     @Autowired
     private IParkDao parkDao;
 
@@ -114,7 +118,7 @@ public class ParkService
             //获取自运营停车场数据
             Geometry geometry = wktReader.read(row.get("geotext").toString());
             Point point = geometry.getInteriorPoint();
-            ParkLocationVo neerByParkVo = ParkLocationVo.builder().parkId((Integer)row.get("park_id"))
+            ParkLocationVo nearByParkVo = ParkLocationVo.builder().parkId((Integer)row.get("park_id"))
                     .code(row.get("code").toString())
                     .name(row.get("name").toString())
                     .totalCnt((Integer)row.get("total_cnt"))
@@ -126,7 +130,7 @@ public class ParkService
                     .freeTimeMin(freeTimeMin)
                     .build();
             
-            ret.add(neerByParkVo);
+            ret.add(nearByParkVo);
         }
         
         //调用腾讯地图查找其他停车场
@@ -143,6 +147,10 @@ public class ParkService
                         .build();
                 ret.add(neerByParkVo);
             }
+        }
+        else
+        {
+            logger.error(mapSearchResult.getMessage());
         }
         
         return ret;

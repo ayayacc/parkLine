@@ -15,9 +15,9 @@ public class EventResult
     private Boolean open;
     
     //显示屏内容
-    private String content;
+    private ContentLines content;
     
-    public static EventResult open(String content) 
+    public static EventResult open(ContentLines content) 
     {
         EventResult result = new EventResult();
         result.setOpen(true);
@@ -25,7 +25,7 @@ public class EventResult
         return result;
     }
     
-    public static EventResult notOpen(String content) 
+    public static EventResult notOpen(ContentLines content) 
     {
         EventResult result = new EventResult();
         result.setOpen(false);

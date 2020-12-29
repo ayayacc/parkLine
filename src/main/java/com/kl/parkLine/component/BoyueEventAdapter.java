@@ -1,27 +1,38 @@
 package com.kl.parkLine.component;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
+import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import com.google.common.primitives.Bytes;
 import com.kl.parkLine.boyue.BoyueEvent;
 import com.kl.parkLine.boyue.BoyueResp;
+import com.kl.parkLine.boyue.SerialData;
 import com.kl.parkLine.entity.Device;
 import com.kl.parkLine.entity.Event;
 import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.PlateColor;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.interfaces.IEventAdapter;
+import com.kl.parkLine.json.ContentLines;
 import com.kl.parkLine.json.EventResult;
 import com.kl.parkLine.service.DeviceService;
+import com.kl.parkLine.util.Const;
 
 /**
  * @author chenc
@@ -37,6 +48,9 @@ public class BoyueEventAdapter implements IEventAdapter<BoyueEvent, BoyueResp>
     @Autowired
     private AliYunCmpt aliYunCmpt;
     
+    @Autowired
+    private CRC16Cmpt crc16Cmpt;
+    
     private final  String DEVICE_COMPANY_BY = "博粤";
     
     //车牌颜色, 0：未知、1：蓝色、2：黄色、3：白色、4：黑色、5：绿色
@@ -46,12 +60,34 @@ public class BoyueEventAdapter implements IEventAdapter<BoyueEvent, BoyueResp>
     private final Integer BY_PLATE_COLOR_WHITE = 3;
     private final Integer BY_PLATE_COLOR_BLACK = 4;
     private final Integer BY_PLATE_COLOR_GREEN = 5;
+    
     //车牌颜色映射表
     private final Map<Integer, PlateColor> mapByPalteColorToEnum = new HashMap<Integer, PlateColor>();
     
     //博粤开闸
     private final String BOYUE_OPEN = "ok";
     private final String BOYUE_NOT_OPEN = "notok";
+    
+    private String TIME_STAMP = "‘Y-‘M-‘D ‘g星期‘V 'r‘H：‘N：‘S";
+    
+    private Byte DA = 0x00;
+    private Byte VA = 0x64;
+    private Byte PN = (byte) 0xFF;
+    private Byte CMD_LINES = 0x6E; //单包多行显示，带语音 
+    private Byte SAVE_FLAG_TEMP = 0x00; //下载到临时区
+    //内容显示控制
+    private Byte DM = 0x03; //显示模式
+    private Byte DS = 0x00; //显示速度
+    private Byte DT = 0x05; //停留时间 
+    private Byte DR = 0x00; //显示次数
+    private Byte[] TC_G = {0x00, (byte) 0xFF, 0x00, 0x00}; //文本颜色-绿色
+    private Byte TEXT_LINE_END = 0x0D; //文本行结尾
+    private Byte TEXT_LAST_LINE_END = 0x00; //最后一行文本行结尾
+    private Byte VOICE_START = 0x0A; //语音开始
+    private Byte VOICE_END = 0x00; //语音结束
+    
+    //数据长度位置
+    private int DL_POS = 5;
     
     public BoyueEventAdapter()
     {
@@ -135,10 +171,13 @@ public class BoyueEventAdapter implements IEventAdapter<BoyueEvent, BoyueResp>
     }
 
     @Override
-    public BoyueResp convert2EventResp(EventResult eventResult)
+    public BoyueResp convert2EventResp(EventResult eventResult) throws UnsupportedEncodingException
     {
         BoyueResp boyueResp = new BoyueResp();
-        boyueResp.setContent(eventResult.getContent());
+        List<SerialData> serialDatas = new ArrayList<>();
+        serialDatas.add(this.convertContent(eventResult.getContent()));
+        boyueResp.setSerialData(serialDatas);
+        boyueResp.setContent(serialDatas.get(0).getContent());
         if (eventResult.getOpen())
         {
             boyueResp.setInfo(BOYUE_OPEN);
@@ -156,5 +195,151 @@ public class BoyueEventAdapter implements IEventAdapter<BoyueEvent, BoyueResp>
         BoyueResp resp = new BoyueResp();
         resp.setInfo(BOYUE_OPEN); //出现异常回复ok开闸
         return null;
+    }
+    
+    /**
+     * 将文字内容转换成一体机命令
+     * @param content
+     * @return
+     * @throws UnsupportedEncodingException 
+     */
+    private SerialData convertContent(ContentLines content) throws UnsupportedEncodingException
+    {
+        //DA + VR + PN[2] + 0x6E + DL + SAVE_FLAG + TEXT_CONTEXT_NUMBER + TEXT_CONTEXT[…]+ VF+ VTL + VT[...] CRC[2] 
+        List<Byte> bytes = new ArrayList<Byte>();
+        //设备地址,版本号
+        bytes.add(DA);
+        bytes.add(VA);
+        //单包PN
+        bytes.add(PN);
+        bytes.add(PN);
+        
+        //CMD,单包多行显示，带语音 
+        bytes.add(CMD_LINES);
+        
+        //DL,1 byte 数据长度
+        int len = 0;
+        
+        //SAVE_FLAG下载到临时区
+        bytes.add(SAVE_FLAG_TEMP);
+        len++;
+        
+        //文本行数
+        String strContent = "";
+        //将内容转换成数组，方便处理
+        Byte lineCnt = 0x00;
+        List<String> lines = new ArrayList<>();
+        if (!StringUtils.isEmpty(content.getLine1()) )
+        {
+            lines.add(content.getLine1());
+            lineCnt++;
+            strContent += content.getLine1();
+        }
+        if (!StringUtils.isEmpty(content.getLine2()) )
+        {
+            lines.add(content.getLine2());
+            lineCnt++;
+            strContent += content.getLine2();
+        }
+        if (!StringUtils.isEmpty(content.getLine3()) )
+        {
+            lines.add(content.getLine3());
+            lineCnt++;
+            strContent += content.getLine3();
+        }
+        if (!StringUtils.isEmpty(content.getLine4()) )
+        {
+            lines.add(content.getLine4());
+            lineCnt++;
+            strContent += content.getLine4();
+        }
+        bytes.add(lineCnt);
+        len++;
+        
+        //转换文本内容
+        ListIterator<String> iterator = lines.listIterator();
+        while (iterator.hasNext())
+        {
+            String line = iterator.next();
+            byte lid = 0x00; //行号，从0开始
+            bytes.add(lid++);
+            len++;
+            
+            //显示模式，速度，停留时间，显示次数
+            bytes.add(DM);
+            len++;
+            bytes.add(DS);
+            len++;
+            bytes.add(DT);
+            len++;
+            bytes.add(DR);
+            len++;
+            
+            //文本颜色-绿色 
+            bytes.addAll(Arrays.asList(TC_G));
+            len += TC_G.length;
+            
+            //处理时间戳
+            if (line.equals(Const.TIME_STAMP))
+            {
+                line = this.TIME_STAMP;
+            }
+            //文本长度
+            byte[] text = line.getBytes("GBK");
+            bytes.add((byte) text.length);
+            len++;
+            
+            //文本内容
+            for (byte b : text)
+            {
+                bytes.add(b);
+                len++;
+            }
+            
+            if (iterator.hasNext())
+            {
+                //文本行结尾
+                bytes.add(TEXT_LINE_END);
+            }
+            else
+            {
+                //最后文本行结尾
+                bytes.add(TEXT_LAST_LINE_END);
+            }
+            len++;
+        }
+        
+        //语音行
+        if (!StringUtils.isEmpty(content.getVoice()))
+        {
+            bytes.add(VOICE_START);
+            len++;
+            //文本长度
+            byte[] text = content.getVoice().getBytes("GBK");
+            bytes.add((byte) text.length);
+            len++;
+            //文本内容
+            for (byte b : text)
+            {
+                bytes.add(b);
+                len++;
+            }
+            bytes.add(VOICE_END);
+            len++;
+        }
+        
+        //添加DL
+        bytes.add(DL_POS, (byte)(len&0xFF));
+        
+        //CRC16校验
+        bytes.addAll(crc16Cmpt.calcCrc16(bytes));
+        
+        SerialData serialData = SerialData.builder().serialChannel(0)
+                .dataLen(bytes.size())
+                .content(strContent)
+                .data(new String(Base64.encodeBase64(Bytes.toArray(bytes))))
+                .build();
+        
+        return serialData;
     }
 }

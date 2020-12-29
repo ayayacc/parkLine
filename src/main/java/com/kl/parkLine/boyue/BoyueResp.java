@@ -1,5 +1,7 @@
 package com.kl.parkLine.boyue;
 
+import java.util.List;
+
 import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.Getter;
@@ -21,8 +23,9 @@ public class BoyueResp
     @JSONField(name="plateid")
     private Integer plateId;
     
-    /**
-     * 显示屏内容
-     */
+    @JSONField(name="content")
     private String content;
+    
+    @JSONField(name="serialData")
+    private List<SerialData> serialData;
 }

@@ -12,6 +12,5 @@ public interface IWxFeignClient
     //"https://api.weixin.qq.com/sns/jscode2session?appid={APPID}&secret={APPSECRET}&js_code={JSCODE}&grant_type=authorization_code";
     @GetMapping(value = "/sns/jscode2session?appid={APPID}&secret={APPSECRET}&js_code={JSCODE}&grant_type=authorization_code")
     public WxCode2SessionResult code2Session(@RequestParam("APPID")String appId, 
-            @RequestParam("APPSECRET")String appSecret, 
-            @RequestParam("JSCODE")String code);
+            @RequestParam("APPSECRET")String appSecret, @RequestParam("JSCODE")String code);
 }

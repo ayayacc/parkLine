@@ -144,7 +144,12 @@ public class XltEventAdapter implements IEventAdapter<XltEvt, XltEvtResult>
     public XltEvtResult convert2EventResp(EventResult eventResult)
     {
         XltEvtResult xltEvtResult = new XltEvtResult();
-        xltEvtResult.setMessage(eventResult.getContent());
+        String msg = String.format("%s,%s,%s,%s", 
+                eventResult.getContent().getLine1(),
+                eventResult.getContent().getLine2(),
+                eventResult.getContent().getLine3(),
+                eventResult.getContent().getLine4());
+        xltEvtResult.setMessage(msg);
         if (eventResult.getOpen())
         {
             xltEvtResult.setErrorcode(CLT_RET_CODE_OK);

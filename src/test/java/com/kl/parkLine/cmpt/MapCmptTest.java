@@ -1,7 +1,9 @@
 package com.kl.parkLine.cmpt;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 
 import org.junit.jupiter.api.Test;
@@ -32,6 +34,18 @@ public class MapCmptTest
         Point point = geometry.getInteriorPoint();
         QqMapSearchResult result = mapCmpt.search(point, 5d);
         assertNotNull(result);
+    }
+    
+    @Test
+    public void testGetBytes() throws ParseException, org.locationtech.jts.io.ParseException, UnsupportedEncodingException
+    {
+        String string = "欢迎光临";
+        byte[] bytes = string.getBytes("GBK");
+        assertEquals(8, bytes.length);
+        for (byte b : bytes)
+        {
+            System.out.println(Integer.toHexString(b));  
+        }
     }
     
 }

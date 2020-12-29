@@ -27,4 +27,5 @@ public class Const
     //提前付款出场时间30min
     public final static Integer OUT_LIMIT_TIME_NIN = 30;
     
+    public final static  String TIME_STAMP = "TIME_STAMP";
 }

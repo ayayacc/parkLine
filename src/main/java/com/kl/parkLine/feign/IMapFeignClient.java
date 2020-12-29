@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.kl.parkLine.json.QqMapSearchResult;
 
-@FeignClient(name="mapFeignClient", url="https://apis.map.qq.com", fallback=FeignClientFallback.class)
+@FeignClient(name="mapFeignClient", url="https://apis.map.qq.com")
 public interface IMapFeignClient
 {
     //"https://apis.map.qq.com/ws/place/v1/search?boundary={boundary}&key={key}&keyword={keyword}&sig={sig}";
