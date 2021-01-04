@@ -206,7 +206,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     /**
      * 订单状态: 已入场/待支付（已出场）/已支付/开票中/已开票
      */
-    @Column(name = "status", columnDefinition="varchar(255) comment '订单状态: in(已入场)/needToPay(待支付)/payed(已支付)/noNeedToPay(无需支付)/canceled(已取消)'")
+    @Column(name = "status", columnDefinition="varchar(16) comment '订单状态: in(已入场)/needToPay(待支付)/payed(已支付)/noNeedToPay(无需支付)/canceled(已取消)'")
     @Enumerated(EnumType.STRING)
     @NeedToCompare(name = "状态")
     private OrderStatus status;

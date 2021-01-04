@@ -13,6 +13,7 @@ import com.kl.parkLine.entity.EventPic;
 import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.ParkAbnormal;
 import com.kl.parkLine.enums.PlateColor;
+import com.kl.parkLine.enums.TriggerType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.interfaces.IEventAdapter;
 import com.kl.parkLine.json.EventResult;
@@ -89,6 +90,8 @@ public class XltEventAdapter implements IEventAdapter<XltEvt, XltEvtResult>
         
         //事件类型
         retEvent.setType(mapXltEventTypeToEnum.get(xltEvt.getEvt()));
+        //触发类型
+        retEvent.setTriggerType(TriggerType.auto);
         
         //属性赋值
         retEvent.setGuid(xltEvt.getEvtGuid());
@@ -117,7 +120,6 @@ public class XltEventAdapter implements IEventAdapter<XltEvt, XltEvtResult>
         retEvent.setPlaceCode(xltEvt.getBerthCode());
         retEvent.setDeviceSn(xltEvt.getDeviceSn());
         retEvent.setDevicePlace(xltEvt.getDevicePlace());
-        retEvent.setPlateCredible(xltEvt.getPlateCredible());
         retEvent.setActionCredible(xltEvt.getActionCredible());
         
         //异常停车类型

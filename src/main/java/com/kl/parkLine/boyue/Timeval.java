@@ -9,5 +9,5 @@ import lombok.ToString;
 @ToString
 public class Timeval
 {
-    private Long usec;
+    private Long sec;
 }

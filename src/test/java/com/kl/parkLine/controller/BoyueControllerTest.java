@@ -127,7 +127,7 @@ public class BoyueControllerTest
         Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
         InputStream is = resource.getInputStream();
         BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(inTime.getMillis());
+        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(inTime.getMillis()/1000);
         is.close();
         Car car = carService.getCar(boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo(), PlateColor.blue);
         
@@ -180,7 +180,7 @@ public class BoyueControllerTest
         resource = new ClassPathResource("/testData/boyue/carOut.json");
         is = resource.getInputStream();
         BoyueEvent boyueEventOut = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(outTime.getMillis());
+        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(outTime.getMillis()/1000);
         is.close();
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -334,7 +334,7 @@ public class BoyueControllerTest
         Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
         InputStream is = resource.getInputStream();
         BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(inTime.getMillis());
+        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(inTime.getMillis()/1000);
         is.close();
         Car car = carService.getCar(boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo(), PlateColor.blue);
         
@@ -414,7 +414,7 @@ public class BoyueControllerTest
         resource = new ClassPathResource("/testData/boyue/carOut.json");
         is = resource.getInputStream();
         BoyueEvent boyueEventOut = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(outTime.getMillis());
+        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(outTime.getMillis()/1000);
         is.close();
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -478,7 +478,7 @@ public class BoyueControllerTest
         Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
         InputStream is = resource.getInputStream();
         BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(inTime.getMillis());
+        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(inTime.getMillis()/1000);
         is.close();
         Car car = carService.getCar(boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo(), PlateColor.blue);
         
@@ -572,7 +572,7 @@ public class BoyueControllerTest
         resource = new ClassPathResource("/testData/boyue/carOut.json");
         is = resource.getInputStream();
         BoyueEvent boyueEventOut = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(outTime.getMillis());
+        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(outTime.getMillis()/1000);
         is.close();
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -638,7 +638,7 @@ public class BoyueControllerTest
         Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
         InputStream is = resource.getInputStream();
         BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(inTime.getMillis());
+        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(inTime.getMillis()/1000);
         is.close();
         Car car = carService.getCar(boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo(), PlateColor.blue);
         
@@ -709,7 +709,7 @@ public class BoyueControllerTest
         resource = new ClassPathResource("/testData/boyue/carOut.json");
         is = resource.getInputStream();
         BoyueEvent boyueEventOut = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(outTime.getMillis());
+        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(outTime.getMillis()/1000);
         is.close();
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -743,7 +743,7 @@ public class BoyueControllerTest
         Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
         InputStream is = resource.getInputStream();
         BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(inTime.getMillis());
+        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(inTime.getMillis()/1000);
         is.close();
         Car car = carService.getCar(boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo(), PlateColor.blue);
         
@@ -856,7 +856,7 @@ public class BoyueControllerTest
         resource = new ClassPathResource("/testData/boyue/carOut.json");
         is = resource.getInputStream();
         BoyueEvent boyueEventOut = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(outTime.getMillis());
+        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(outTime.getMillis()/1000);
         is.close();
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -898,7 +898,7 @@ public class BoyueControllerTest
         Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
         InputStream is = resource.getInputStream();
         BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(inTime.getMillis());
+        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(inTime.getMillis()/1000);
         is.close();
         Car car = carService.getCar(boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo(), PlateColor.blue);
         
@@ -1011,7 +1011,7 @@ public class BoyueControllerTest
         resource = new ClassPathResource("/testData/boyue/carOut.json");
         is = resource.getInputStream();
         BoyueEvent boyueEventOut = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(outTime.getMillis());
+        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(outTime.getMillis()/1000);
         is.close();
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1053,7 +1053,7 @@ public class BoyueControllerTest
         Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
         InputStream is = resource.getInputStream();
         BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(inTime.getMillis());
+        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(inTime.getMillis()/1000);
         is.close();
         Car car = carService.getCar(boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo(), PlateColor.blue);
         
@@ -1166,7 +1166,7 @@ public class BoyueControllerTest
         resource = new ClassPathResource("/testData/boyue/carOut.json");
         is = resource.getInputStream();
         BoyueEvent boyueEventOut = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(outTime.getMillis());
+        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(outTime.getMillis()/1000);
         is.close();
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1265,7 +1265,7 @@ public class BoyueControllerTest
         Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
         InputStream is = resource.getInputStream();
         BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(inTime.getMillis());
+        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(inTime.getMillis()/1000);
         is.close();
         Car car = carService.getCar(boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo(), PlateColor.blue);
         
@@ -1383,7 +1383,7 @@ public class BoyueControllerTest
         resource = new ClassPathResource("/testData/boyue/carOut.json");
         is = resource.getInputStream();
         BoyueEvent boyueEventOut = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(outTime.getMillis());
+        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(outTime.getMillis()/1000);
         is.close();
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -1492,7 +1492,7 @@ public class BoyueControllerTest
         Resource resource = new ClassPathResource("/testData/boyue/carIn.json");
         InputStream is = resource.getInputStream();
         BoyueEvent boyueEventIn = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(inTime.getMillis());
+        boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(inTime.getMillis()/1000);
         is.close();
         Car car = carService.getCar(boyueEventIn.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo(), PlateColor.blue);
         
@@ -1561,7 +1561,7 @@ public class BoyueControllerTest
         resource = new ClassPathResource("/testData/boyue/carOut.json");
         is = resource.getInputStream();
         BoyueEvent boyueEventOut = JSONObject.parseObject(is, BoyueEvent.class);
-        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setUsec(outTime.getMillis());
+        boyueEventOut.getAlarmInfoPlate().getResult().getPlateResult().getTimeStamp().getTimeval().setSec(outTime.getMillis()/1000);
         is.close();
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
                 .contentType(MediaType.APPLICATION_JSON)

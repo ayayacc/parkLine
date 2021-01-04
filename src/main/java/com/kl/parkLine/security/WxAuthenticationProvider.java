@@ -53,6 +53,11 @@ public class WxAuthenticationProvider implements AuthenticationProvider
             throw new WxAuthenticationException(result.getErrmsg());
         }
         
+        if (!user.isEnabled())
+        {
+            throw new SmsAuthenticationException("您的帐号已被禁用");
+        }
+        
         WxAuthenticationToken token = new WxAuthenticationToken(user.getUsername(), user.getAuthorities());
         token.setDetails(authentication.getDetails());
         return token;

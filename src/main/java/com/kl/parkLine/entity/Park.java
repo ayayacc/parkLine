@@ -81,17 +81,17 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     private String changeRemark;
     
     /**
-     * 停车场总车位数量
+     * 停车场临停车位总数量
      */
-    @NeedToCompare(name = "车位总数")
-    @Column(name = "total_cnt", nullable = false, columnDefinition="int comment '车位总数'")
+    @NeedToCompare(name = "临停车位总数")
+    @Column(name = "total_cnt", nullable = false, columnDefinition="int comment '临停车位总数'")
     private Integer totalCnt;
     
     /**
-     * 当前可用车位数量
+     * 当前可用临停车位数量
      */
-    @NeedToCompare(name = "可用车位数")
-    @Column(name = "available_cnt", nullable = false, columnDefinition="int comment '可用车位数'")
+    @NeedToCompare(name = "可用临停车位数")
+    @Column(name = "available_cnt", nullable = false, columnDefinition="int comment '可用临停车位数'")
     private Integer availableCnt;
     
     /**

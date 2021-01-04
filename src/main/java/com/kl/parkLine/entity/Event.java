@@ -29,6 +29,7 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.ParkAbnormal;
 import com.kl.parkLine.enums.PlateColor;
+import com.kl.parkLine.enums.TriggerType;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -71,6 +72,13 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, columnDefinition="varchar(16) comment 'in/out/complete/cancel'")
     private EventType type; 
+    
+    /**
+     * 触发类型
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "trigger_type", columnDefinition="varchar(8) comment 'auto/manual'")
+    private TriggerType triggerType;
     
     /**
      * 事件唯一标识符
@@ -133,10 +141,6 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
     //设备安装详细地址
     @Column(name = "device_place", length = 256, columnDefinition="varchar(256) comment '设备安装详细地址'")
     private String devicePlace;
-    
-    //车牌识别可信度
-    @Column(name = "plate_credible", precision = 8 ,scale = 2, columnDefinition="decimal(8,2) comment '车牌识别可信度0--1'")
-    private BigDecimal plateCredible;
     
     //出入行为可信度
     @Column(name = "action_credible", precision = 8 ,scale = 2, columnDefinition="decimal(8,2) comment '出入行为可信度0--1'")

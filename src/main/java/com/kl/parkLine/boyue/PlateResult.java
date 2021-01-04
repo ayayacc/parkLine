@@ -1,7 +1,5 @@
 package com.kl.parkLine.boyue;
 
-import java.math.BigDecimal;
-
 import com.alibaba.fastjson.annotation.JSONField;
 
 import lombok.Getter;
@@ -16,9 +14,6 @@ public class PlateResult
     
     //车牌颜色
     private Integer colorType;
-    
-    //识别结果可信度1-100
-    private BigDecimal confidence;
     
     //当前结果的触发类型：1：自动触发类型、2：外部输入触 发（IO 输入）、4：软件触发（SDK）、8：虚拟线圈触发
     private Integer triggerType;
@@ -45,7 +40,6 @@ public class PlateResult
         StringBuilder builder = new StringBuilder();
         builder.append("PlateResult [plateNo=").append(plateNo)
                 .append(", colorType=").append(colorType)
-                .append(", confidence=").append(confidence)
                 .append(", triggerType=").append(triggerType)
                 .append(", plateId=").append(plateId).append(", isoffline=")
                 .append(isoffline).append(", timeStamp=").append(timeStamp)

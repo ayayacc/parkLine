@@ -113,7 +113,11 @@ public class UserService
     {
         String userName = Const.WX_PREFIX + sessionResult.getOpenid();
         User user = findByName(userName);
-        if (null == user)
+        if (null != user)
+        {
+            return user;
+        }
+        else
         {
             user = new User();
         }
@@ -124,6 +128,7 @@ public class UserService
         user.setProvince(wxUserInfo.getProvince());
         user.setCity(wxUserInfo.getCity());
         user.setWxSessionKey(sessionResult.getSessionKey());
+        user.setEnabled(true);
         switch (wxUserInfo.getGender())
         {
             case 1:

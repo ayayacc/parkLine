@@ -58,6 +58,8 @@ import com.kl.parkLine.enums.RetCode;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.Base64Img;
+import com.kl.parkLine.json.CalOrderAmtParam;
+import com.kl.parkLine.json.CalOrderAmtResult;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.ContentLines;
 import com.kl.parkLine.json.EventResult;
@@ -415,6 +417,7 @@ public class OrderService
                         .line1(Const.TIME_STAMP)
                         .line2(order.getCar().getCarNo())
                         .line3("一路顺风")
+                        .voice(String.format("%s,一路顺风", order.getCar().getCarNo()))
                         .build());
             }
             else if (order.getStatus().equals(OrderStatus.payed)) //已经支付
@@ -426,6 +429,7 @@ public class OrderService
                             .line1(Const.TIME_STAMP)
                             .line2(order.getCar().getCarNo())
                             .line3("一路顺风")
+                            .voice(String.format("%s,一路顺风", order.getCar().getCarNo()))
                             .build());
                 }
             }
@@ -473,28 +477,34 @@ public class OrderService
         
         //车辆信息
         Car car = carService.getCar(event.getPlateNo(), event.getPlateColor());
-
-        //停车场无空位
-        if (0 >= park.getAvailableCnt())
-        {
-            
-            return EventResult.notOpen(ContentLines.builder()
-                    .line1(Const.TIME_STAMP)
-                    .line2(event.getPlateNo())
-                    .line3("车位已满").build());
-        }
         
-        //车辆不在白名单中才检查黑名单情况,也就是说，如果车辆在白名单中，则直接放行
-        if (!parkCarItemService.existsInWhiteList(park, car))
+        //检查是否为月票车
+        Order monthlyTck = this.findValidMonthlyTck(car, park);
+        if (null == monthlyTck) //无月票
         {
-            //检查是否在黑名单
-            if (parkCarItemService.existsInBlackList(park, car))
+            //停车场无空位
+            if (0 >= park.getAvailableCnt())
             {
-                return EventResult.notOpen(
-                        ContentLines.builder()
+                
+                return EventResult.notOpen(ContentLines.builder()
                         .line1(Const.TIME_STAMP)
                         .line2(event.getPlateNo())
-                        .line3("黑名单").build());
+                        .line3("车位已满").build());
+            }
+            
+            //车辆不在白名单中才检查黑名单情况,也就是说，如果车辆在白名单中，则直接放行
+            if (!parkCarItemService.existsInWhiteList(park, car))
+            {
+                //检查是否在黑名单
+                if (parkCarItemService.existsInBlackList(park, car))
+                {
+                    return EventResult.notOpen(
+                            ContentLines.builder()
+                            .line1(Const.TIME_STAMP)
+                            .line2(event.getPlateNo())
+                            .line3("黑名单车辆")
+                            .line4("此车为黑名单车辆").build());
+                }
             }
         }
         
@@ -512,21 +522,43 @@ public class OrderService
                 .inImgCode(event.getPicUrlIn())
                 .isOut(false)
                 .build();
-        //停车场空位-1
-        Integer newAvailableCnt = park.getAvailableCnt() - 1;
-        park.setChangeRemark(String.format("车辆入场, 停车场可用车位变化: %d --> %d, 事件: %s", 
-                park.getAvailableCnt(), newAvailableCnt, event.getGuid()));
-        park.setAvailableCnt(newAvailableCnt);
-        parkService.save(park);
+        EventResult eventResult = null;
+        if (null != monthlyTck) //月租车进入
+        {
+            DateTime now = new DateTime(event.getTimeIn());
+            DateTime endDate = new DateTime(monthlyTck.getEndDate());
+            //月租车提示
+            int nDay = Days.daysBetween(now, endDate).getDays();
+            eventResult = EventResult.open(ContentLines.builder()
+                    .line1(Const.TIME_STAMP)
+                    .line2("固定车")
+                    .line3(event.getPlateNo())
+                    .line4(String.format("剩余%d天", nDay))
+                    .voice(String.format("%s,剩余%d天", event.getPlateNo(), nDay))
+                    .build());
+        }
+        else //临停车辆进入, 扣减停车位
+        {
+            //停车场空位-1
+            Integer newAvailableCnt = park.getAvailableCnt() - 1;
+            park.setChangeRemark(String.format("车辆入场, 停车场可用车位变化: %d --> %d, 事件: %s", 
+                    park.getAvailableCnt(), newAvailableCnt, event.getGuid()));
+            park.setAvailableCnt(newAvailableCnt);
+            parkService.save(park);
+            
+            //临停车提示
+            eventResult = EventResult.open(ContentLines.builder()
+                    .line1(Const.TIME_STAMP)
+                    .line2("欢迎光临")
+                    .line3(event.getPlateNo())
+                    .line4("临时车")
+                    .voice(String.format("%s,欢迎光临", event.getPlateNo()))
+                    .build());
+        }
         
         //保存 订单
         this.save(order, event);
-        return EventResult.open(ContentLines.builder()
-                .line1(Const.TIME_STAMP)
-                .line2(event.getPlateNo())
-                .line3("欢迎光临")
-                .voice(String.format("%s欢迎光临", event.getPlateNo()))
-                .build());
+        return eventResult;
     }
     
     /**
@@ -560,7 +592,8 @@ public class OrderService
         else //无事件Id，道闸停车场
         {
             //找到最近的入场订单
-            order = orderDao.findTopByPlateIdOrderByInTimeDescCreatedDateDesc(event.getPlateId());
+            Car car = carService.getCar(event.getPlateNo(), event.getPlateColor());
+            order = orderDao.findTopByCarAndTypeAndIsOutIsFalseOrderByInTimeDesc(car, OrderType.parking);
         }
         
         if (null == order) //无入场记录,开闸
@@ -595,6 +628,7 @@ public class OrderService
                         .line1(Const.TIME_STAMP)
                         .line2(event.getPlateNo())
                         .line3("一路顺风")
+                        .voice(String.format("%s,一路顺风", event.getPlateNo()))
                         .build());
             }
             else  //产生费用
@@ -603,6 +637,10 @@ public class OrderService
                 DateTime inTime = new DateTime(order.getInTime());
                 DateTime outTime = new DateTime(order.getOutTime());
                 Period period = new Period(inTime, outTime, PeriodType.time());
+                String line3 = String.format("停车%d小时%d分", 
+                        period.getHours(), period.getMinutes());
+                String line4 = String.format("请交费%.2f元", 
+                        order.getAmt().floatValue());
                 //用户开通了无感支付
                 if (null!=order.getOwner() && order.getOwner().getIsQuickPay())
                 {
@@ -615,10 +653,10 @@ public class OrderService
                                 .line3(String.format("停车时长%d小时%d分", 
                                         period.getHours(), period.getMinutes()))
                                 .line4(String.format("无感支付%.2f元",order.getAmt().floatValue()))
-                                .voice("一路顺风")
+                                .voice(String.format("%s,一路顺风", event.getPlateNo()))
                                 .build());
                     }
-                    catch (Exception e)
+                    catch (Exception e)  //无感支付失败
                     {
                         OrderLog log = OrderLog.builder().order(order).build();
                         log.setRemark(String.format("%s, 无感支付失败: %s", order.getChangeRemark(), e.getMessage()));
@@ -627,10 +665,10 @@ public class OrderService
                         eventResult = EventResult.notOpen(ContentLines.builder()
                                 .line1(Const.TIME_STAMP)
                                 .line2(event.getPlateNo())
-                                .line3(String.format("停车%d小时%d分", 
-                                        period.getHours(), period.getMinutes()))
-                                .line4(String.format("请交费%.2f元", 
-                                        order.getAmt().floatValue()))
+                                .line3(line3)
+                                .line4(line4)
+                                .dr((byte) 0)
+                                .voice(String.format("%s,%s", line3,line4))
                                 .build());
                     }
                 }
@@ -640,10 +678,10 @@ public class OrderService
                     eventResult = EventResult.notOpen(ContentLines.builder()
                             .line1(Const.TIME_STAMP)
                             .line2(event.getPlateNo())
-                            .line3(String.format("停车%d小时%d分", 
-                                    period.getHours(), period.getMinutes()))
-                            .line4(String.format("请交费%.2f元", 
-                                    order.getAmt().floatValue()))
+                            .line3(line3)
+                            .line4(line4)
+                            .voice(String.format("%s,%s", line3,line4))
+                            .dr((byte) 0)
                             .build());
                 }
             }
@@ -657,6 +695,7 @@ public class OrderService
                         .line1(Const.TIME_STAMP)
                         .line2(event.getPlateNo())
                         .line3("一路顺风")
+                        .voice(String.format("%s,一路顺风", event.getPlateNo()))
                         .build());
             }
             else //超过离场时间限制
@@ -666,6 +705,11 @@ public class OrderService
                 Period period = new Period(endTime, outTimeLimit, PeriodType.time());
                 //计算需要补缴的费用
                 resetAmtAndOutTimeLimit(order);
+                //提示
+                String line3 = String.format("停车%d小时%d分", 
+                        period.getHours(), period.getMinutes());
+                String line4 = String.format("请交费%.2f元", 
+                        order.getAmt().floatValue());
                 if (order.getStatus().equals(OrderStatus.needToPay))  //产生新的费用
                 {
                     //BigDecimal unPayedAmt = order.getAmt().subtract(order.getPayedAmt());
@@ -679,6 +723,7 @@ public class OrderService
                                     .line1(Const.TIME_STAMP)
                                     .line2(event.getPlateNo())
                                     .line3("一路顺风")
+                                    .voice(String.format("%s,一路顺风", event.getPlateNo()))
                                     .build());
                             /*eventResult = EventResult.open(String.format("超时%d小时%d分, 无感支付%.2f元", 
                                     period.getHours(), period.getMinutes(), unPayedAmt.floatValue()));*/
@@ -692,10 +737,10 @@ public class OrderService
                             eventResult = EventResult.notOpen(ContentLines.builder()
                                     .line1(Const.TIME_STAMP)
                                     .line2(event.getPlateNo())
-                                    .line3(String.format("停车%d小时%d分", 
-                                            period.getHours(), period.getMinutes()))
-                                    .line4(String.format("请交费%.2f元", 
-                                            order.getAmt().floatValue()))
+                                    .line3(line3)
+                                    .line4(line4)
+                                    .voice(String.format("%s,%s", line3, line4))
+                                    .dr((byte) 0)
                                     .build());
                         }
                     }
@@ -709,6 +754,8 @@ public class OrderService
                                         period.getHours(), period.getMinutes()))
                                 .line4(String.format("请补交费%.2f元", 
                                         order.getAmt().floatValue()))
+                                .dr((byte) 0)
+                                .voice(String.format("%s,%s", line3,line4))
                                 .build());
                     }
                 }
@@ -718,6 +765,7 @@ public class OrderService
                             .line1(Const.TIME_STAMP)
                             .line2(event.getPlateNo())
                             .line3("一路顺风")
+                            .voice(String.format("%s,一路顺风", event.getPlateNo()))
                             .build());
                 }
             }
@@ -1799,5 +1847,37 @@ public class OrderService
             order.setStatus(OrderStatus.needToPay);
         }
         save(order);
+    }
+    
+    /**
+     * 找到指定车辆在指定停车场的有效月票
+     * @param car
+     * @param park
+     * @return
+     */
+    public Order findValidMonthlyTck(Car car, Park park)
+    {
+        Date now = new Date();
+        return orderDao.findTopByTypeAndCarAndParkAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(OrderType.monthlyTicket, car, park, OrderStatus.payed, now, now);
+    }
+    
+    /**
+     * 计算订单价格
+     * @param calOrderAmtParam
+     * @return
+     * @throws BusinessException 
+     * @throws ParseException 
+     */
+    public CalOrderAmtResult calOrderAmt(CalOrderAmtParam calOrderAmtParam) throws BusinessException, ParseException
+    {
+        Order order = this.findOneByOrderId(calOrderAmtParam.getOrderId());
+        if (null == order)
+        {
+            throw new BusinessException(String.format("无效的订单Id: %d", calOrderAmtParam.getOrderId()));
+        }
+        order.setOutTime(calOrderAmtParam.getOutTime());
+        this.setAmtAndOutTimeLimit(order);
+        this.save(order);
+        return CalOrderAmtResult.builder().amt(order.getAmt()).build();
     }
 }

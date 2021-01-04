@@ -66,9 +66,12 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
             User user = userDetailsService.loadUserByName(username);
             if (null == user)
             {
-                throw new BusinessException(String.format("无效的用户: %s", username));
+                throw new BusinessException(RetCode.userCanNotFind, String.format("不存在的用户: %s", username));
             }
-            
+            if (!user.isEnabled())
+            {
+                throw new BusinessException(RetCode.userDisabled, String.format("被禁用用户: %s", username));
+            }
             JWTAuthenticationToken token = new JWTAuthenticationToken(username, user.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(token);
             

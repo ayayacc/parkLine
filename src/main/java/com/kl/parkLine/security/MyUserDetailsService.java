@@ -33,7 +33,10 @@ public class MyUserDetailsService implements UserDetailsService
     public User loadUserByName(String userName) 
     {
         User user = userService.findByName(userName);
-        user.getAuthorities();
+        if (null != user)
+        {
+            user.getAuthorities();
+        }
         return user;
     }
 }

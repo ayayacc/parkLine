@@ -23,7 +23,13 @@ public enum RetCode implements BaseEnum
     expiredToke(3, "过期令牌"),
     
     @ApiModelProperty("4: 余额不足")
-    balanceNotEnough(4, "余额不足");
+    balanceNotEnough(4, "余额不足"),
+    
+    @ApiModelProperty("5: 用户被禁用")
+    userDisabled(5, "用户被禁用"),
+    
+    @ApiModelProperty("6: 未找到用户")
+    userCanNotFind(6, "未找到用户");
     
     private Integer value;
     private String text;
