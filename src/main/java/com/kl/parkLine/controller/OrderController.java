@@ -31,8 +31,6 @@ import com.kl.parkLine.enums.DeviceUseage;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.Base64Img;
-import com.kl.parkLine.json.CalOrderAmtParam;
-import com.kl.parkLine.json.CalOrderAmtResult;
 import com.kl.parkLine.json.ChargeOpts;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.MonthlyTktParam;
@@ -489,7 +487,7 @@ public class OrderController
         return RestResult.success(chargeOpts);
     }
     
-    @PostMapping(value = "/calAmt")
+    /*@PostMapping(value = "/calAmt")
     @ApiOperation(value="计算停车订单金额", notes="计算停车订单金额")
     public RestResult<CalOrderAmtResult> calAmt(@ApiParam(name="计算订单价格参数", required=true) @RequestBody CalOrderAmtParam calOrderAmtParam)
     {
@@ -501,5 +499,5 @@ public class OrderController
         {
             return RestResult.failed(e.getMessage());
         }
-    }
+    }*/
 }

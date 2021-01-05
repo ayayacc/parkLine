@@ -58,8 +58,6 @@ import com.kl.parkLine.enums.RetCode;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.Base64Img;
-import com.kl.parkLine.json.CalOrderAmtParam;
-import com.kl.parkLine.json.CalOrderAmtResult;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.ContentLines;
 import com.kl.parkLine.json.EventResult;
@@ -417,6 +415,7 @@ public class OrderService
                         .line1(Const.TIME_STAMP)
                         .line2(order.getCar().getCarNo())
                         .line3("一路顺风")
+                        .line4(" ")
                         .voice(String.format("%s,一路顺风", order.getCar().getCarNo()))
                         .build());
             }
@@ -429,6 +428,7 @@ public class OrderService
                             .line1(Const.TIME_STAMP)
                             .line2(order.getCar().getCarNo())
                             .line3("一路顺风")
+                            .line4(" ")
                             .voice(String.format("%s,一路顺风", order.getCar().getCarNo()))
                             .build());
                 }
@@ -489,7 +489,8 @@ public class OrderService
                 return EventResult.notOpen(ContentLines.builder()
                         .line1(Const.TIME_STAMP)
                         .line2(event.getPlateNo())
-                        .line3("车位已满").build());
+                        .line3("车位已满")
+                        .line4(" ").build());
             }
             
             //车辆不在白名单中才检查黑名单情况,也就是说，如果车辆在白名单中，则直接放行
@@ -602,6 +603,7 @@ public class OrderService
                     .line1(Const.TIME_STAMP)
                     .line2(event.getPlateNo())
                     .line3("无入场")
+                    .line4(" ")
                     .build());
         }
 
@@ -628,6 +630,7 @@ public class OrderService
                         .line1(Const.TIME_STAMP)
                         .line2(event.getPlateNo())
                         .line3("一路顺风")
+                        .line4(" ")
                         .voice(String.format("%s,一路顺风", event.getPlateNo()))
                         .build());
             }
@@ -695,6 +698,7 @@ public class OrderService
                         .line1(Const.TIME_STAMP)
                         .line2(event.getPlateNo())
                         .line3("一路顺风")
+                        .line4(" ")
                         .voice(String.format("%s,一路顺风", event.getPlateNo()))
                         .build());
             }
@@ -723,6 +727,7 @@ public class OrderService
                                     .line1(Const.TIME_STAMP)
                                     .line2(event.getPlateNo())
                                     .line3("一路顺风")
+                                    .line4(" ")
                                     .voice(String.format("%s,一路顺风", event.getPlateNo()))
                                     .build());
                             /*eventResult = EventResult.open(String.format("超时%d小时%d分, 无感支付%.2f元", 
@@ -765,6 +770,7 @@ public class OrderService
                             .line1(Const.TIME_STAMP)
                             .line2(event.getPlateNo())
                             .line3("一路顺风")
+                            .line4(" ")
                             .voice(String.format("%s,一路顺风", event.getPlateNo()))
                             .build());
                 }
@@ -1868,7 +1874,7 @@ public class OrderService
      * @throws BusinessException 
      * @throws ParseException 
      */
-    public CalOrderAmtResult calOrderAmt(CalOrderAmtParam calOrderAmtParam) throws BusinessException, ParseException
+    /*public CalOrderAmtResult calOrderAmt(CalOrderAmtParam calOrderAmtParam) throws BusinessException, ParseException
     {
         Order order = this.findOneByOrderId(calOrderAmtParam.getOrderId());
         if (null == order)
@@ -1879,5 +1885,5 @@ public class OrderService
         this.setAmtAndOutTimeLimit(order);
         this.save(order);
         return CalOrderAmtResult.builder().amt(order.getAmt()).build();
-    }
+    }*/
 }

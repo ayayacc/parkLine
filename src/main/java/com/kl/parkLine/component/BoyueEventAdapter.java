@@ -2,6 +2,7 @@ package com.kl.parkLine.component;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -251,29 +252,33 @@ public class BoyueEventAdapter implements IEventAdapter<BoyueEvent, BoyueResp>
         {
             lines.add(content.getLine1());
             lineCnt++;
-            strContent += content.getLine1();
+            strContent = content.getLine1();
         }
         
         if (!StringUtils.isEmpty(content.getLine2()))
         {
             lines.add(content.getLine2());
             lineCnt++;
-            strContent += content.getLine2();
+            strContent += "#" + content.getLine2();
         }
         
         if (!StringUtils.isEmpty(content.getLine3()))
         {
             lines.add(content.getLine3());
             lineCnt++;
-            strContent += content.getLine3();
+            strContent += "#" + content.getLine3();
         }
         
         if (!StringUtils.isEmpty(content.getLine4()))
         {
             lines.add(content.getLine4());
             lineCnt++;
-            strContent += content.getLine4();
+            strContent += "#" + content.getLine4();
         }
+        
+        //替换时间戳
+        SimpleDateFormat sdf = new SimpleDateFormat("yy-MM-dd E HH:mm:ss");
+        strContent = strContent.replace(Const.TIME_STAMP, sdf.format(new Date()));
         
         bytes.add(lineCnt);
         len++;
