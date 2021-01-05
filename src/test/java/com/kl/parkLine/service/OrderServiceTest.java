@@ -10,6 +10,8 @@ import java.util.Date;
 
 import org.joda.time.DateTime;
 import org.joda.time.Minutes;
+import org.joda.time.Period;
+import org.joda.time.PeriodType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -785,5 +787,17 @@ public class OrderServiceTest
         BigDecimal realDiscount = max.min(discount);
         BigDecimal realAmt = amt.subtract(realDiscount);
         assertEquals(new BigDecimal(7), realAmt);
+    }
+    
+    @Test
+    public void testJoda()
+    {
+        DateTime now = new DateTime();
+        DateTime future = now.plusDays(1).plusHours(1).plusMinutes(10).plusSeconds(50);
+        Period period = new Period(now, future, PeriodType.time());
+        int hours = 25;
+        int minutes = 10;
+        assertEquals(hours, period.getHours());
+        assertEquals(minutes, period.getMinutes());
     }
 }

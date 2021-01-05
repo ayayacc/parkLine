@@ -413,10 +413,10 @@ public class OrderService
             {
                 eventResult = EventResult.open(ContentLines.builder()
                         .line1(Const.TIME_STAMP)
-                        .line2(order.getCar().getCarNo())
-                        .line3("一路顺风")
+                        .line2("一路平安")
+                        .line3(order.getCar().getCarNo())
                         .line4(" ")
-                        .voice(String.format("%s,一路顺风", order.getCar().getCarNo()))
+                        .voice(String.format("一路平安,%s", order.getCar().getCarNo()))
                         .build());
             }
             else if (order.getStatus().equals(OrderStatus.payed)) //已经支付
@@ -426,10 +426,10 @@ public class OrderService
                 {
                     eventResult = EventResult.open(ContentLines.builder()
                             .line1(Const.TIME_STAMP)
-                            .line2(order.getCar().getCarNo())
-                            .line3("一路顺风")
+                            .line2("一路平安")
+                            .line3(order.getCar().getCarNo())
                             .line4(" ")
-                            .voice(String.format("%s,一路顺风", order.getCar().getCarNo()))
+                            .voice(String.format("一路平安,%s", order.getCar().getCarNo()))
                             .build());
                 }
             }
@@ -490,7 +490,8 @@ public class OrderService
                         .line1(Const.TIME_STAMP)
                         .line2(event.getPlateNo())
                         .line3("车位已满")
-                        .line4(" ").build());
+                        .line4(" ")
+                        .voice("车位已满").build());
             }
             
             //车辆不在白名单中才检查黑名单情况,也就是说，如果车辆在白名单中，则直接放行
@@ -502,9 +503,10 @@ public class OrderService
                     return EventResult.notOpen(
                             ContentLines.builder()
                             .line1(Const.TIME_STAMP)
-                            .line2(event.getPlateNo())
-                            .line3("黑名单车辆")
-                            .line4("此车为黑名单车辆").build());
+                            .line2("禁止入场")
+                            .line3(event.getPlateNo())
+                            .line4(" ")
+                            .voice(String.format("禁止入场,%s", event.getPlateNo())).build());
                 }
             }
         }
@@ -532,10 +534,10 @@ public class OrderService
             int nDay = Days.daysBetween(now, endDate).getDays();
             eventResult = EventResult.open(ContentLines.builder()
                     .line1(Const.TIME_STAMP)
-                    .line2("固定车")
+                    .line2("欢迎光临")
                     .line3(event.getPlateNo())
-                    .line4(String.format("剩余%d天", nDay))
-                    .voice(String.format("%s,剩余%d天", event.getPlateNo(), nDay))
+                    .line4(String.format("月租车剩余%d天", nDay))
+                    .voice(String.format("欢迎光临,月租车剩余%d天", nDay))
                     .build());
         }
         else //临停车辆进入, 扣减停车位
@@ -553,7 +555,7 @@ public class OrderService
                     .line2("欢迎光临")
                     .line3(event.getPlateNo())
                     .line4("临时车")
-                    .voice(String.format("%s,欢迎光临", event.getPlateNo()))
+                    .voice(String.format("欢迎光临,%s", event.getPlateNo()))
                     .build());
         }
         
@@ -628,10 +630,10 @@ public class OrderService
                 order.setStatus(OrderStatus.noNeedToPay);
                 eventResult = EventResult.open(ContentLines.builder()
                         .line1(Const.TIME_STAMP)
-                        .line2(event.getPlateNo())
-                        .line3("一路顺风")
+                        .line2("一路平安")
+                        .line3(event.getPlateNo())
                         .line4(" ")
-                        .voice(String.format("%s,一路顺风", event.getPlateNo()))
+                        .voice(String.format("一路平安,%s", event.getPlateNo()))
                         .build());
             }
             else  //产生费用
@@ -650,13 +652,20 @@ public class OrderService
                     try
                     {
                         this.quickPayByWallet(order); //无感支付, 钱包支付订单
-                        eventResult = EventResult.open(ContentLines.builder()
+                        /*eventResult = EventResult.open(ContentLines.builder()
                                 .line1(Const.TIME_STAMP)
                                 .line2(event.getPlateNo())
                                 .line3(String.format("停车时长%d小时%d分", 
                                         period.getHours(), period.getMinutes()))
                                 .line4(String.format("无感支付%.2f元",order.getAmt().floatValue()))
-                                .voice(String.format("%s,一路顺风", event.getPlateNo()))
+                                .voice(String.format("一路平安,%s", event.getPlateNo()))
+                                .build());*/
+                        eventResult = EventResult.open(ContentLines.builder()
+                                .line1(Const.TIME_STAMP)
+                                .line2("一路平安")
+                                .line3(event.getPlateNo())
+                                .line4(" ")
+                                .voice(String.format("一路平安,%s", event.getPlateNo()))
                                 .build());
                     }
                     catch (Exception e)  //无感支付失败
@@ -671,7 +680,7 @@ public class OrderService
                                 .line3(line3)
                                 .line4(line4)
                                 .dr((byte) 0)
-                                .voice(String.format("%s,%s", line3,line4))
+                                .voice(String.format("%s,%s", event.getPlateNo(),line4))
                                 .build());
                     }
                 }
@@ -683,7 +692,7 @@ public class OrderService
                             .line2(event.getPlateNo())
                             .line3(line3)
                             .line4(line4)
-                            .voice(String.format("%s,%s", line3,line4))
+                            .voice(String.format("%s,%s", event.getPlateNo(),line4))
                             .dr((byte) 0)
                             .build());
                 }
@@ -696,10 +705,10 @@ public class OrderService
             {
                 eventResult = EventResult.open(ContentLines.builder()
                         .line1(Const.TIME_STAMP)
-                        .line2(event.getPlateNo())
-                        .line3("一路顺风")
+                        .line2("一路平安")
+                        .line3(event.getPlateNo())
                         .line4(" ")
-                        .voice(String.format("%s,一路顺风", event.getPlateNo()))
+                        .voice(String.format("一路平安,%s", event.getPlateNo()))
                         .build());
             }
             else //超过离场时间限制
@@ -725,10 +734,10 @@ public class OrderService
                             this.quickPayByWallet(order); //无感支付, 钱包支付订单
                             eventResult = EventResult.open(ContentLines.builder()
                                     .line1(Const.TIME_STAMP)
-                                    .line2(event.getPlateNo())
-                                    .line3("一路顺风")
+                                    .line2("一路平安")
+                                    .line3(event.getPlateNo())
                                     .line4(" ")
-                                    .voice(String.format("%s,一路顺风", event.getPlateNo()))
+                                    .voice(String.format("一路平安,%s", event.getPlateNo()))
                                     .build());
                             /*eventResult = EventResult.open(String.format("超时%d小时%d分, 无感支付%.2f元", 
                                     period.getHours(), period.getMinutes(), unPayedAmt.floatValue()));*/
@@ -744,7 +753,7 @@ public class OrderService
                                     .line2(event.getPlateNo())
                                     .line3(line3)
                                     .line4(line4)
-                                    .voice(String.format("%s,%s", line3, line4))
+                                    .voice(String.format("%s,%s", event.getPlateNo(), line4))
                                     .dr((byte) 0)
                                     .build());
                         }
@@ -760,7 +769,7 @@ public class OrderService
                                 .line4(String.format("请补交费%.2f元", 
                                         order.getAmt().floatValue()))
                                 .dr((byte) 0)
-                                .voice(String.format("%s,%s", line3,line4))
+                                .voice(String.format("%s,%s", event.getPlateNo(),line4))
                                 .build());
                     }
                 }
@@ -768,10 +777,10 @@ public class OrderService
                 {
                     eventResult = EventResult.open(ContentLines.builder()
                             .line1(Const.TIME_STAMP)
-                            .line2(event.getPlateNo())
-                            .line3("一路顺风")
+                            .line2("一路平安")
+                            .line3(event.getPlateNo())
                             .line4(" ")
-                            .voice(String.format("%s,一路顺风", event.getPlateNo()))
+                            .voice(String.format("一路平安,%s", event.getPlateNo()))
                             .build());
                 }
             }
