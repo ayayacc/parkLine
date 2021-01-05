@@ -628,13 +628,30 @@ public class OrderService
             if (0 == order.getAmt().compareTo(BigDecimal.ZERO))  //无需付款,直接开闸
             {
                 order.setStatus(OrderStatus.noNeedToPay);
-                eventResult = EventResult.open(ContentLines.builder()
-                        .line1(Const.TIME_STAMP)
-                        .line2("一路平安")
-                        .line3(event.getPlateNo())
-                        .line4(" ")
-                        .voice(String.format("一路平安,%s", event.getPlateNo()))
-                        .build());
+                //月票车出场
+                Order monthlyTkt = order.getUsedMonthlyTkt();
+                if (null != monthlyTkt)
+                {
+                    int nDay = Days.daysBetween(new DateTime(now), new DateTime(monthlyTkt.getEndDate())).getDays();
+                    eventResult = EventResult.open(ContentLines.builder()
+                            .line1(Const.TIME_STAMP)
+                            .line2("一路平安")
+                            .line3(event.getPlateNo())
+                            .line4(String.format("月租车剩余%d天", nDay))
+                            .voice(String.format("一路平安,月租车剩余%d天", nDay))
+                            .build());
+                }
+                else
+                {
+                    eventResult = EventResult.open(ContentLines.builder()
+                            .line1(Const.TIME_STAMP)
+                            .line2("一路平安")
+                            .line3(event.getPlateNo())
+                            .line4(" ")
+                            .voice(String.format("一路平安,%s", event.getPlateNo()))
+                            .build());
+                }
+                
             }
             else  //产生费用
             {
@@ -786,8 +803,8 @@ public class OrderService
             }
         }
         
-        //如果开闸
-        if (eventResult.getOpen())
+        //如果开闸并且不是月租车出场
+        if (eventResult.getOpen()&&null!=order.getUsedMonthlyTkt())
         {
             //停车场空位+1
             Park park = order.getPark();
