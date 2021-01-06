@@ -127,17 +127,21 @@ public class BoyueEventAdapter implements IEventAdapter<BoyueEvent, BoyueResp>
         String carNo = boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getPlateNo().trim().toUpperCase();
         
         //bse64图片处理
-        //code: carNo-in/out-timeStamp.jpg
-        Date now = new Date();
-        String code = String.format("%s-%s-%d.jpg", carNo, device.getUseage(), now.getTime());
-        try
+        String code = "";
+        if (!StringUtils.isEmpty(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getImageFile()))
         {
-            aliYunCmpt.upload(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getImageFile(), code);
-        }
-        catch (IOException e)
-        {
-            logger.error(String.format("图片上传阿里云失败:%s", e.getMessage()));
-            e.printStackTrace();
+            //code: carNo-in/out-timeStamp.jpg
+            Date now = new Date();
+            code = String.format("%s-%s-%d.jpg", carNo, device.getUseage(), now.getTime());
+            try
+            {
+                aliYunCmpt.upload(boyueEvt.getAlarmInfoPlate().getResult().getPlateResult().getImageFile(), code);
+            }
+            catch (IOException e)
+            {
+                logger.error(String.format("图片上传阿里云失败:%s", e.getMessage()));
+                e.printStackTrace();
+            }
         }
         
         //车牌识别Id 

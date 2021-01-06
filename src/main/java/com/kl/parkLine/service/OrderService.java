@@ -478,6 +478,17 @@ public class OrderService
         //车辆信息
         Car car = carService.getCar(event.getPlateNo(), event.getPlateColor());
         
+        //检查车辆是否重复入场
+        if (existsByTypeAndCarAndStatus(OrderType.parking, car, OrderStatus.in))
+        {
+            return EventResult.notOpen(ContentLines.builder()
+                    .line1(Const.TIME_STAMP)
+                    .line2(event.getPlateNo())
+                    .line3("车已在场")
+                    .line4(" ")
+                    .voice("车已在场").build());
+        }
+        
         //检查是否为月票车
         Order monthlyTck = this.findValidMonthlyTck(car, park);
         if (null == monthlyTck) //无月票
@@ -570,7 +581,7 @@ public class OrderService
      */
     public Boolean existsByTypeAndCarAndStatus(OrderType orderType, Car car, OrderStatus orderStatus)
     {
-        return orderDao.existsByTypeAndCarAndStatus(OrderType.parking, car, OrderStatus.needToPay);
+        return orderDao.existsByTypeAndCarAndStatus(OrderType.parking, car, orderStatus);
     }
     
     /**

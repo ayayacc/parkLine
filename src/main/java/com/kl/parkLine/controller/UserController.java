@@ -22,6 +22,7 @@ import com.kl.parkLine.json.DecryptionResult;
 import com.kl.parkLine.json.MyInfo;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.json.SmsCheckParam;
+import com.kl.parkLine.json.MobileBindResult;
 import com.kl.parkLine.service.UserService;
 import com.kl.parkLine.vo.UserVo;
 
@@ -157,7 +158,7 @@ public class UserController
     @GetMapping("/isMobileBinded")
     @ApiOperation(value="检查用户是否绑定了手机号", notes="检查用户是否绑定了手机号")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Boolean> isMobileProvided(Authentication auth)
+    public RestResult<MobileBindResult> isMobileProvided(Authentication auth)
     {
         return RestResult.success(userService.isMobileProvided(auth.getName()));
     }

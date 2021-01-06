@@ -26,6 +26,7 @@ import com.kl.parkLine.enums.Gender;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.DecryptionParam;
 import com.kl.parkLine.json.DecryptionResult;
+import com.kl.parkLine.json.MobileBindResult;
 import com.kl.parkLine.json.MyInfo;
 import com.kl.parkLine.json.SmsCheckParam;
 import com.kl.parkLine.json.WxCode2SessionResult;
@@ -291,13 +292,16 @@ public class UserService
      * @param userName 用户名
      * @return
      */
-    public Boolean isMobileProvided(String userName)
+    public MobileBindResult isMobileProvided(String userName)
     {
         //找到当前用户
         User user = userDao.findOneByName(userName);
         
+        
         //检查用户是否提供了手机号
-        return !StringUtils.isEmpty(user.getMobile());
+        return MobileBindResult.builder()
+                .isBinded(!StringUtils.isEmpty(user.getMobile()))
+                .mobile(user.getMobile()).build();
     }
     
     /**

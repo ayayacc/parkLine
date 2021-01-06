@@ -10,6 +10,8 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -54,6 +56,8 @@ import springfox.documentation.annotations.ApiIgnore;
 @Api(tags="订单管理")
 public class OrderController
 {
+    private final static Logger logger = LoggerFactory.getLogger(OrderController.class);
+    
     @Autowired 
     private OrderService orderService;  
     
@@ -311,6 +315,7 @@ public class OrderController
                 sb.append(line);
             }
             String notifyData = sb.toString();
+            logger.info(notifyData);
             Map<String, String> notifyMap = WXPayUtil.xmlToMap(notifyData);  // 转换成map
             
             if (!active.equalsIgnoreCase("dev"))
