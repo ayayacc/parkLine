@@ -54,6 +54,7 @@ import com.kl.parkLine.enums.EventType;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PaymentType;
+import com.kl.parkLine.enums.PlaceType;
 import com.kl.parkLine.enums.RetCode;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
@@ -288,8 +289,8 @@ public class OrderService
                 .parkId(park.getParkId())
                 .code(park.getCode())
                 .name(park.getName())
-                .totalCnt(park.getTotalCnt())
-                .availableCnt(park.getAvailableCnt())
+                .totalCnt(park.getTotalTmpCnt())
+                .availableCnt(park.getAvailableTmpCnt())
                 .lng(park.getGeo().getX())
                 .lat(park.getGeo().getY())
                 .contact(park.getContact())
@@ -440,10 +441,10 @@ public class OrderService
         {
             //停车场空位+1
             Park park = order.getPark();
-            Integer newAvailableCnt = park.getAvailableCnt() + 1;
-            park.setChangeRemark(String.format("停车完成, 停车场可用车位变化: %d --> %d", 
-                    park.getAvailableCnt(), newAvailableCnt));
-            park.setAvailableCnt(newAvailableCnt);
+            Integer newAvailableCnt = park.getAvailableTmpCnt() + 1;
+            park.setChangeRemark(String.format("停车完成, 临停可用车位变化: %d --> %d", 
+                    park.getAvailableTmpCnt(), newAvailableCnt));
+            park.setAvailableTmpCnt(newAvailableCnt);
             parkService.save(park);
             
             //订单已经出场
@@ -494,7 +495,7 @@ public class OrderService
         if (null == monthlyTck) //无月票
         {
             //停车场无空位
-            if (0 >= park.getAvailableCnt())
+            if (0 >= park.getAvailableTmpCnt())
             {
                 
                 return EventResult.notOpen(ContentLines.builder()
@@ -554,10 +555,10 @@ public class OrderService
         else //临停车辆进入, 扣减停车位
         {
             //停车场空位-1
-            Integer newAvailableCnt = park.getAvailableCnt() - 1;
-            park.setChangeRemark(String.format("车辆入场, 停车场可用车位变化: %d --> %d, 事件: %s", 
-                    park.getAvailableCnt(), newAvailableCnt, event.getGuid()));
-            park.setAvailableCnt(newAvailableCnt);
+            Integer newAvailableCnt = park.getAvailableTmpCnt() - 1;
+            park.setChangeRemark(String.format("车辆入场, 临停可用车位变化: %d --> %d, 事件: %s", 
+                    park.getAvailableTmpCnt(), newAvailableCnt, event.getGuid()));
+            park.setAvailableTmpCnt(newAvailableCnt);
             parkService.save(park);
             
             //临停车提示
@@ -819,10 +820,10 @@ public class OrderService
         {
             //停车场空位+1
             Park park = order.getPark();
-            Integer newAvailableCnt = park.getAvailableCnt() + 1;
-            park.setChangeRemark(String.format("停车完成, 停车场可用车位变化: %d --> %d, 事件: %s", 
-                    park.getAvailableCnt(), newAvailableCnt, event.getGuid()));
-            park.setAvailableCnt(newAvailableCnt);
+            Integer newAvailableCnt = park.getAvailableTmpCnt() + 1;
+            park.setChangeRemark(String.format("停车完成, 临停可用车位变化: %d --> %d, 事件: %s", 
+                    park.getAvailableTmpCnt(), newAvailableCnt, event.getGuid()));
+            park.setAvailableTmpCnt(newAvailableCnt);
             parkService.save(park);
             
             //订单已经出场
@@ -879,11 +880,11 @@ public class OrderService
             //当前订单状态是入场，停车场空位数量+1
             if (OrderStatus.in.getValue() == order.getStatus().getValue())
             {
-                Integer newAvailableCnt = park.getAvailableCnt() + 1;
-                park.setChangeRemark(String.format("取消车辆入场, 停车场可用车位变化: %d --> %d, 事件: %s, 被取消事件: %s", 
-                        park.getAvailableCnt(), newAvailableCnt, 
+                Integer newAvailableCnt = park.getAvailableTmpCnt() + 1;
+                park.setChangeRemark(String.format("取消车辆入场, 临停可用车位变化: %d --> %d, 事件: %s, 被取消事件: %s", 
+                        park.getAvailableTmpCnt(), newAvailableCnt, 
                         event.getGuid(), targetEvent.getGuid()));
-                park.setAvailableCnt(newAvailableCnt);
+                park.setAvailableTmpCnt(newAvailableCnt);
                 parkService.save(park);
             }
             
@@ -904,13 +905,13 @@ public class OrderService
             order.setOutTime(null);
             
             //停车场空位数量-1
-            Integer newAvailableCnt = park.getAvailableCnt() - 1;
-            park.setChangeRemark(String.format("取消车停车完成, 停车场可用车位变化: %d --> %d, 事件: %s, 被取消事件: %s", 
-                    park.getAvailableCnt(), newAvailableCnt, 
+            Integer newAvailableCnt = park.getAvailableTmpCnt() - 1;
+            park.setChangeRemark(String.format("取消车停车完成, 临停可用车位变化: %d --> %d, 事件: %s, 被取消事件: %s", 
+                    park.getAvailableTmpCnt(), newAvailableCnt, 
                     event.getGuid(), targetEvent.getGuid()));
-            park.setAvailableCnt(newAvailableCnt);
+            park.setAvailableTmpCnt(newAvailableCnt);
             parkService.save(park);
-            park.setAvailableCnt(newAvailableCnt);
+            park.setAvailableTmpCnt(newAvailableCnt);
         }
         
         //保存订单
@@ -1239,47 +1240,7 @@ public class OrderService
         order.getOwner().setSubscribe(wxPayNotifyParam.getIsSubscribe());
         
         //设置订单支付
-        order.setStatus(OrderStatus.payed);
-        order.setPayedAmt(order.getAmt());
-        BigDecimal realPayedAmt = order.getRealPayedAmt();
-        if (null == realPayedAmt)
-        {
-            realPayedAmt = BigDecimal.ZERO;
-        }
-        order.setRealPayedAmt(realPayedAmt.add(order.getRealUnpayedAmt()));
-        OrderPayment orderPayment = new OrderPayment();
-        orderPayment.setRealAmt(order.getRealUnpayedAmt());
-        orderPayment.setAmt(order.getAmt());
-        orderPayment.setBankType(wxPayNotifyParam.getBankType());
-        orderPayment.setOrder(order);
-        orderPayment.setPaymentType(PaymentType.wx);
-        orderPayment.setPaymentTime(wxPayNotifyParam.getTimeEnd());
-        order.setLastPaymentTime(wxPayNotifyParam.getTimeEnd());
-        order.setRealUnpayedAmt(BigDecimal.ZERO);
-        if (null == order.getOrderPayments())
-        {
-            order.setOrderPayments(new ArrayList<OrderPayment>());
-        }
-        order.getOrderPayments().add(orderPayment);
-        
-        switch (order.getType())
-        {
-            case walletIn: //钱包充值订单:增加钱包余额
-                User owner = order.getOwner();
-                owner.setBalance(owner.getBalance().add(order.getAmt()));
-                orderPayment.setWalletBalance(owner.getBalance());//记录钱包余额
-                break;
-            case coupon:
-                Coupon coupon = order.getActivatedCoupon();
-                coupon.setStatus(CouponStatus.valid);
-                //默认激活七天
-                DateTime now = new DateTime();
-                coupon.setStartDate(now.toDate());
-                coupon.setEndDate(now.plusDays(Const.COUPON_ACTIVE_DAYS).toDate());
-                break;
-            default:
-                break;
-        }
+        paySucess(order, PaymentType.wx, wxPayNotifyParam.getBankType(), null, wxPayNotifyParam.getTimeEnd());
         
         order.appedChangeRemark(String.format("微信付款成功: %s", wxPayNotifyParam));
         this.save(order);
@@ -1347,14 +1308,40 @@ public class OrderService
      * @param dateTimeStart 开始时间
      * @param dateTimeEnd 结束时间
      * @return
+     * @throws BusinessException 
      */
-    private BigDecimal calMonthlyTktAmt(Park park, Car car, Date startDate, Date endDate)
+    private BigDecimal calMonthlyTktAmt(Park park, Car car, PlaceType placeType, Date startDate, Date endDate) throws BusinessException
     {
         BigDecimal amt = BigDecimal.ZERO;
-        BigDecimal price = park.getFuelMonthlyPrice(); //默认按照燃油车计费
+        BigDecimal price = BigDecimal.ZERO;
+        if (placeType.equals(PlaceType.ground))
+        {
+            if (!park.getHasGroundPlace())
+            {
+                throw new BusinessException(String.format("该停车场不支持 %s 车位", placeType.getText()));
+            }
+            price = park.getFuelGroundMonthlyPrice(); //默认按照燃油车计费
+            if (car.getCarType().equals(CarType.newEnergy))
+            {
+                price = park.getNewEnergyGroundMonthlyPrice();
+            }
+        }
+        else
+        {
+            if (!park.getHasUndergroundPlace())
+            {
+                throw new BusinessException(String.format("该停车场不支持 %s 车位", placeType.getText()));
+            }
+            price = park.getFuelUndergroundMonthlyPrice(); //默认按照燃油车计费
+            if (car.getCarType().equals(CarType.newEnergy))
+            {
+                price = park.getNewEnergyUndergroundMonthlyPrice();
+            }
+        }
+        park.getFuelGroundMonthlyPrice(); //默认按照燃油车计费
         if (car.getCarType().equals(CarType.newEnergy))
         {
-            price = park.getNewEnergyMonthlyPrice();
+            price = park.getNewEnergyGroundMonthlyPrice();
         }
         
         //开始结束时间
@@ -1408,7 +1395,7 @@ public class OrderService
             throw new BusinessException("请勿重复购买月票");
         }
         
-        return calMonthlyTktAmt(park, car, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
+        return calMonthlyTktAmt(park, car, monthlyTktParam.getPlaceType(), monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
     }    
     
     /**
@@ -1473,13 +1460,14 @@ public class OrderService
         }
         
         String code = util.makeCode(OrderType.monthlyTicket);
-        BigDecimal amt = this.calMonthlyTktAmt(park, car, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
+        BigDecimal amt = this.calMonthlyTktAmt(park, car, monthlyTktParam.getPlaceType(), monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
         
         //创建订单
         Order order = Order.builder()
                 .code(code).car(car).park(park).amt(amt)
                 .realUnpayedAmt(amt)
                 .type(OrderType.monthlyTicket)
+                .placeTye(monthlyTktParam.getPlaceType())
                 .startDate(monthlyTktParam.getStartDate())
                 .endDate(monthlyTktParam.getEndDate())
                 .status(OrderStatus.needToPay)
@@ -1799,29 +1787,7 @@ public class OrderService
         owner.setBalance(newBlance);
         
         //设置订单支付
-        order.setStatus(OrderStatus.payed);
-        order.setPayedAmt(order.getAmt());
-        BigDecimal realPayedAmt = order.getRealPayedAmt();
-        if (null == realPayedAmt)
-        {
-            realPayedAmt = BigDecimal.ZERO;
-        }
-        order.setRealPayedAmt(realPayedAmt.add(order.getRealUnpayedAmt()));
-        OrderPayment orderPayment = new OrderPayment();
-        orderPayment.setUsedCoupon(coupon);
-        orderPayment.setAmt(order.getAmt());
-        orderPayment.setRealAmt(order.getRealUnpayedAmt());
-        orderPayment.setOrder(order);
-        orderPayment.setPaymentType(PaymentType.qb);
-        orderPayment.setPaymentTime(new Date());
-        orderPayment.setWalletBalance(newBlance);
-        order.setRealUnpayedAmt(BigDecimal.ZERO);
-        order.setLastPaymentTime(orderPayment.getPaymentTime());
-        if (null == order.getOrderPayments())
-        {
-            order.setOrderPayments(new ArrayList<OrderPayment>());
-        }
-        order.getOrderPayments().add(orderPayment);
+        paySucess(order, PaymentType.qb, null, coupon, new Date());
         
         //记录备注
         this.save(order);
@@ -1904,6 +1870,89 @@ public class OrderService
         return orderDao.findTopByTypeAndCarAndParkAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(OrderType.monthlyTicket, car, park, OrderStatus.payed, now, now);
     }
     
+    /**
+     * 处理订单付款成功
+     * @param order 付款成功的订单
+     * @param paymentType 付款方式
+     * @param bankType 付款银行（微信付款时才有此参数）
+     * @param coupon 使用的优惠券(钱包付款才有此参数)
+     * @param paymentTime
+     * @throws BusinessException 
+     */
+    public void paySucess(Order order, PaymentType paymentType, String bankType, Coupon coupon, Date paymentTime) throws BusinessException
+    {
+        //设置订单支付
+        order.setStatus(OrderStatus.payed);
+        order.setPayedAmt(order.getAmt());
+        BigDecimal realPayedAmt = order.getRealPayedAmt();
+        if (null == realPayedAmt)
+        {
+            realPayedAmt = BigDecimal.ZERO;
+        }
+        order.setRealPayedAmt(realPayedAmt.add(order.getRealUnpayedAmt()));
+        OrderPayment orderPayment = new OrderPayment();
+        orderPayment.setOrder(order);
+        orderPayment.setAmt(order.getAmt());
+        orderPayment.setRealAmt(order.getRealUnpayedAmt());
+        orderPayment.setPaymentType(paymentType);
+        orderPayment.setPaymentTime(paymentTime);
+        
+        //微信付款特有
+        orderPayment.setBankType(bankType);
+        
+        //钱包付款特有
+        orderPayment.setWalletBalance(order.getOwner().getBalance());
+        orderPayment.setUsedCoupon(coupon);
+        
+        order.setLastPaymentTime(paymentTime);
+        order.setRealUnpayedAmt(BigDecimal.ZERO);
+        if (null == order.getOrderPayments())
+        {
+            order.setOrderPayments(new ArrayList<OrderPayment>());
+        }
+        order.getOrderPayments().add(orderPayment);
+        
+        switch (order.getType())
+        {
+            case walletIn: //钱包充值订单:增加钱包余额
+                User owner = order.getOwner();
+                owner.setBalance(owner.getBalance().add(order.getAmt()));
+                orderPayment.setWalletBalance(owner.getBalance());//记录钱包余额
+                break;
+            case coupon: //激活优惠券
+                Coupon activedCoupon = order.getActivatedCoupon();
+                activedCoupon.setStatus(CouponStatus.valid);
+                //默认激活七天
+                activedCoupon.setStartDate(paymentTime);
+                activedCoupon.setEndDate(new DateTime(paymentTime).plusDays(Const.COUPON_ACTIVE_DAYS).toDate());
+                break;
+            case monthlyTicket: //月租成功
+                //停车场可用月租数量-1
+                parkService.changeMonthlyAvaliableCnt(order, -1);
+                break;
+            default:
+                break;
+        }
+    }
+    
+    /**
+     * 定时任务执行，更新已经过期的月票并且释放可用月租车位数量
+     * @throws BusinessException 
+     */
+    public void updateExpiredMonthlyTkt() throws BusinessException
+    {
+        Date now = new Date();
+        List<Order> expiredOrders = orderDao.findByTypeAndStatusAndEndDateLessThan(OrderType.monthlyTicket, OrderStatus.payed, now);
+        for (Order order : expiredOrders)
+        {
+            //增加停车场可用固定车位
+            parkService.changeMonthlyAvaliableCnt(order, 1);
+            //设置状态过期
+            order.setStatus(OrderStatus.expired);
+            order.appedChangeRemark(String.format("月票  %s 过期", order.getCode()));
+            save(order);
+        }
+    }
     /**
      * 计算订单价格
      * @param calOrderAmtParam

@@ -3,6 +3,7 @@ package com.kl.parkLine.json;
 import java.util.Date;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.kl.parkLine.enums.PlaceType;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -21,6 +22,9 @@ public class MonthlyTktParam
     
     @ApiModelProperty(required = true, name = "车辆Id")
     private Integer carId;
+    
+    @ApiModelProperty(required = true, name = "车位类型:ground(地面)/underground(地下)")
+    private PlaceType placeType;
     
     /**
      * 有效期开始时间

@@ -32,6 +32,7 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
+import com.kl.parkLine.enums.PlaceType;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -194,6 +195,13 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date endDate; 
     
+    /**
+     * 车位类型: 地面/地下
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "place_type", nullable=false, columnDefinition="varchar(16) comment '订单类型:parking(停车订单)/monthlyTicket(月票)/coupon(优惠券激活)/walletIn(钱包充值)'")
+    private PlaceType placeTye;
+    
     /*优惠券激活订单特有字段*/
     /**
      * 被激活的优惠券
@@ -206,7 +214,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     /**
      * 订单状态: 已入场/待支付（已出场）/已支付/开票中/已开票
      */
-    @Column(name = "status", columnDefinition="varchar(16) comment '订单状态: in(已入场)/needToPay(待支付)/payed(已支付)/noNeedToPay(无需支付)/canceled(已取消)'")
+    @Column(name = "status", columnDefinition="varchar(16) comment '订单状态: in(已入场)/needToPay(待支付)/payed(已支付)/noNeedToPay(无需支付)/expired(已过期)/canceled(已取消)'")
     @Enumerated(EnumType.STRING)
     @NeedToCompare(name = "状态")
     private OrderStatus status;

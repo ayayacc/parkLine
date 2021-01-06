@@ -137,15 +137,15 @@ public class InitSystemTest
             park.setEnabled("Y");
             park.setCode(code);
             park.setName(parkStr[1]);
-            park.setTotalCnt(Integer.valueOf(parkStr[2]));
+            park.setTotalTmpCnt(Integer.valueOf(parkStr[2]));
             Geometry point = wktReader.read(parkStr[3]);
             Point pointToSave = point.getInteriorPoint();
             park.setGeo(pointToSave);
             park.setContact(parkStr[4]);
-            park.setTotalCnt(100);
-            park.setAvailableCnt(100);
-            park.setFuelMonthlyPrice(new BigDecimal(300)); //月票300元
-            park.setNewEnergyMonthlyPrice(new BigDecimal(280)); //月票280元
+            park.setTotalTmpCnt(100);
+            park.setAvailableTmpCnt(100);
+            park.setFuelGroundMonthlyPrice(new BigDecimal(300)); //月票300元
+            park.setNewEnergyGroundMonthlyPrice(new BigDecimal(280)); //月票280元
             //设备
             List<Device> devices = new ArrayList<>();
             //入场设备

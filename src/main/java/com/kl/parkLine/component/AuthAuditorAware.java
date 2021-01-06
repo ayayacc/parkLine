@@ -17,7 +17,7 @@ public class AuthAuditorAware implements AuditorAware<String>
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (null == authentication)
         {
-            return Optional.of("admin");
+            return Optional.of("sys");
         }
         
         return Optional.of(authentication.getName());

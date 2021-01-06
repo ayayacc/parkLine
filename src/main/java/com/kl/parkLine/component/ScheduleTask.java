@@ -4,13 +4,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.service.CouponService;
+import com.kl.parkLine.service.OrderService;
 
 @Component
 public class ScheduleTask
 {
     @Autowired
     private CouponService couponService;
+    
+    @Autowired
+    private OrderService orderService;
     
     /**
      * 每天00:00:01秒执行,更新优惠券以及优惠券定义过期状态
@@ -20,5 +25,22 @@ public class ScheduleTask
     {
         //刷新优惠券状态
         couponService.updateExpiredStatus();
+    }
+    
+    /**
+     * 每天00:00:01秒执行,更新优惠券以及优惠券定义过期状态
+     */
+    @Scheduled(cron = "2 00 00 * * ?")
+    public void updateMontlyTkt()
+    {
+        //刷新过期的月票状态以及
+        try
+        {
+            orderService.updateExpiredMonthlyTkt();
+        }
+        catch (BusinessException e)
+        {
+            e.printStackTrace();
+        }
     }
 }

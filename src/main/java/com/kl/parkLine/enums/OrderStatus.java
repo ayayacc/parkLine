@@ -22,8 +22,11 @@ public enum OrderStatus implements BaseEnum
     @ApiModelProperty("4:无需支付")
     noNeedToPay(4, "无需支付"),
     
-    @ApiModelProperty("5:已取消")
-    canceled(5, "已取消");
+    @ApiModelProperty("5:已过期")
+    expired(5, "已过期"),
+    
+    @ApiModelProperty("6:已取消")
+    canceled(6, "已取消");
     
     private Integer value;
     private String text;

@@ -14,9 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -24,23 +21,17 @@ import org.springframework.util.StringUtils;
 import com.kl.parkLine.component.MapCmpt;
 import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IParkDao;
+import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.Park;
 import com.kl.parkLine.entity.ParkLog;
 import com.kl.parkLine.entity.ParkStepFee;
-import com.kl.parkLine.entity.QPark;
-import com.kl.parkLine.entity.User;
 import com.kl.parkLine.enums.ChargeType;
+import com.kl.parkLine.enums.PlaceType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.QqMapPoiItem;
 import com.kl.parkLine.json.QqMapSearchResult;
-import com.kl.parkLine.predicate.ParkPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.ParkLocationVo;
-import com.kl.parkLine.vo.ParkVo;
-import com.querydsl.core.QueryResults;
-import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.Projections;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 
 /**
  * @author chenc
@@ -54,18 +45,9 @@ public class ParkService
     
     @Autowired
     private IParkDao parkDao;
-
-    @Autowired
-    private UserService userService;
     
     @Autowired
     private Utils util;
-    
-    @Autowired
-    private JPAQueryFactory jpaQueryFactory;
-    
-    @Autowired
-    private ParkPredicates parkPredicates;
     
     @Autowired
     private WKTReader wktReader;
@@ -209,27 +191,50 @@ public class ParkService
         parkDao.save(park);
     }
     
-    public Page<ParkVo> fuzzyFindPage(ParkVo parkVo, Pageable pageable, String userName)
+    /**
+     * 获取停车场支持的车位类型
+     * @param park
+     * @return
+     */
+    public List<PlaceType> gePlaceTypes(Park park)
     {
-        User user = userService.findByName(userName);
-        Predicate searchPred = parkPredicates.fuzzy(parkVo, user);
-        
-        QPark qPark = QPark.park;
-        QueryResults<ParkVo> queryResults = jpaQueryFactory
-                .select(Projections.constructor(ParkVo.class, 
-                        qPark.parkId,
-                        qPark.code,
-                        qPark.name,
-                        qPark.totalCnt,
-                        qPark.availableCnt,
-                        qPark.geo,
-                        qPark.contact,
-                        qPark.enabled))
-                .from(qPark)
-                .where(searchPred)
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetchResults();
-        return new PageImpl<>(queryResults.getResults(), pageable, queryResults.getTotal());
+        List<PlaceType> placeTypes = new ArrayList<>();
+        if (park.getHasGroundPlace())
+        {
+            placeTypes.add(PlaceType.ground);
+        }
+        if (park.getHasUndergroundPlace())
+        {
+            placeTypes.add(PlaceType.underground);
+        }
+        return placeTypes;
+    }
+    
+    /**
+     * 变化月租可用车位
+     * @param order 引起变动的order
+     * @param changeCnt 变化数量
+     * @throws BusinessException 
+     */
+    public void changeMonthlyAvaliableCnt(Order order, int changeCnt) throws BusinessException
+    {
+        Park park = order.getPark();
+        Integer currentCnt = 0;
+        Integer newAvailableCnt = 0;
+        if (order.getPlaceTye().equals(PlaceType.ground))
+        {
+            currentCnt = park.getAvailableGroundMonthlyCnt();
+            newAvailableCnt = currentCnt + changeCnt;
+            park.setAvailableGroundMonthlyCnt(newAvailableCnt);
+        }
+        else
+        {
+            currentCnt = park.getAvailableUndergroundMonthlyCnt();
+            newAvailableCnt = currentCnt + changeCnt;
+            park.setAvailableUndergroundMonthlyCnt(newAvailableCnt);
+        }
+        park.setChangeRemark(String.format("%s 月租可用车位变化: %d --> %d, 订单编号: %s", 
+                order.getPlaceTye().getText(), currentCnt, newAvailableCnt, order.getCode()));
+        this.save(park);
     }
 }

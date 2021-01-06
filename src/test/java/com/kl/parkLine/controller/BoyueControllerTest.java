@@ -134,7 +134,7 @@ public class BoyueControllerTest
         //记录入场前停车场位置
         Device device = deviceService.findOneBySerialNo(boyueEventIn.getAlarmInfoPlate().getSerialno());
         Park park = device.getPark();
-        Integer availableCnt = park.getAvailableCnt();
+        Integer availableCnt = park.getAvailableTmpCnt();
         
         //车辆入场
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
@@ -174,7 +174,7 @@ public class BoyueControllerTest
         
         //检查停车场空位-1
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(--availableCnt, park.getAvailableCnt());
+        assertEquals(--availableCnt, park.getAvailableTmpCnt());
         
         //车辆出场
         resource = new ClassPathResource("/testData/boyue/carOut.json");
@@ -195,7 +195,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量不变
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(availableCnt, park.getAvailableCnt());
+        assertEquals(availableCnt, park.getAvailableTmpCnt());
         
         //检查订单费用
         result = mockMvc.perform(MockMvcRequestBuilders.get(String.format("/orders/parking/needToPayByCar/%d", car.getCarId()))
@@ -222,7 +222,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量不变
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(availableCnt, park.getAvailableCnt());
+        assertEquals(availableCnt, park.getAvailableTmpCnt());
 
         //反向寻车
         result = mockMvc.perform(MockMvcRequestBuilders.get(String.format("/cars/getParkLocation/%d", car.getCarId()))
@@ -293,7 +293,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量+1
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(++availableCnt, park.getAvailableCnt());
+        assertEquals(++availableCnt, park.getAvailableTmpCnt());
         
         //检查轮询不抬杆
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/comet")
@@ -341,7 +341,7 @@ public class BoyueControllerTest
         //记录入场前停车场位置
         Device device = deviceService.findOneBySerialNo(boyueEventIn.getAlarmInfoPlate().getSerialno());
         Park park = device.getPark();
-        Integer availableCnt = park.getAvailableCnt();
+        Integer availableCnt = park.getAvailableTmpCnt();
         
         //车辆入场
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
@@ -357,7 +357,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量-1
         park = parkService.findOneById(park.getParkId());
-        assertEquals(--availableCnt, park.getAvailableCnt());
+        assertEquals(--availableCnt, park.getAvailableTmpCnt());
         
         //登录
         String token = login();
@@ -447,7 +447,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量+1
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(++availableCnt, park.getAvailableCnt());
+        assertEquals(++availableCnt, park.getAvailableTmpCnt());
         
         //检查轮询不抬杆
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/comet")
@@ -485,7 +485,7 @@ public class BoyueControllerTest
         //记录入场前停车场位置
         Device device = deviceService.findOneBySerialNo(boyueEventIn.getAlarmInfoPlate().getSerialno());
         Park park = device.getPark();
-        Integer availableCnt = park.getAvailableCnt();
+        Integer availableCnt = park.getAvailableTmpCnt();
         
         //车辆入场
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
@@ -501,7 +501,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量-1
         park = parkService.findOneById(park.getParkId());
-        assertEquals(--availableCnt, park.getAvailableCnt());
+        assertEquals(--availableCnt, park.getAvailableTmpCnt());
         
         //登录
         String token = login();
@@ -608,7 +608,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量+1
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(++availableCnt, park.getAvailableCnt());
+        assertEquals(++availableCnt, park.getAvailableTmpCnt());
         
         //检查轮询不抬杆
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/comet")
@@ -645,7 +645,7 @@ public class BoyueControllerTest
         //记录入场前停车场位置
         Device device = deviceService.findOneBySerialNo(boyueEventIn.getAlarmInfoPlate().getSerialno());
         Park park = device.getPark();
-        Integer availableCnt = park.getAvailableCnt();
+        Integer availableCnt = park.getAvailableTmpCnt();
         
         //车辆入场
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
@@ -661,7 +661,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量-1
         park = parkService.findOneById(park.getParkId());
-        assertEquals(--availableCnt, park.getAvailableCnt());
+        assertEquals(--availableCnt, park.getAvailableTmpCnt());
         
         //登录
         String token = login();
@@ -750,7 +750,7 @@ public class BoyueControllerTest
         //记录入场前停车场数量
         Device device = deviceService.findOneBySerialNo(boyueEventIn.getAlarmInfoPlate().getSerialno());
         Park park = device.getPark();
-        Integer availableCnt = park.getAvailableCnt();
+        Integer availableCnt = park.getAvailableTmpCnt();
         
         //车辆入场
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
@@ -766,7 +766,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量-1
         park = parkService.findOneById(park.getParkId());
-        assertEquals(--availableCnt, park.getAvailableCnt());
+        assertEquals(--availableCnt, park.getAvailableTmpCnt());
         
         //登录
         String token = login();
@@ -870,7 +870,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量+1
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(++availableCnt, park.getAvailableCnt());
+        assertEquals(++availableCnt, park.getAvailableTmpCnt());
         
         //检查轮询不抬杆
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/comet")
@@ -905,7 +905,7 @@ public class BoyueControllerTest
         //记录入场前停车场数量
         Device device = deviceService.findOneBySerialNo(boyueEventIn.getAlarmInfoPlate().getSerialno());
         Park park = device.getPark();
-        Integer availableCnt = park.getAvailableCnt();
+        Integer availableCnt = park.getAvailableTmpCnt();
         
         //车辆入场
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
@@ -921,7 +921,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量-1
         park = parkService.findOneById(park.getParkId());
-        assertEquals(--availableCnt, park.getAvailableCnt());
+        assertEquals(--availableCnt, park.getAvailableTmpCnt());
         
         //登录
         String token = login();
@@ -1025,7 +1025,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量+1
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(++availableCnt, park.getAvailableCnt());
+        assertEquals(++availableCnt, park.getAvailableTmpCnt());
         
         //检查轮询不抬杆
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/comet")
@@ -1060,7 +1060,7 @@ public class BoyueControllerTest
         //记录入场前停车场数量
         Device device = deviceService.findOneBySerialNo(boyueEventIn.getAlarmInfoPlate().getSerialno());
         Park park = device.getPark();
-        Integer availableCnt = park.getAvailableCnt();
+        Integer availableCnt = park.getAvailableTmpCnt();
         
         //车辆入场
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
@@ -1076,7 +1076,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量-1
         park = parkService.findOneById(park.getParkId());
-        assertEquals(--availableCnt, park.getAvailableCnt());
+        assertEquals(--availableCnt, park.getAvailableTmpCnt());
         
         //登录
         String token = login();
@@ -1237,7 +1237,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量+1
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(++availableCnt, park.getAvailableCnt());
+        assertEquals(++availableCnt, park.getAvailableTmpCnt());
         
         //检查轮询不抬杆
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/comet")
@@ -1272,7 +1272,7 @@ public class BoyueControllerTest
         //记录入场前停车场数量
         Device device = deviceService.findOneBySerialNo(boyueEventIn.getAlarmInfoPlate().getSerialno());
         Park park = device.getPark();
-        Integer availableCnt = park.getAvailableCnt();
+        Integer availableCnt = park.getAvailableTmpCnt();
         
         //车辆入场
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
@@ -1288,7 +1288,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量-1
         park = parkService.findOneById(park.getParkId());
-        assertEquals(--availableCnt, park.getAvailableCnt());
+        assertEquals(--availableCnt, park.getAvailableTmpCnt());
         
         //登录
         String token = login();
@@ -1454,7 +1454,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量+1
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(++availableCnt, park.getAvailableCnt());
+        assertEquals(++availableCnt, park.getAvailableTmpCnt());
         
         //检查轮询不抬杆
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/comet")
@@ -1499,7 +1499,7 @@ public class BoyueControllerTest
         //记录入场前停车场数量
         Device device = deviceService.findOneBySerialNo(boyueEventIn.getAlarmInfoPlate().getSerialno());
         Park park = device.getPark();
-        Integer availableCnt = park.getAvailableCnt();
+        Integer availableCnt = park.getAvailableTmpCnt();
         
         //车辆入场
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/plateNotify")
@@ -1515,7 +1515,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量-1
         park = parkService.findOneById(park.getParkId());
-        assertEquals(--availableCnt, park.getAvailableCnt());
+        assertEquals(--availableCnt, park.getAvailableTmpCnt());
         
         //登录
         String token = login();
@@ -1575,7 +1575,7 @@ public class BoyueControllerTest
         
         //检查停车场空位数量+1
         park = parkService.findOneById(parkLocationResult.getData().getParkId());
-        assertEquals(++availableCnt, park.getAvailableCnt());
+        assertEquals(++availableCnt, park.getAvailableTmpCnt());
         
         //检查轮询不抬杆
         result = mockMvc.perform(MockMvcRequestBuilders.post("/boyue/comet")

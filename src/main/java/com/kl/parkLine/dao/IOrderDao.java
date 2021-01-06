@@ -34,4 +34,5 @@ public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredic
     public Set<Order> findByCarAndOwnerIsNull(Car car);
     public Page<OrderVo> findByTypeAndStatusAndOwnerOrderByCreatedDateDesc(OrderType orderType, OrderStatus status, User owner, Pageable pageable);
     public Integer countByOwnerAndTypeAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(User owner, OrderType orderType, OrderStatus status, Date startDate, Date endDate);
+    public List<Order> findByTypeAndStatusAndEndDateLessThan(OrderType orderType, OrderStatus status, Date date);
 }
