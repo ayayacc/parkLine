@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kl.parkLine.entity.Park;
-import com.kl.parkLine.enums.PlaceType;
+import com.kl.parkLine.json.BaseEnumJson;
 import com.kl.parkLine.json.NearbyParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.service.ParkService;
@@ -64,7 +64,7 @@ public class ParkController
     @GetMapping(value = "/placeType/{parkId}")
     @ApiOperation(value="查询停车场明细", notes="查看单个停车场明细")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<List<PlaceType>> getPlaceType(@ApiParam(name="停车场Id",type="path") @PathVariable("parkId") Integer parkId, 
+    public RestResult<List<BaseEnumJson>> getPlaceType(@ApiParam(name="停车场Id",type="path") @PathVariable("parkId") Integer parkId, 
             @ApiIgnore @PathVariable("parkId") Park park)
     {
         if (null == park)

@@ -28,6 +28,7 @@ import com.kl.parkLine.entity.ParkStepFee;
 import com.kl.parkLine.enums.ChargeType;
 import com.kl.parkLine.enums.PlaceType;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.BaseEnumJson;
 import com.kl.parkLine.json.QqMapPoiItem;
 import com.kl.parkLine.json.QqMapSearchResult;
 import com.kl.parkLine.util.Const;
@@ -196,16 +197,16 @@ public class ParkService
      * @param park
      * @return
      */
-    public List<PlaceType> gePlaceTypes(Park park)
+    public List<BaseEnumJson> gePlaceTypes(Park park)
     {
-        List<PlaceType> placeTypes = new ArrayList<>();
+        List<BaseEnumJson> placeTypes = new ArrayList<>();
         if (park.getHasGroundPlace())
         {
-            placeTypes.add(PlaceType.ground);
+            placeTypes.add(BaseEnumJson.builder().value(PlaceType.ground.toString()).text(PlaceType.ground.getText()).build());
         }
         if (park.getHasUndergroundPlace())
         {
-            placeTypes.add(PlaceType.underground);
+            placeTypes.add(BaseEnumJson.builder().value(PlaceType.underground.toString()).text(PlaceType.underground.getText()).build());
         }
         return placeTypes;
     }
