@@ -104,13 +104,18 @@ public class ParkService
             ParkLocationVo nearByParkVo = ParkLocationVo.builder().parkId((Integer)row.get("park_id"))
                     .code(row.get("code").toString())
                     .name(row.get("name").toString())
-                    .totalCnt((Integer)row.get("total_cnt"))
-                    .availableCnt((Integer)row.get("available_cnt"))
+                    .totalTmpCnt((Integer)row.get("total_tmp_cnt"))
+                    .availableTmpCnt((Integer)row.get("available_tmp_cnt"))
+                    .totalGroundMonthlyCnt((Integer)row.get("total_ground_monthly_cnt"))
+                    .availableGroundMonthlyCnt((Integer)row.get("available_ground_monthly_cnt"))
+                    .totalUndergroundMonthlyCnt((Integer)row.get("total_underground_monthly_cnt"))
+                    .availableUndergroundMonthlyCnt((Integer)row.get("available_underground_monthly_cnt"))
                     .lng(point.getX())
                     .lat(point.getY())
                     .contact(row.get("contact").toString())
                     .distance((Double)row.get("dist"))
                     .freeTimeMin(freeTimeMin)
+                    .address(row.get("address").toString())
                     .build();
             
             ret.add(nearByParkVo);
@@ -127,6 +132,9 @@ public class ParkService
                         .lng(qqMapPoiItem.getLocation().getLng())
                         .lat(qqMapPoiItem.getLocation().getLat())
                         .contact(qqMapPoiItem.getTel())
+                        .address(qqMapPoiItem.getAddress()
+                                .replace(qqMapPoiItem.getAddInfo().getProvince(), "")
+                                .replace(qqMapPoiItem.getAddInfo().getCity(), "")) //地址中去掉省市信息
                         .build();
                 ret.add(neerByParkVo);
             }

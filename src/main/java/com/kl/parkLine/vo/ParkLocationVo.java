@@ -28,10 +28,22 @@ public class ParkLocationVo
     private String name;
     
     @ApiModelProperty("总可用车位")
-    private Integer totalCnt;
+    private Integer totalTmpCnt;
     
     @ApiModelProperty("可用车位")
-    private Integer availableCnt;
+    private Integer availableTmpCnt;
+    
+    @ApiModelProperty("地面月租车位总数量")
+    private Integer totalGroundMonthlyCnt;
+    
+    @ApiModelProperty("当前可用地面月租车位数量")
+    private Integer availableGroundMonthlyCnt;
+    
+    @ApiModelProperty("地下月租车位总数量")
+    private Integer totalUndergroundMonthlyCnt;
+    
+    @ApiModelProperty("当前可用地下月租车位数量")
+    private Integer availableUndergroundMonthlyCnt;
     
     @ApiModelProperty("经度")
     private Double lng;
@@ -47,4 +59,7 @@ public class ParkLocationVo
     
     @ApiModelProperty("免费时长(分钟)")
     private Integer freeTimeMin;
+    
+    @ApiModelProperty("地址")
+    private String address;
 }

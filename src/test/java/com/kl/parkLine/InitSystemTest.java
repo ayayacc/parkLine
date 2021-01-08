@@ -137,6 +137,7 @@ public class InitSystemTest
             park.setEnabled("Y");
             park.setCode(code);
             park.setName(parkStr[1]);
+            park.setAddress(parkStr[1]+"address");
             park.setTotalTmpCnt(Integer.valueOf(parkStr[2]));
             Geometry point = wktReader.read(parkStr[3]);
             Point pointToSave = point.getInteriorPoint();

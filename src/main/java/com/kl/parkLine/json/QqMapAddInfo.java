@@ -7,8 +7,8 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-public class QqMapLocation
+public class QqMapAddInfo
 {
-    private Double lat;  
-    private Double lng;  
+    private String province;  
+    private String city;  
 }

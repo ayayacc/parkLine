@@ -127,7 +127,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 详细地址
      */
     @NeedToCompare(name = "详细地址")
-    @Column(name = "address", length = 128, columnDefinition = "varchar(128) comment '详细地址'")
+    @Column(name = "address", length = 128, nullable = false, columnDefinition = "varchar(128) comment '详细地址'")
     private String address;
 
     /**
