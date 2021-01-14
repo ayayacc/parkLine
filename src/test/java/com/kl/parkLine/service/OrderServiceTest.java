@@ -2,6 +2,7 @@ package com.kl.parkLine.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
 
 import com.kl.parkLine.dao.IOrderDao;
 import com.kl.parkLine.entity.Car;
@@ -800,4 +802,13 @@ public class OrderServiceTest
         assertEquals(hours, period.getHours());
         assertEquals(minutes, period.getMinutes());
     }
+    
+    @Test
+    public void testMd5() throws UnsupportedEncodingException
+    {
+        String parmas = "orderId=2&paymentTime=1610615042481&payee=1_admin测试&remark=2121&publicKey=parkLineAdmin&privateKey=DF09D78C73ECD21FCD2BDFD2877687BD";
+        String md5 = DigestUtils.md5DigestAsHex(parmas.getBytes("UTF-8"));
+        assertEquals("df54b6c7e0a3a6917eaff984da631bd9", md5);
+    }
+    
 }

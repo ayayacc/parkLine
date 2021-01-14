@@ -199,7 +199,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      * 车位类型: 地面/地下
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "place_type", nullable=false, columnDefinition="varchar(16) comment '订单类型:parking(停车订单)/monthlyTicket(月票)/coupon(优惠券激活)/walletIn(钱包充值)'")
+    @Column(name = "place_type", columnDefinition="varchar(16) comment '订单类型:parking(停车订单)/monthlyTicket(月票)/coupon(优惠券激活)/walletIn(钱包充值)'")
     private PlaceType placeTye;
     
     /*优惠券激活订单特有字段*/
@@ -275,6 +275,20 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     @OrderBy(value = "paymentTime desc")
     @JSONField(serialize = false)
     private List<OrderPayment> orderPayments;
+    
+    /**
+     * 现金收款人
+     */
+    @Column(name = "cash_payee", length = 48, columnDefinition="varchar(48) comment '现金收款人'")
+    @NeedToCompare(name = "现金收款人")
+    private String cashPayee;
+    
+    /**
+     * 订单备注
+     */
+    @Column(name = "remark", length = 256, columnDefinition="varchar(256) comment '订单备注'")
+    @NeedToCompare(name = "现金收款人")
+    private String remark;
     
     /**
      * 操作记录

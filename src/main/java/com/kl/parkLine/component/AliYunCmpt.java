@@ -93,9 +93,12 @@ public class AliYunCmpt
     public String uploadToShanghai(String code) throws ClientException, IOException
     {
         //<Schema>://<Bucket>.<外网Endpoint>/<Object> 
+        ossClient.setObjectAcl(bucket, code, CannedAccessControlList.PublicRead);
         String tmp = "oss-cn-shenzhen.aliyuncs.com";
         String url = String.format("%s://%s.%s/%s", schema, bucket, tmp, code);
-        return fileUtils.upload(url);
+        url = fileUtils.upload(url);
+        ossClient.setObjectAcl(bucket, code, CannedAccessControlList.Private);
+        return url;
     }
     
 
@@ -108,7 +111,7 @@ public class AliYunCmpt
      */
     public void upload(MultipartFile multipartFile, String code) throws IOException 
     {
-        upload(multipartFile.getInputStream(), code, CannedAccessControlList.PublicRead);
+        upload(multipartFile.getInputStream(), code, CannedAccessControlList.Private);
     }
     
     /**

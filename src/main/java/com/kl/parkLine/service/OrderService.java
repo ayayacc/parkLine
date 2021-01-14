@@ -1,6 +1,7 @@
 package com.kl.parkLine.service;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
@@ -16,6 +17,8 @@ import org.joda.time.Days;
 import org.joda.time.Minutes;
 import org.joda.time.Period;
 import org.joda.time.PeriodType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,6 +26,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.events.EventException;
 
@@ -35,6 +39,7 @@ import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Coupon;
 import com.kl.parkLine.entity.Device;
 import com.kl.parkLine.entity.Event;
+import com.kl.parkLine.entity.KeyMap;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.OrderLog;
 import com.kl.parkLine.entity.OrderPayment;
@@ -59,6 +64,8 @@ import com.kl.parkLine.enums.RetCode;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.Base64Img;
+import com.kl.parkLine.json.CalOrderAmtParam;
+import com.kl.parkLine.json.CalOrderAmtResult;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.ContentLines;
 import com.kl.parkLine.json.EventResult;
@@ -67,6 +74,7 @@ import com.kl.parkLine.json.PayOrderParam;
 import com.kl.parkLine.json.TimePoint;
 import com.kl.parkLine.json.WxPayNotifyParam;
 import com.kl.parkLine.json.WxUnifiedOrderResult;
+import com.kl.parkLine.json.XjPayParam;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.vo.OrderPaymentVo;
 import com.kl.parkLine.vo.OrderVo;
@@ -84,6 +92,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 @Transactional(rollbackFor = Exception.class)
 public class OrderService
 {
+    private final Logger logger = LoggerFactory.getLogger(OrderService.class);
     @Autowired
     private IOrderDao orderDao;
     
@@ -125,6 +134,9 @@ public class OrderService
     
     @Autowired
     private ParkCarItemService parkCarItemService;
+    
+    @Autowired
+    private KeyMapService keyMapService;
     
     
     private final List<OrderStatus> checkedStatus = new ArrayList<OrderStatus>();
@@ -1905,7 +1917,10 @@ public class OrderService
         orderPayment.setBankType(bankType);
         
         //钱包付款特有
-        orderPayment.setWalletBalance(order.getOwner().getBalance());
+        if (null != order.getOwner()) //现金付款时，订单可能无拥有者
+        {
+            orderPayment.setWalletBalance(order.getOwner().getBalance());
+        }
         orderPayment.setUsedCoupon(coupon);
         
         order.setLastPaymentTime(paymentTime);
@@ -1957,6 +1972,7 @@ public class OrderService
             save(order);
         }
     }
+    
     /**
      * 计算订单价格
      * @param calOrderAmtParam
@@ -1964,16 +1980,69 @@ public class OrderService
      * @throws BusinessException 
      * @throws ParseException 
      */
-    /*public CalOrderAmtResult calOrderAmt(CalOrderAmtParam calOrderAmtParam) throws BusinessException, ParseException
+    public CalOrderAmtResult calOrderAmt(CalOrderAmtParam calOrderAmtParam) throws BusinessException, ParseException
     {
         Order order = this.findOneByOrderId(calOrderAmtParam.getOrderId());
         if (null == order)
         {
             throw new BusinessException(String.format("无效的订单Id: %d", calOrderAmtParam.getOrderId()));
         }
+        //只计算停车订单的价格
+        if (!order.getType().equals(OrderType.parking))
+        {
+            throw new BusinessException("非停车订单");
+        }
+        //入场时间为空
+        if (null == order.getInTime())
+        {
+            throw new BusinessException("入场时间为空");
+        }
         order.setOutTime(calOrderAmtParam.getOutTime());
         this.setAmtAndOutTimeLimit(order);
         this.save(order);
         return CalOrderAmtResult.builder().amt(order.getAmt()).build();
-    }*/
+    }
+    
+    /**
+     * 现金支付通知
+     * @param wxPayNotifyParam
+     * @throws UnsupportedEncodingException 
+     */
+    public void xjPaySuccess(XjPayParam xjPayParam) throws BusinessException, UnsupportedEncodingException
+    {
+        //获取私钥
+        KeyMap keyMap = keyMapService.findOneByPublicKey(xjPayParam.getPublicKey());
+        if (null == keyMap)
+        {
+            throw new BusinessException(String.format("无效的公钥: %s", xjPayParam.getPublicKey()));
+        }
+        
+        //校验参数签名
+        String parmas = String.format("orderId=%d&paymentTime=%d&payee=%s&remark=%s&publicKey=%s&privateKey=%s", 
+                xjPayParam.getOrderId(), xjPayParam.getPaymentTime(), xjPayParam.getPayee(),
+                xjPayParam.getRemark(), xjPayParam.getPublicKey(), keyMap.getPrivateKey());
+        String md5 = DigestUtils.md5DigestAsHex(parmas.getBytes("UTF-8"));
+        if (!md5.equals(xjPayParam.getSign()))
+        {
+            logger.error(String.format("%s,%s,%s", md5, xjPayParam.getSign(),parmas));
+            throw new BusinessException("无效的签名");
+        }
+        
+        Order order = findOneByOrderId(xjPayParam.getOrderId());
+        if (null == order)
+        {
+            throw new BusinessException(String.format("无效的订单Id: %d", xjPayParam.getOrderId()));
+        }
+        
+        //处理支付成功
+        paySucess(order, PaymentType.xj, null, null, new Date(xjPayParam.getPaymentTime()));
+        
+        //记录现金收款人
+        order.setRemark(xjPayParam.getRemark());
+        order.setCashPayee(xjPayParam.getPayee());
+        order.appedChangeRemark(String.format("现金收款人: %s", xjPayParam.getPayee()));
+        //记录备注
+        this.save(order);
+        
+    }
 }

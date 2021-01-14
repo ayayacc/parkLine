@@ -131,8 +131,8 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
         .antMatchers("/MchApi", "/MchApi/**", 
                 "/boyue", "/boyue/**", 
                 "/sms", "/sms/**", 
-                "/orders/wxpay/notify", //"/orders/calAmt",
-                "/parks/nearby").permitAll()
+                "/orders/wxpay/notify","/orders/calAmt",
+                "/parks/nearby","/orders/xjpay/notify").permitAll()
         .and()
         .authorizeRequests()
         .anyRequest().authenticated()

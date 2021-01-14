@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.Optional;
 
 import org.apache.commons.io.FilenameUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -50,6 +52,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 @Transactional(rollbackFor = Exception.class)
 public class CarService
 {
+    private final Logger logger = LoggerFactory.getLogger(CarService.class);
+    
     @Autowired
     private UserService userService;
     
@@ -264,7 +268,7 @@ public class CarService
      * @throws ServerException 
      * @throws BusinessException 
      */
-    public DrivingLicenseVo lock(String userName, Car car, MultipartFile licenseImg) throws IOException, ServerException, ClientException, ParseException, BusinessException
+    public DrivingLicenseVo lock(String userName, Car car, MultipartFile licenseImg) throws BusinessException
     {
         String carNo = car.getCarNo();
         
@@ -274,6 +278,7 @@ public class CarService
             throw new BusinessException(String.format("车辆 %s 已经绑定过行驶证,请联系客服确认", carNo));
         }
         
+        logger.info(String.format("fileName:%s, length:%d", licenseImg.getName(), licenseImg.getSize()));
         User user = userService.findByName(userName);
         
         //"DrivingLicense_carNo_timestamp"
@@ -281,11 +286,23 @@ public class CarService
         String extName = FilenameUtils.getExtension(licenseImg.getOriginalFilename());
         String code = String.format("DrivingLicense_%s_%d.%s", carNo, now.getTime(), extName);
         
-        //将图片上传到oss
-        aliYunCmpt.upload(licenseImg, code);
-        
-        //识别行驶证
-        DrivingLicenseVo drivingLicenseVo = aliYunCmpt.recognizeDrivingLicense(code);
+        DrivingLicenseVo drivingLicenseVo = null;
+        try
+        {
+            //将图片上传到oss
+            aliYunCmpt.upload(licenseImg, code);
+            
+            //识别行驶证
+            drivingLicenseVo = aliYunCmpt.recognizeDrivingLicense(code);
+        }
+        catch (ClientException e)
+        {
+            throw new BusinessException(String.format("行驶证识别错误: %s:%s", e.getErrCode(), e.getErrorDescription()));
+        }
+        catch (IOException | ParseException e) 
+        {
+            throw new BusinessException(String.format("行驶证识别错误: %s", e.getMessage()));
+        }
         
         if (!carNo.equalsIgnoreCase(drivingLicenseVo.getPlateNumber().trim()))
         {

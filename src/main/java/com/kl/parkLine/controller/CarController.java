@@ -70,7 +70,7 @@ public class CarController
     @ApiImplicitParam(name="Authorization", value="登录令牌",required=true, paramType="header")
     public RestResult<DrivingLicenseVo> lock(@ApiParam(name="车辆Id", type="string")@PathVariable Integer carId, 
             @ApiIgnore @PathVariable(name = "carId", required = true) Car car,
-            @ApiParam(name="行驶证照片照片") @RequestParam MultipartFile licenseImg, Authentication auth)
+            @ApiParam(name="行驶证照片照片") @RequestParam("licenseImg") MultipartFile licenseImg, Authentication auth)
     {
         if (null == car)
         {
@@ -82,7 +82,7 @@ public class CarController
             //上传车辆行驶证,锁定车辆
             return RestResult.success(carService.lock(auth.getName(), car, licenseImg));
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }

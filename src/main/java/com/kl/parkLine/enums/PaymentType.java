@@ -13,7 +13,9 @@ public enum PaymentType implements BaseEnum
     @ApiModelProperty("1:微信")
     wx(1, "微信"),
     @ApiModelProperty("2:钱包")
-    qb(2, "钱包");
+    qb(2, "钱包"),
+    @ApiModelProperty("3:现金")
+    xj(3, "现金");
     
     private Integer value;
     private String text;
