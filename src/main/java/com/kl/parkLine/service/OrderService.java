@@ -2018,8 +2018,10 @@ public class OrderService
         }
         
         //校验参数签名
-        String parmas = String.format("orderId=%d&paymentTime=%d&payee=%s&remark=%s&publicKey=%s&privateKey=%s", 
-                xjPayParam.getOrderId(), xjPayParam.getPaymentTime(), xjPayParam.getPayee(),
+        String parmas = String.format("orderId=%d&realPayedAmt=%.2f&paymentTime=%d&payee=%s&remark=%s&publicKey=%s&privateKey=%s", 
+                xjPayParam.getOrderId(), 
+                xjPayParam.getRealPayedAmt().setScale(2, RoundingMode.HALF_UP).floatValue(), 
+                xjPayParam.getPaymentTime(), xjPayParam.getPayee(),
                 xjPayParam.getRemark(), xjPayParam.getPublicKey(), keyMap.getPrivateKey());
         String md5 = DigestUtils.md5DigestAsHex(parmas.getBytes("UTF-8"));
         if (!md5.equals(xjPayParam.getSign()))
@@ -2036,6 +2038,9 @@ public class OrderService
         
         //处理支付成功
         paySucess(order, PaymentType.xj, null, null, new Date(xjPayParam.getPaymentTime()));
+        
+        //现金支付以实际付款金额为准
+        order.setRealPayedAmt(xjPayParam.getRealPayedAmt());
         
         //记录现金收款人
         order.setRemark(xjPayParam.getRemark());

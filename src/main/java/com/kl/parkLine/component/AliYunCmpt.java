@@ -15,7 +15,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.aliyun.com.viapi.FileUtils;
+import com.aliyun.ocr20191230.Client;
+import com.aliyun.ocr20191230.models.RecognizeDrivingLicenseAdvanceRequest;
+import com.aliyun.ocr20191230.models.RecognizeDrivingLicenseResponse;
+import com.aliyun.ocr20191230.models.RecognizeDrivingLicenseResponse.RecognizeDrivingLicenseResponseDataFaceResult;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.model.CannedAccessControlList;
 import com.aliyun.oss.model.GetObjectRequest;
@@ -23,14 +26,12 @@ import com.aliyun.oss.model.OSSObject;
 import com.aliyun.oss.model.ObjectMetadata;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.aliyun.oss.model.PutObjectResult;
+import com.aliyun.teautil.models.RuntimeOptions;
 import com.aliyuncs.DefaultAcsClient;
 import com.aliyuncs.dysmsapi.model.v20170525.SendSmsRequest;
 import com.aliyuncs.dysmsapi.model.v20170525.SendSmsResponse;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
-import com.aliyuncs.ocr.model.v20191230.RecognizeDrivingLicenseRequest;
-import com.aliyuncs.ocr.model.v20191230.RecognizeDrivingLicenseResponse;
-import com.aliyuncs.ocr.model.v20191230.RecognizeDrivingLicenseResponse.Data.FaceResult;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.DrivingLicenseVo;
 
@@ -40,14 +41,11 @@ public class AliYunCmpt
     @Autowired
     private OSS ossClient;
     
-    @Resource(name="ascClientSh")
-    private DefaultAcsClient ascClientSh;
-    
     @Resource(name="ascClientHz")
     private DefaultAcsClient ascClientHz;
     
     @Autowired
-    private FileUtils fileUtils;
+    private Client ocrClient;
     
     @Autowired
     private Utils utils;
@@ -82,25 +80,6 @@ public class AliYunCmpt
         
         return putObjectResult;
     }
-    
-    /**
-     * 行驶证识别时，临时将
-     * @param code
-     * @return
-     * @throws IOException 
-     * @throws ClientException 
-     */
-    public String uploadToShanghai(String code) throws ClientException, IOException
-    {
-        //<Schema>://<Bucket>.<外网Endpoint>/<Object> 
-        ossClient.setObjectAcl(bucket, code, CannedAccessControlList.PublicRead);
-        String tmp = "oss-cn-shenzhen.aliyuncs.com";
-        String url = String.format("%s://%s.%s/%s", schema, bucket, tmp, code);
-        url = fileUtils.upload(url);
-        ossClient.setObjectAcl(bucket, code, CannedAccessControlList.Private);
-        return url;
-    }
-    
 
     /**
      * 上传文件到OSS
@@ -179,15 +158,15 @@ public class AliYunCmpt
      * @throws ParseException 
      * @throws IOException 
      */
-    public DrivingLicenseVo recognizeDrivingLicense(String code) throws ServerException, ClientException, ParseException, IOException
+    public DrivingLicenseVo recognizeDrivingLicense(MultipartFile licenseImg) throws Exception
     {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-        String imgUrl = uploadToShanghai(code);
-        RecognizeDrivingLicenseRequest req = new RecognizeDrivingLicenseRequest();
+        RecognizeDrivingLicenseAdvanceRequest req = new RecognizeDrivingLicenseAdvanceRequest();
+        RuntimeOptions runtimeOptions = new RuntimeOptions();
         req.setSide("face"); //首页
-        req.setImageURL(imgUrl);
-        RecognizeDrivingLicenseResponse resp = ascClientSh.getAcsResponse(req);
-        FaceResult faceResult = resp.getData().getFaceResult();
+        req.setImageURLObject(licenseImg.getInputStream());
+        RecognizeDrivingLicenseResponse resp = ocrClient.recognizeDrivingLicenseAdvance(req, runtimeOptions);
+        RecognizeDrivingLicenseResponseDataFaceResult faceResult = resp.getData().getFaceResult();
         DrivingLicenseVo drivingLicenseVo = DrivingLicenseVo.builder().address(faceResult.getAddress())
             .engineNumber(faceResult.getEngineNumber())
             .issueDate(sdf.parse(faceResult.getIssueDate()))

@@ -8,14 +8,11 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
 
 import com.github.wxpay.sdk.WXPay;
 import com.github.wxpay.sdk.WXPayUtil;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.exception.BusinessException;
-import com.kl.parkLine.json.WxCode2SessionResult;
 import com.kl.parkLine.json.WxUnifiedOrderResult;
 import com.kl.parkLine.util.Const;
 
@@ -45,23 +42,6 @@ public class WxCmpt
     
     @Value("${wx.pay.key}")
     private String wxPayKey;
-    
-    @Autowired
-    private WXMappingJackson2HttpMessageConverter jsonConverter;
-    
-    public WxCode2SessionResult code2Session(String jsCode) throws Exception
-    {
-        String url = "https://api.weixin.qq.com/sns/jscode2session?appid={APPID}&secret={APPSECRET}&js_code={JSCODE}&grant_type=authorization_code";
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(jsonConverter);
-        WxCode2SessionResult result = restTemplate.getForObject(url, WxCode2SessionResult.class, appId, appSecret, jsCode);
-        if (false == StringUtils.isEmpty(result.getErrmsg()))
-        {
-            throw new Exception(String.format("Get WeChat jscode2session failed:%d, %s", 
-                    result.getErrcode(), result.getErrmsg()));
-        }
-        return result;
-    }
     
     public WxUnifiedOrderResult unifiedOrder(Order order) throws Exception
     {

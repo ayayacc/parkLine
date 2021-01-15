@@ -1,16 +1,20 @@
 package com.kl.parkLine.cmpt;
 
-import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.FileInputStream;
 import java.text.ParseException;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.aliyuncs.exceptions.ClientException;
 import com.kl.parkLine.component.AliYunCmpt;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.DrivingLicenseVo;
 
 @SpringBootTest
 public class AliYunCmptTest
@@ -31,15 +35,12 @@ public class AliYunCmptTest
     {
         try
         {
-            aliYunCmpt.recognizeDrivingLicense("DrivingLicense_桂B01R36_1610433984466.jpg");
+            FileInputStream is = new FileInputStream("E:\\MY_PARK\\微信图片_20201125165551.jpg");
+            MultipartFile file = new MockMultipartFile("test.png", is);
+            DrivingLicenseVo vo = aliYunCmpt.recognizeDrivingLicense(file);
+            assertEquals("桂BJ1012", vo.getPlateNumber());
         }
-        catch (ClientException e)
-        {
-            e.getErrCode();
-            e.getErrMsg();
-            e.getErrorDescription();
-        }
-        catch (IOException e)
+        catch (Exception e)
         {
             e.getMessage();
         }

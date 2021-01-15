@@ -3,6 +3,7 @@ package com.kl.parkLine.feign;
 import org.springframework.stereotype.Component;
 
 import com.kl.parkLine.json.QqMapSearchResult;
+import com.kl.parkLine.json.WxAccessTokenResult;
 import com.kl.parkLine.json.WxCode2SessionResult;
 
 @Component
@@ -25,6 +26,14 @@ public class FeignClientFallback implements IWxFeignClient, IMapFeignClient
         QqMapSearchResult result = new QqMapSearchResult();
         result.setMessage("qq map search exception");
         return result;
+    }
+
+    @Override
+    public WxAccessTokenResult getAccessToken(String openId, String openSecret)
+    {
+        WxAccessTokenResult result = new WxAccessTokenResult();
+        result.setErrmsg("getAccessToken exception");
+        return null;
     }
     
 }

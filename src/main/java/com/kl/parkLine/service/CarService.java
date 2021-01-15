@@ -293,13 +293,9 @@ public class CarService
             aliYunCmpt.upload(licenseImg, code);
             
             //识别行驶证
-            drivingLicenseVo = aliYunCmpt.recognizeDrivingLicense(code);
+            drivingLicenseVo = aliYunCmpt.recognizeDrivingLicense(licenseImg);
         }
-        catch (ClientException e)
-        {
-            throw new BusinessException(String.format("行驶证识别错误: %s:%s", e.getErrCode(), e.getErrorDescription()));
-        }
-        catch (IOException | ParseException e) 
+        catch (Exception e)
         {
             throw new BusinessException(String.format("行驶证识别错误: %s", e.getMessage()));
         }

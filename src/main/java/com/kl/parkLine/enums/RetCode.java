@@ -20,7 +20,7 @@ public enum RetCode implements BaseEnum
     invalidToken(2, "无效令牌"),
     
     @ApiModelProperty("1: 过期令牌")
-    expiredToke(3, "过期令牌"),
+    expiredToken(3, "过期令牌"),
     
     @ApiModelProperty("4: 余额不足")
     balanceNotEnough(4, "余额不足"),

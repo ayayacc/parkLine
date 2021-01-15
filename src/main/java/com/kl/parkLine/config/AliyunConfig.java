@@ -5,8 +5,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.aliyun.com.viapi.FileUtils;
+import com.aliyun.ocr20191230.Client;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
+import com.aliyun.tearpc.models.Config;
 import com.aliyuncs.DefaultAcsClient;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.profile.DefaultProfile;
@@ -30,12 +32,17 @@ public class AliyunConfig
         return ossClient;
     }
     
-    @Bean(name="ascClientSh")
-    public DefaultAcsClient aliYunAcsShClient()
+    @Bean
+    public Client aliYunAcsShClient() throws Exception
     {
-        DefaultProfile profile = DefaultProfile.getProfile("cn-shanghai", accessKey, secretKey);
-        DefaultAcsClient acsClient = new DefaultAcsClient(profile);
-        return acsClient;
+        Config config = new Config();
+        config.setAccessKeyId(accessKey)
+            .setAccessKeySecret(secretKey)
+            .setRegionId("cn-shanghai")
+            .setEndpointType("access_key")
+            .setEndpoint("ocr.cn-shanghai.aliyuncs.com");
+        Client client = new Client(config);
+        return client;
     }
     
     @Bean(name="ascClientHz")
