@@ -15,5 +15,5 @@ public class WxAccessTokenResult extends WxResultBase
     private String accessToken;  
     
     @JSONField(name="expires_in")
-    private Long expiresIn;  
+    private Integer expiresIn;  
 }

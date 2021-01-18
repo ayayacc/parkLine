@@ -28,7 +28,7 @@ import lombok.Setter;
  * @author chenc
  */
 @Entity
-@Table(name = "TT_REST_TOKEN")
+@Table(name = "TT_ACCESS_TOKEN")
 @SuppressWarnings("serial")
 @DynamicUpdate
 @DynamicInsert
@@ -53,18 +53,11 @@ public class AccessToken extends AbstractEntity implements java.io.Serializable
     private Date validTime; //有效期
 
     @Override
-    public String toString()
-    {
-        StringBuilder builder = new StringBuilder();
-        builder.append("AccessToken [tokenId=").append(tokenId).append("]");
-        return builder.toString();
-    }
-
-    @Override
     public int hashCode()
     {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((token == null) ? 0 : token.hashCode());
         result = prime * result + ((tokenId == null) ? 0 : tokenId.hashCode());
         return result;
     }
@@ -85,6 +78,17 @@ public class AccessToken extends AbstractEntity implements java.io.Serializable
             return false;
         }
         AccessToken other = (AccessToken) obj;
+        if (token == null)
+        {
+            if (other.token != null)
+            {
+                return false;
+            }
+        }
+        else if (!token.equals(other.token))
+        {
+            return false;
+        }
         if (tokenId == null)
         {
             if (other.tokenId != null)
@@ -97,5 +101,14 @@ public class AccessToken extends AbstractEntity implements java.io.Serializable
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("AccessToken [tokenId=").append(tokenId)
+                .append(", token=").append(token).append("]");
+        return builder.toString();
     }
 }

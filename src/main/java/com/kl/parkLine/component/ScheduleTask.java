@@ -5,6 +5,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.service.AccessTokenService;
 import com.kl.parkLine.service.CouponService;
 import com.kl.parkLine.service.OrderService;
 
@@ -16,6 +17,9 @@ public class ScheduleTask
     
     @Autowired
     private OrderService orderService;
+    
+    @Autowired
+    private AccessTokenService accessTokenService;
     
     /**
      * 每天00:00:01秒执行,更新优惠券以及优惠券定义过期状态
@@ -37,6 +41,23 @@ public class ScheduleTask
         try
         {
             orderService.updateExpiredMonthlyTkt();
+        }
+        catch (BusinessException e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * 每9分50秒检查一次token,10分钟内过期更新
+     */
+    @Scheduled(fixedRate = 590000)
+    public void updateAccessToken()
+    {
+        //检查accesstoken
+        try
+        {
+            accessTokenService.getLatestToken();
         }
         catch (BusinessException e)
         {

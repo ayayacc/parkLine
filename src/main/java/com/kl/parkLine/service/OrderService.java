@@ -1883,7 +1883,7 @@ public class OrderService
     public Order findValidMonthlyTck(Car car, Park park)
     {
         Date now = new Date();
-        return orderDao.findTopByTypeAndCarAndParkAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(OrderType.monthlyTicket, car, park, OrderStatus.payed, now, now);
+        return orderDao.findTopByTypeAndCarAndParkAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByEndDateDesc(OrderType.monthlyTicket, car, park, OrderStatus.payed, now, now);
     }
     
     /**
