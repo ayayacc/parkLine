@@ -205,14 +205,14 @@ public class ParkService
      * @param park
      * @return
      */
-    public List<BaseEnumJson> gePlaceTypes(Park park)
+    public List<BaseEnumJson> getPlaceTypes(Park park)
     {
         List<BaseEnumJson> placeTypes = new ArrayList<>();
-        if (park.getHasGroundPlace())
+        if (park.getHasGroundPlace() && 0 < park.getAvailableGroundMonthlyCnt())
         {
             placeTypes.add(BaseEnumJson.builder().value(PlaceType.ground.toString()).text(PlaceType.ground.getText()).build());
         }
-        if (park.getHasUndergroundPlace())
+        if (park.getHasUndergroundPlace() && 0 < park.getAvailableUndergroundMonthlyCnt())
         {
             placeTypes.add(BaseEnumJson.builder().value(PlaceType.underground.toString()).text(PlaceType.underground.getText()).build());
         }

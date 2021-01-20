@@ -1831,7 +1831,10 @@ public class OrderService
                 break;
         }
         Base64Img base64Img = new Base64Img();
-        base64Img.setImg(aliYunOssCmpt.getBase64(code));
+        if (!StringUtils.isEmpty(code))
+        {
+            base64Img.setImg(aliYunOssCmpt.getBase64(code));
+        }
         return base64Img;
     }
     

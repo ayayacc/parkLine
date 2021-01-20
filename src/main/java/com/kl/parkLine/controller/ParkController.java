@@ -73,7 +73,7 @@ public class ParkController
         }
         else
         {
-            return RestResult.success(parkService.gePlaceTypes(park));
+            return RestResult.success(parkService.getPlaceTypes(park));
         }
     }
 }
