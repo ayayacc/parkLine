@@ -225,6 +225,7 @@ public class CarService
                 .select(Projections.constructor(CarVo.class, 
                         QCar.car.carId,
                         QCar.car.carNo,
+                        QCar.car.license.drivingLicenseId.isNotNull(),
                         QUser.user.name))
                 .from(QCar.car).leftJoin(QUser.user).on(QCar.car.user.eq(QUser.user))
                 .where(searchPred)

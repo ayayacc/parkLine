@@ -20,6 +20,10 @@ public class CarVo
     @ApiModelProperty("车牌号")
     private String carNo;
     
+    @ApiModelProperty("是否绑定了行驶证")
+    private Boolean isLocked;
+    
     @ApiModelProperty("绑定的用户名")
     private String userName;
+    
 }
