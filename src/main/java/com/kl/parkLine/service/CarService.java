@@ -203,8 +203,8 @@ public class CarService
         {
             car.setChangeRemark(String.format("从用户解绑: %s", car.getUser().getName()));
             car.setUser(null);
+            car.setLicense(null);
         }
-        
         this.save(car);
         return;
     }

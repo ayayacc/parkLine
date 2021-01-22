@@ -139,7 +139,7 @@ public class User extends AbstractDateEntity implements UserDetails
     /**
      * 是否订阅了公众号
      */
-    @Column(name = "subscribe", columnDefinition = "varchar(255) comment '是否订阅了公众号Y/N'")
+    @Column(name = "subscribe", columnDefinition = "varchar(255) default 'N' comment '是否订阅了公众号Y/N'")
     private String subscribe;
     
     @ManyToMany(fetch = FetchType.LAZY)

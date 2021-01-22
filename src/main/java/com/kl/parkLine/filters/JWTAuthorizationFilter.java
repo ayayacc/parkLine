@@ -26,7 +26,8 @@ import com.nimbusds.jwt.SignedJWT;
 
 public class JWTAuthorizationFilter extends OncePerRequestFilter 
 {
-
+    //private final static Logger logger = LoggerFactory.getLogger(JWTAuthorizationFilter.class);
+    
     private JwtCmpt jwtCmpt;
 
     private MyUserDetailsService userDetailsService;
@@ -50,6 +51,7 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
         // 如果请求头中没有Authorization信息则直接放行了
         if (tokenHeader == null) 
         {
+            //logger.info(String.format("NO Authorization header, path: %s", request.getServletPath()));
             chain.doFilter(request, response);
             return;
         }

@@ -114,22 +114,19 @@ public class UserService
     {
         String userName = Const.WX_PREFIX + sessionResult.getOpenid();
         User user = findByName(userName);
-        if (null != user)
-        {
-            return user;
-        }
-        else
+        if (null == user)
         {
             user = new User();
+            user.setEnabled(true);
         }
         user.setName(userName);
+        //user.setNickName(wxUserInfo.getNickName());
         user.setNickName(Base64.encodeBase64String(wxUserInfo.getNickName().getBytes("utf-8")));
         user.setWxOpenId(sessionResult.getOpenid());
         user.setCountry(wxUserInfo.getCountry());
         user.setProvince(wxUserInfo.getProvince());
         user.setCity(wxUserInfo.getCity());
         user.setWxSessionKey(sessionResult.getSessionKey());
-        user.setEnabled(true);
         switch (wxUserInfo.getGender())
         {
             case 1:
@@ -146,7 +143,6 @@ public class UserService
         Role role = roleService.findOneByCode(RoleCode.END_USER);
         roles.add(role);
         user.setRoles(roles);
-        user.setSubscribe("N");
         save(user);
         return user;
     }
