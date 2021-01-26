@@ -95,7 +95,7 @@ public class Coupon extends AbstractDateEntity implements java.io.Serializable
     /**
      * 状态
      */
-    @Column(name = "status", columnDefinition="varchar(255) comment 'valid(有效)/used(已使用)/invalid(无效)/expired(已过期)'")
+    @Column(name = "status", columnDefinition="varchar(64) comment 'valid(有效)/used(已使用)/invalid(无效)/expired(已过期)'")
     @Enumerated(EnumType.STRING)
     @ApiModelProperty("优惠券状态")
     private CouponStatus status;

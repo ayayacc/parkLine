@@ -6,7 +6,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -48,6 +49,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 @Transactional(rollbackFor = Exception.class)
 public class UserService
 {
+    private final static Logger logger = LoggerFactory.getLogger(UserService.class);
     @Autowired
     private IUserDao userDao;
     
@@ -120,13 +122,15 @@ public class UserService
             user.setEnabled(true);
         }
         user.setName(userName);
-        //user.setNickName(wxUserInfo.getNickName());
-        user.setNickName(Base64.encodeBase64String(wxUserInfo.getNickName().getBytes("utf-8")));
+        user.setNickName(wxUserInfo.getNickName());
+        //user.setNickName(Base64.encodeBase64String(wxUserInfo.getNickName().getBytes("utf-8")));
         user.setWxOpenId(sessionResult.getOpenid());
         user.setCountry(wxUserInfo.getCountry());
         user.setProvince(wxUserInfo.getProvince());
         user.setCity(wxUserInfo.getCity());
         user.setWxSessionKey(sessionResult.getSessionKey());
+        logger.info(String.format("Unionid=%s", sessionResult.getUnionid()));
+        user.setWxUnionId(sessionResult.getUnionid());
         switch (wxUserInfo.getGender())
         {
             case 1:

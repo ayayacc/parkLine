@@ -93,6 +93,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 public class OrderService
 {
     private final Logger logger = LoggerFactory.getLogger(OrderService.class);
+    
     @Autowired
     private IOrderDao orderDao;
     
@@ -137,7 +138,6 @@ public class OrderService
     
     @Autowired
     private KeyMapService keyMapService;
-    
     
     private final List<OrderStatus> checkedStatus = new ArrayList<OrderStatus>();
     
@@ -2051,6 +2051,5 @@ public class OrderService
         order.appedChangeRemark(String.format("现金收款人: %s", xjPayParam.getPayee()));
         //记录备注
         this.save(order);
-        
     }
 }

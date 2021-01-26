@@ -106,7 +106,7 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
     
     //车牌颜色
     @Enumerated(EnumType.STRING)
-    @Column(name = "plact_color", columnDefinition="varchar(255) comment '车牌颜色'")
+    @Column(name = "plact_color", columnDefinition="varchar(64) comment '车牌颜色'")
     private PlateColor plateColor; 
     
     /**
@@ -148,7 +148,7 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
     
     //异常停车类型
     @Enumerated(EnumType.STRING)
-    @Column(name = "parking_abnormal", columnDefinition="varchar(255) comment '异常停车类型zc/kw/xw/yx'")
+    @Column(name = "parking_abnormal", columnDefinition="varchar(64) comment '异常停车类型zc/kw/xw/yx'")
     private ParkAbnormal parkingAbnormal;
     
     //设备经纬度，不为空时，格式如下： “108.23 22.45”
@@ -183,7 +183,7 @@ public class Event extends AbstractDateEntity implements java.io.Serializable
     
     //事件类型，此处为作废目标事件类型
     @Enumerated(EnumType.STRING)
-    @Column(name = "target_type", columnDefinition="varchar(255) comment '事件类型，此处为作废目标事件类型'")
+    @Column(name = "target_type", columnDefinition="varchar(64) comment '事件类型，此处为作废目标事件类型'")
     private EventType targetType;
     
     /**

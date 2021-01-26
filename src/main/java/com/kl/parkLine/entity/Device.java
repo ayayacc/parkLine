@@ -74,7 +74,7 @@ public class Device implements java.io.Serializable
     /**
      * 设备用途，监控入场/出场
      */
-    @Column(name = "useage", columnDefinition="varchar(255) comment '设备用途:in(入场)/out(出场)'")
+    @Column(name = "useage", columnDefinition="varchar(64) comment '设备用途:in(入场)/out(出场)'")
     @Enumerated(EnumType.STRING)
     private DeviceUseage useage;
 }

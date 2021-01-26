@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component;
 import com.kl.parkLine.json.QqMapSearchResult;
 import com.kl.parkLine.json.WxAccessTokenResult;
 import com.kl.parkLine.json.WxCode2SessionResult;
+import com.kl.parkLine.json.WxSendMsgResult;
+import com.kl.parkLine.json.WxTpltMsg;
 
 @Component
 public class FeignClientFallback implements IWxFeignClient, IMapFeignClient
@@ -33,7 +35,15 @@ public class FeignClientFallback implements IWxFeignClient, IMapFeignClient
     {
         WxAccessTokenResult result = new WxAccessTokenResult();
         result.setErrmsg("getAccessToken exception");
-        return null;
+        return result;
+    }
+
+    @Override
+    public WxSendMsgResult sendTpltMsg(String accessToken, WxTpltMsg wxTpltMsg)
+    {
+        WxSendMsgResult result = new WxSendMsgResult();
+        result.setErrmsg("sendWxMessage exception");
+        return result;
     }
     
 }

@@ -71,7 +71,7 @@ public class Invoice extends AbstractEntity implements java.io.Serializable
     /**
      * 发票状态: 已经申请/开票成功/开票失败
      */
-    @Column(name = "status", columnDefinition="varchar(255) comment 'submited/successed/failed'")
+    @Column(name = "status", columnDefinition="varchar(64) comment 'submited/successed/failed'")
     @Enumerated(EnumType.STRING)
     private InvoiceStatus status;
     

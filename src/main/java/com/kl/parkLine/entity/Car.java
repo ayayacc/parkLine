@@ -68,14 +68,14 @@ public class Car extends AbstractDateEntity implements java.io.Serializable
      *  车牌颜色
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "palte_color", nullable = false, columnDefinition="varchar(255) comment '车牌颜色'")
+    @Column(name = "palte_color", nullable = false, columnDefinition="varchar(64) comment '车牌颜色'")
     private PlateColor plateColor;
     
     /**
      *  车辆类型:燃油车/新能源
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "car_type", nullable = false, columnDefinition="varchar(255) comment '车辆类型:fuel(燃油车)/newEnergy(新能源车)'")
+    @Column(name = "car_type", nullable = false, columnDefinition="varchar(64) comment '车辆类型:fuel(燃油车)/newEnergy(新能源车)'")
     private CarType carType;
     
     @ManyToOne(fetch = FetchType.LAZY) 

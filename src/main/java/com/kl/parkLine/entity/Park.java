@@ -140,7 +140,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     /**
      * 计费类型: 固定计费/阶梯计费
      */
-    @Column(name = "charge_type", nullable = false, columnDefinition = "varchar(255) comment '计费类型: 固定计费/阶梯计费'")
+    @Column(name = "charge_type", nullable = false, columnDefinition = "varchar(64) comment '计费类型: 固定计费/阶梯计费'")
     @Enumerated(EnumType.STRING)
     private ChargeType chargeType;
 
@@ -250,14 +250,14 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 地面月租车位总数量
      */
     @NeedToCompare(name = "地面月租车位总数量")
-    @Column(name = "total_ground_monthly_cnt", nullable = false, columnDefinition = "int comment '地面月租车位总数量'")
+    @Column(name = "total_ground_monthly_cnt", nullable = false, columnDefinition = "int default 0 comment '地面月租车位总数量'")
     private Integer totalGroundMonthlyCnt;
 
     /**
      * 当前可用地面月租车位数量
      */
     @NeedToCompare(name = "当前可用地面月租车位数量")
-    @Column(name = "available_ground_monthly_cnt", nullable = false, columnDefinition = "int comment '当前可用地面月租车位数量'")
+    @Column(name = "available_ground_monthly_cnt", nullable = false, columnDefinition = "int default 0 comment '当前可用地面月租车位数量'")
     private Integer availableGroundMonthlyCnt;
 
     /**
@@ -278,21 +278,20 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
      * 地下月租车位总数量
      */
     @NeedToCompare(name = "地下月租车位总数量")
-    @Column(name = "total_underground_monthly_cnt", nullable = false, columnDefinition = "int comment '地下月租车位总数量'")
+    @Column(name = "total_underground_monthly_cnt", nullable = false, columnDefinition = "int default 0 comment '地下月租车位总数量'")
     private Integer totalUndergroundMonthlyCnt;
 
     /**
      * 当前可用地下月租车位数量
      */
     @NeedToCompare(name = "当前可用地下月租车位数量")
-    @Column(name = "available_underground_monthly_cnt", nullable = false, columnDefinition = "int comment '当前可用地下月租车位数量'")
+    @Column(name = "available_underground_monthly_cnt", nullable = false, columnDefinition = "int default 0 comment '当前可用地下月租车位数量'")
     private Integer availableUndergroundMonthlyCnt;
 
     /**
      * 停车场设备
      */
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade =
-    { CascadeType.ALL })
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = {CascadeType.ALL})
     @OrderBy(value = "name desc")
     @JSONField(serialize = false)
     private List<Device> devices;

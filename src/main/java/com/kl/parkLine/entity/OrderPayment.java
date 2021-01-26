@@ -64,7 +64,7 @@ public class OrderPayment implements Serializable
      * 支付方式: 微信/钱包
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_type", columnDefinition="varchar(255) comment '支付方式:wx(微信)/qb(钱包)'")
+    @Column(name = "payment_type", columnDefinition="varchar(64) comment '支付方式:wx(微信)/qb(钱包)'")
     private PaymentType paymentType;
     
     /**

@@ -44,17 +44,17 @@ public class Role extends AbstractEntity implements java.io.Serializable
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Integer roleId;
     
-    @Column(name="code", nullable=false, unique=true, length=255, columnDefinition="varchar(255) comment '角色唯一编码'")
+    @Column(name="code", nullable=false, unique=true, length=255, columnDefinition="varchar(64) comment '角色唯一编码'")
     private String code;
     
-    @Column(name="name", nullable=false, unique=true, length=255, columnDefinition="varchar(255) comment '角色名称'")
+    @Column(name="name", nullable=false, unique=true, length=255, columnDefinition="varchar(64) comment '角色名称'")
     private String name;
     
     /**
      * 订单类型: 公司/停车场/终端用户
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", columnDefinition="varchar(255) comment '角色名称:company(公司总部)/park(停车场)/endUser(终端用户)'")
+    @Column(name = "type", columnDefinition="varchar(64) comment '角色名称:company(公司总部)/park(停车场)/endUser(终端用户)'")
     private RoleType type;
     
     @ManyToMany(fetch=FetchType.LAZY, cascade={CascadeType.PERSIST,CascadeType.MERGE,CascadeType.REFRESH}) 

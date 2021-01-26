@@ -69,6 +69,14 @@ public class User extends AbstractDateEntity implements UserDetails
     private String wxOpenId;
     
     /**
+     * 微信用户unionid
+     */
+    @Column(name = "wx_union_id", length = 64, unique = true, columnDefinition="varchar(64) comment '微信用户unionid'")
+    @ApiModelProperty("微信用户unionid")
+    @JSONField(serialize = false)
+    private String wxUnionId;
+    
+    /**
      * 微信用户登录的session_key
      */
     @Column(name = "wx_session_key", length = 64, unique = true, columnDefinition="varchar(64) comment '微信用户登录的session_key'")
@@ -100,7 +108,7 @@ public class User extends AbstractDateEntity implements UserDetails
     @Column(name = "city", length = 64, columnDefinition="varchar(64) comment '市'")
     private String city;
     
-    @Column(name = "gender", columnDefinition="varchar(255) comment '性别:unkonwn/male/female'")
+    @Column(name = "gender", columnDefinition="varchar(64) comment '性别:unkonwn/male/female'")
     @Enumerated(EnumType.STRING)
     private Gender gender;
     
@@ -139,7 +147,7 @@ public class User extends AbstractDateEntity implements UserDetails
     /**
      * 是否订阅了公众号
      */
-    @Column(name = "subscribe", columnDefinition = "varchar(255) default 'N' comment '是否订阅了公众号Y/N'")
+    @Column(name = "subscribe", columnDefinition = "varchar(64) default 'N' comment '是否订阅了公众号Y/N'")
     private String subscribe;
     
     @ManyToMany(fetch = FetchType.LAZY)

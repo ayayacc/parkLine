@@ -44,13 +44,13 @@ public class Menu extends AbstractEntity implements java.io.Serializable
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer menuId;
 
-    @Column(name = "name", nullable = false, unique = true, length = 255, columnDefinition="varchar(255) comment '菜单名称'")
+    @Column(name = "name", nullable = false, unique = true, length = 64, columnDefinition="varchar(64) comment '菜单名称'")
     private String name;
 
-    @Column(name = "url", nullable = false, length = 255, columnDefinition="varchar(255) comment '菜单url'")
+    @Column(name = "url", nullable = false, length = 64, columnDefinition="varchar(64) comment '菜单url'")
     private String url;
     
-    @Column(name = "sort_idx", nullable = false, columnDefinition="varchar(255) comment '菜单排序'")
+    @Column(name = "sort_idx", nullable = false, columnDefinition="varchar(64) comment '菜单排序'")
     private String sortIdx;
     
     @ManyToOne(optional = true, fetch = FetchType.LAZY)

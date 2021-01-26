@@ -50,7 +50,7 @@ public class ParkCarItem implements Serializable
     /**
      * 名单类型
      */
-    @Column(name = "park_car_type", columnDefinition="varchar(255) comment '名单类型: 白名单(white)/黑名单(black)'")
+    @Column(name = "park_car_type", columnDefinition="varchar(64) comment '名单类型: 白名单(white)/黑名单(black)'")
     @Enumerated(EnumType.STRING)
     private ParkCarType parkCarType;
     

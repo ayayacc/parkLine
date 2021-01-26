@@ -79,7 +79,7 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      * 订单类型: 停车订单/月票订单/优惠券激活订单/钱包充值订单
      */
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable=false, columnDefinition="varchar(255) comment '订单类型:parking(停车订单)/monthlyTicket(月票)/coupon(优惠券激活)/walletIn(钱包充值)'")
+    @Column(name = "type", nullable=false, columnDefinition="varchar(64) comment '订单类型:parking(停车订单)/monthlyTicket(月票)/coupon(优惠券激活)/walletIn(钱包充值)'")
     private OrderType type;
     
     /*停车订单特有字段*/
@@ -168,13 +168,13 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     /**
      * 入场抓拍设备序列号(为了提高查询效率，不关联到设备表)
      */
-    @Column(name = "in_device_sn", length = 255, columnDefinition="varchar(255) comment '入场抓拍设备序列号'")
+    @Column(name = "in_device_sn", length = 64, columnDefinition="varchar(64) comment '入场抓拍设备序列号'")
     private String inDeviceSn;
     
     /**
      * 出场抓拍设备序列号(为了提高查询效率，不关联到设备表)
      */
-    @Column(name = "out_device_sn", length = 255, columnDefinition="varchar(255) comment '出场抓拍设备序列号'")
+    @Column(name = "out_device_sn", length = 64, columnDefinition="varchar(64) comment '出场抓拍设备序列号'")
     private String outDeviceSn;
     
     /**

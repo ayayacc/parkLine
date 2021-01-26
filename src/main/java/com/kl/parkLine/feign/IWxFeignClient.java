@@ -2,10 +2,14 @@ package com.kl.parkLine.feign;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.kl.parkLine.json.WxAccessTokenResult;
 import com.kl.parkLine.json.WxCode2SessionResult;
+import com.kl.parkLine.json.WxSendMsgResult;
+import com.kl.parkLine.json.WxTpltMsg;
 
 @FeignClient(name="wxFeignClient", url="https://api.weixin.qq.com")
 public interface IWxFeignClient
@@ -19,4 +23,8 @@ public interface IWxFeignClient
     @GetMapping(value = "/cgi-bin/token?grant_type=client_credential&appid={APPID}&secret={APPSECRET}")
     public WxAccessTokenResult getAccessToken(@RequestParam("APPID")String openId, 
             @RequestParam("APPSECRET")String openSecret);
+    
+    //https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=ACCESS_TOKEN
+    @PostMapping(value = "/cgi-bin/message/template/send?access_token= {ACCESS_TOKEN}")
+    public WxSendMsgResult sendTpltMsg(@RequestParam("ACCESS_TOKEN")String accessToken, @RequestBody WxTpltMsg wxTpltMsg);
 }

@@ -2,6 +2,7 @@ package com.kl.parkLine.component;
 
 import java.math.BigDecimal;
 import java.net.InetAddress;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,12 @@ import com.github.wxpay.sdk.WXPay;
 import com.github.wxpay.sdk.WXPayUtil;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.feign.IWxFeignClient;
+import com.kl.parkLine.json.WxSendMsgResult;
+import com.kl.parkLine.json.WxTpltMsg;
+import com.kl.parkLine.json.WxTpltMsgData;
 import com.kl.parkLine.json.WxUnifiedOrderResult;
+import com.kl.parkLine.service.AccessTokenService;
 import com.kl.parkLine.util.Const;
 
 /**
@@ -22,6 +28,9 @@ import com.kl.parkLine.util.Const;
 @Component
 public class WxCmpt
 {
+    private final String WX_MSG_TPLT_ID_MONTHLY_TKT_EXPIRE = "Z1Sq4OW1MA5IRhDq-sfPJwJ3wpRgV_RF9hwBPi8JmZ4";
+    private final String COLOR_BLACK = "#000000";
+    
     @Value("${wx.app.id}")
     private String appId;
     
@@ -42,6 +51,12 @@ public class WxCmpt
     
     @Value("${wx.pay.key}")
     private String wxPayKey;
+
+    @Autowired
+    private IWxFeignClient wxFeignClient;
+    
+    @Autowired
+    private AccessTokenService accessTokenService;
     
     public WxUnifiedOrderResult unifiedOrder(Order order) throws Exception
     {
@@ -117,4 +132,41 @@ public class WxCmpt
             .paySign(paySign).orderCode(order.getCode()).build();
     }
     
+    /**
+     * 发送月票即将到期提醒
+     * @param order
+     * @return
+     * @throws BusinessException 
+     */
+    public WxSendMsgResult sendMonthlyTktExpireNote(Order order) throws BusinessException
+    {
+        //获取有效令牌
+        String accessToken = accessTokenService.getLatestToken();
+        
+        //构建消息
+        Map<String, WxTpltMsgData> mapParams = new HashMap<String, WxTpltMsgData>();
+        WxTpltMsg wxTpltMsg = WxTpltMsg.builder().toUser(order.getOwner().getWxOpenId())
+                .templateId(WX_MSG_TPLT_ID_MONTHLY_TKT_EXPIRE)
+                .data(mapParams).build();
+        //first
+        String content = String.format("尊敬的车主，您的爱车%s在%s的月卡即将到期，请记得及时续费哦！", 
+                order.getCar().getCarNo(), order.getPark().getName());
+        mapParams.put("first", WxTpltMsgData.builder().value(content).color(COLOR_BLACK).build());
+        
+        //keyword1,停车场
+        mapParams.put("keyword1", WxTpltMsgData.builder().value(order.getPark().getName()).color(COLOR_BLACK).build());
+        
+        //keyword2,车牌号
+        mapParams.put("keyword2", WxTpltMsgData.builder().value(order.getCar().getCarNo()).color(COLOR_BLACK).build());
+        
+        //keyword3,到期日
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        mapParams.put("keyword3", WxTpltMsgData.builder().value(simpleDateFormat.format(order.getEndDate())).color(COLOR_BLACK).build());
+        
+        //remark,备注
+        mapParams.put("keyword3", WxTpltMsgData.builder().value("本停车场当前车位紧张，若不及时续费，可能会导致失去月租车位资格，没有车位停车哦，一定要记得及时续费哦！购买停车线月卡，省钱更省事，提前续费更便捷。").color(COLOR_BLACK).build());
+        
+        //发送消息
+        return wxFeignClient.sendTpltMsg(accessToken, wxTpltMsg);
+    }
 }

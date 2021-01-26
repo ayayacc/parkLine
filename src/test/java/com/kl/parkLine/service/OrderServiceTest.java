@@ -810,5 +810,4 @@ public class OrderServiceTest
         String md5 = DigestUtils.md5DigestAsHex(parmas.getBytes("UTF-8"));
         assertEquals("df54b6c7e0a3a6917eaff984da631bd9", md5);
     }
-    
 }

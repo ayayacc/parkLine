@@ -145,6 +145,10 @@ public class InitSystemTest
             park.setContact(parkStr[4]);
             park.setTotalTmpCnt(100);
             park.setAvailableTmpCnt(100);
+            park.setTotalUndergroundMonthlyCnt(100);
+            park.setAvailableUndergroundMonthlyCnt(100);
+            park.setTotalGroundMonthlyCnt(100);
+            park.setAvailableGroundMonthlyCnt(100);
             park.setFuelGroundMonthlyPrice(new BigDecimal(300)); //月票300元
             park.setNewEnergyGroundMonthlyPrice(new BigDecimal(280)); //月票280元
             //设备

@@ -32,7 +32,7 @@ public abstract class AbstractEntity
     @ApiModelProperty(hidden = true)
     private Date createdDate;
     
-    @Column(name="created_by", nullable=false, columnDefinition="varchar(255) comment '创建人'")
+    @Column(name="created_by", nullable=false, columnDefinition="varchar(64) comment '创建人'")
     @CreatedBy
     @ApiModelProperty(hidden = true)
     private String createdBy;
@@ -45,7 +45,7 @@ public abstract class AbstractEntity
     @ApiModelProperty(hidden = true)
     private Date lastModifiedDate;
     
-    @Column(name="last_modified_by", nullable=false, columnDefinition="varchar(255) comment '最后更新人'")
+    @Column(name="last_modified_by", nullable=false, columnDefinition="varchar(64) comment '最后更新人'")
     @LastModifiedBy
     @ApiModelProperty(hidden = true)
     private String lastModifiedBy;
