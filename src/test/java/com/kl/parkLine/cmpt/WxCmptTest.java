@@ -26,7 +26,7 @@ public class WxCmptTest
     @Transactional
     public void testSendMonthlyTktExpireMsg() throws BusinessException
     {
-        Order order = orderService.findOneByOrderId(3);
+        Order order = orderService.findOneByOrderId(4);
         WxSendMsgResult result = wxCmpt.sendMonthlyTktExpireNote(order);
         assertEquals(0, result.getErrcode());
     }

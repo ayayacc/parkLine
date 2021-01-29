@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.feign.IWxFeignClient;
 import com.kl.parkLine.json.WxCode2SessionResult;
+import com.kl.parkLine.json.WxUserInfo;
 import com.kl.parkLine.service.UserService;
 
 @Component
@@ -43,10 +44,14 @@ public class WxAuthenticationProvider implements AuthenticationProvider
             throw new WxAuthenticationException(result.getErrmsg());
         }
         WxAuthenticationToken wxAuthenticationToken = (WxAuthenticationToken)authentication;
+        WxUserInfo wxUserInfo = wxAuthenticationToken.getWxUserInfo();
+        wxUserInfo.setUnionId(result.getUnionid());
+        wxUserInfo.setWxXcxOpenId(result.getOpenid());
+        wxUserInfo.setSessionKey(result.getSessionKey());
         User user;
         try
         {
-            user = userService.setupUser(result, wxAuthenticationToken.getWxUserInfo());
+            user = userService.setupUser(wxUserInfo);
         }
         catch (UnsupportedEncodingException e)
         {

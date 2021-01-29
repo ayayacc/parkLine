@@ -132,7 +132,8 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
                 "/boyue", "/boyue/**", 
                 "/sms", "/sms/**", 
                 "/orders/wxpay/notify","/orders/calAmt",
-                "/parks/nearby","/orders/xjpay/notify").permitAll()
+                "/parks/nearby","/orders/xjpay/notify",
+                "/gzh/**").permitAll()
         .and()
         .authorizeRequests()
         .anyRequest().authenticated()

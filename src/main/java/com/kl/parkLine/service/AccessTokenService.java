@@ -10,6 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.kl.parkLine.dao.IAccessTokenDao;
 import com.kl.parkLine.entity.AccessToken;
+import com.kl.parkLine.enums.AccessTokenType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.feign.IWxFeignClient;
 import com.kl.parkLine.json.WxAccessTokenResult;
@@ -28,6 +29,12 @@ public class AccessTokenService
     @Value("${wx.open.secret}")
     private String openSecret;
     
+    @Value("${wx.app.id}")
+    private String appId;
+    
+    @Value("${wx.app.secret}")
+    private String appSecret;
+    
     @Autowired
     private IAccessTokenDao accessTokenDaoDao;
     
@@ -36,13 +43,13 @@ public class AccessTokenService
     
     /**
      * 获取最新的token,如果当前时间距离到期时间小于10分钟，则重新获取token
-     * @param 被保存的优惠券
+     * @param type需要获取的令牌类型
      * @throws BusinessException 
      */
-    public String getLatestToken() throws BusinessException
+    public String getLatestToken(AccessTokenType accessTokenType) throws BusinessException
     {
         DateTime now = new DateTime();
-        AccessToken token = accessTokenDaoDao.findTopByOrderByValidTimeDesc();
+        AccessToken token = accessTokenDaoDao.findTopByTypeOrderByValidTimeDesc(accessTokenType);
         Boolean needToUpdate = false;
         
         //从未获取token
@@ -60,12 +67,20 @@ public class AccessTokenService
         //刷新token
         if (needToUpdate)
         {
-            WxAccessTokenResult result = wxFeignClient.getAccessToken(openId, openSecret);
+            String id = openId;
+            String secret = openSecret;
+            if (accessTokenType.equals(AccessTokenType.xcx))
+            {
+                id = appId;
+                secret = appSecret;
+            }
+            WxAccessTokenResult result = wxFeignClient.getAccessToken(id, secret);
             if (!StringUtils.isEmpty(result.getErrmsg()))
             {
                 throw new BusinessException(result.getErrmsg());
             }
             token.setToken(result.getAccessToken());
+            token.setType(accessTokenType);
             token.setValidTime(now.plusSeconds(result.getExpiresIn()).toDate());
             accessTokenDaoDao.save(token);
         }

@@ -5,6 +5,8 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -19,6 +21,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.kl.parkLine.enums.AccessTokenType;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -41,13 +44,17 @@ public class AccessToken extends AbstractEntity implements java.io.Serializable
     @Column(name = "token_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tokenId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false, length = 16)
+    private AccessTokenType type;// 令牌类型:公众号/小程序
     
     @Column(name = "token", nullable = false, unique = true, length = 512)
     @Size(max = 512)
     private String token;// 令牌值
     
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "VALID_TIME" , nullable = false)
+    @Column(name = "valid_time" , nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date validTime; //有效期

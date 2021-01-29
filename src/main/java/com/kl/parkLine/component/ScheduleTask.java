@@ -1,9 +1,11 @@
 package com.kl.parkLine.component;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.kl.parkLine.enums.AccessTokenType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.service.AccessTokenService;
 import com.kl.parkLine.service.CouponService;
@@ -12,6 +14,9 @@ import com.kl.parkLine.service.OrderService;
 @Component
 public class ScheduleTask
 {
+    @Value("${spring.profiles.active}")
+    private String active;
+    
     @Autowired
     private CouponService couponService;
     
@@ -54,10 +59,18 @@ public class ScheduleTask
     @Scheduled(fixedRate = 590000)
     public void updateAccessToken()
     {
+        if (!active.equals("pro"))
+        {
+            return;
+        }
         //检查accesstoken
         try
         {
-            accessTokenService.getLatestToken();
+            for (AccessTokenType accessTokenType : AccessTokenType.values())
+            {
+                accessTokenService.getLatestToken(accessTokenType);
+            }
+            accessTokenService.getLatestToken(AccessTokenType.gzh);
         }
         catch (BusinessException e)
         {

@@ -11,7 +11,7 @@ public class Const
     public final static Integer JWT_EXPIRED_TIME_MIN = 60; //60分钟jwt过期
     
     //微信前缀
-    public final static String WX_PREFIX = "wxopenid_";
+    public final static String WX_PREFIX = "wx_unionid_";
     
     //日志记录
     public final static String LOG_CREATE = "新增";

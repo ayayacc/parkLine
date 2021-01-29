@@ -10,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.aliyun.tea.utils.StringUtils;
 import com.github.wxpay.sdk.WXPay;
 import com.github.wxpay.sdk.WXPayUtil;
 import com.kl.parkLine.entity.Order;
+import com.kl.parkLine.enums.AccessTokenType;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.feign.IWxFeignClient;
 import com.kl.parkLine.json.WxSendMsgResult;
@@ -85,7 +87,7 @@ public class WxCmpt
         //trade_type
         reqData.put("trade_type", TRADE_TYPE);
         //openid
-        reqData.put("openid", order.getOwner().getWxOpenId());
+        reqData.put("openid", order.getOwner().getWxXcxOpenId());
         
         //调用接口
         Map<String, String> result = null;
@@ -140,12 +142,18 @@ public class WxCmpt
      */
     public WxSendMsgResult sendMonthlyTktExpireNote(Order order) throws BusinessException
     {
+        if (StringUtils.isEmpty(order.getOwner().getWxGzhOpenId())
+                ||order.getOwner().getSubscribe().equalsIgnoreCase("N"))
+        {
+            throw new BusinessException(String.format("用户Id: 未关注公众号", order.getOwner().getUserId()));
+        }
+        
         //获取有效令牌
-        String accessToken = accessTokenService.getLatestToken();
+        String accessToken = accessTokenService.getLatestToken(AccessTokenType.gzh);
         
         //构建消息
         Map<String, WxTpltMsgData> mapParams = new HashMap<String, WxTpltMsgData>();
-        WxTpltMsg wxTpltMsg = WxTpltMsg.builder().toUser(order.getOwner().getWxOpenId())
+        WxTpltMsg wxTpltMsg = WxTpltMsg.builder().toUser(order.getOwner().getWxGzhOpenId())
                 .templateId(WX_MSG_TPLT_ID_MONTHLY_TKT_EXPIRE)
                 .data(mapParams).build();
         //first
@@ -164,7 +172,7 @@ public class WxCmpt
         mapParams.put("keyword3", WxTpltMsgData.builder().value(simpleDateFormat.format(order.getEndDate())).color(COLOR_BLACK).build());
         
         //remark,备注
-        mapParams.put("keyword3", WxTpltMsgData.builder().value("本停车场当前车位紧张，若不及时续费，可能会导致失去月租车位资格，没有车位停车哦，一定要记得及时续费哦！购买停车线月卡，省钱更省事，提前续费更便捷。").color(COLOR_BLACK).build());
+        mapParams.put("remark", WxTpltMsgData.builder().value("本停车场当前车位紧张，若不及时续费，可能会导致失去月租车位资格，没有车位停车哦，一定要记得及时续费哦！购买停车线月卡，省钱更省事，提前续费更便捷。").color(COLOR_BLACK).build());
         
         //发送消息
         return wxFeignClient.sendTpltMsg(accessToken, wxTpltMsg);

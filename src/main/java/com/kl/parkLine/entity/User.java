@@ -61,12 +61,20 @@ public class User extends AbstractDateEntity implements UserDetails
     private Integer userId;
     
     /**
-     * 微信用户openid
+     * 微信用户小程序openid
      */
-    @Column(name = "wx_open_id", length = 64, unique = true, columnDefinition="varchar(64) comment '微信用户openid'")
-    @ApiModelProperty("微信用户openid")
+    @Column(name = "wx_xcx_open_id", length = 64, unique = true, columnDefinition="varchar(64) comment '微信用户小程序openid'")
+    @ApiModelProperty("微信用户小程序openid")
     @JSONField(serialize = false)
-    private String wxOpenId;
+    private String wxXcxOpenId;
+    
+    /**
+     * 微信用户公众号openid
+     */
+    @Column(name = "wx_gzh_open_id", length = 64, unique = true, columnDefinition="varchar(64) comment '微信用户公众号openid'")
+    @ApiModelProperty("微信用户公众号openid")
+    @JSONField(serialize = false)
+    private String wxGzhOpenId;
     
     /**
      * 微信用户unionid
@@ -250,8 +258,8 @@ public class User extends AbstractDateEntity implements UserDetails
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("User [userId=").append(userId).append(", wxOpenId=")
-                .append(wxOpenId).append(", name=").append(name).append("]");
+        builder.append("User [userId=").append(userId).append(", wxXcxOpenId=")
+                .append(wxXcxOpenId).append(", name=").append(name).append("]");
         return builder.toString();
     }
 

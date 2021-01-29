@@ -6,8 +6,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -23,19 +21,21 @@ import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.QUser;
 import com.kl.parkLine.entity.Role;
 import com.kl.parkLine.entity.User;
+import com.kl.parkLine.enums.AccessTokenType;
 import com.kl.parkLine.enums.Gender;
 import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.feign.IWxFeignClient;
 import com.kl.parkLine.json.DecryptionParam;
 import com.kl.parkLine.json.DecryptionResult;
 import com.kl.parkLine.json.MobileBindResult;
 import com.kl.parkLine.json.MyInfo;
 import com.kl.parkLine.json.SmsCheckParam;
-import com.kl.parkLine.json.WxCode2SessionResult;
 import com.kl.parkLine.json.WxUserInfo;
 import com.kl.parkLine.predicate.UserPredicates;
 import com.kl.parkLine.util.Const;
 import com.kl.parkLine.util.RoleCode;
 import com.kl.parkLine.vo.UserVo;
+import com.kl.parkLine.xml.WxGzhMsg;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
@@ -49,7 +49,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 @Transactional(rollbackFor = Exception.class)
 public class UserService
 {
-    private final static Logger logger = LoggerFactory.getLogger(UserService.class);
     @Autowired
     private IUserDao userDao;
     
@@ -70,6 +69,12 @@ public class UserService
     
     @Autowired
     private SmsCodeService smsCodeService;
+    
+    @Autowired
+    private IWxFeignClient wxFeignClient;
+    
+    @Autowired
+    private AccessTokenService accessTokenService;
     
     @Autowired
     private Utils utils;
@@ -112,9 +117,9 @@ public class UserService
      * @param wxUserInfo 微信登录信息
      * @throws UnsupportedEncodingException 
      */
-    public User setupUser(WxCode2SessionResult sessionResult, WxUserInfo wxUserInfo) throws UnsupportedEncodingException
+    public User setupUser(WxUserInfo wxUserInfo) throws UnsupportedEncodingException
     {
-        String userName = Const.WX_PREFIX + sessionResult.getOpenid();
+        String userName = Const.WX_PREFIX + wxUserInfo.getUnionId();
         User user = findByName(userName);
         if (null == user)
         {
@@ -123,21 +128,37 @@ public class UserService
         }
         user.setName(userName);
         user.setNickName(wxUserInfo.getNickName());
-        //user.setNickName(Base64.encodeBase64String(wxUserInfo.getNickName().getBytes("utf-8")));
-        user.setWxOpenId(sessionResult.getOpenid());
         user.setCountry(wxUserInfo.getCountry());
         user.setProvince(wxUserInfo.getProvince());
         user.setCity(wxUserInfo.getCity());
-        user.setWxSessionKey(sessionResult.getSessionKey());
-        logger.info(String.format("Unionid=%s", sessionResult.getUnionid()));
-        user.setWxUnionId(sessionResult.getUnionid());
-        switch (wxUserInfo.getGender())
+        user.setWxSessionKey(wxUserInfo.getSessionKey());
+        user.setWxUnionId(wxUserInfo.getUnionId());
+        if (!StringUtils.isEmpty(wxUserInfo.getSubscribe()))
+        {
+            user.setSubscribe(wxUserInfo.getSubscribe());
+        }
+        //小程序和公众号openId
+        if (!StringUtils.isEmpty(wxUserInfo.getWxXcxOpenId()))
+        {
+            user.setWxXcxOpenId(wxUserInfo.getWxXcxOpenId());
+        }
+        if (!StringUtils.isEmpty(wxUserInfo.getWxGzhOpenId()))
+        {
+            user.setWxGzhOpenId(wxUserInfo.getWxGzhOpenId());
+        }
+        Integer gender = wxUserInfo.getGender();
+        if (null == gender)
+        {
+            gender = wxUserInfo.getSex();
+        }
+        switch (gender)
         {
             case 1:
                 user.setGender(Gender.male);
                 break;
             case 2:
                 user.setGender(Gender.female);
+                break;
             default:
                 user.setGender(Gender.unkonwn);
                 break;
@@ -158,15 +179,6 @@ public class UserService
     public User findByName(String name)
     {
         return userDao.findOneByName(name);
-    }
-    
-    /**
-     * 根据用户名称查找
-     * @param name 用户名称
-     */ 
-    public User findWxOpenId(String openId)
-    {
-        return userDao.findOneByWxOpenId(openId);
     }
     
     /**
@@ -317,5 +329,49 @@ public class UserService
         String text = utils.decrypt(user.getWxSessionKey(), decryptionParam.getIv(), decryptionParam.getEncryptedData());
         
         return JSON.parseObject(text, DecryptionResult.class);
+    }
+    
+    /**
+     * 处理微信公众号推送消息，关注事件
+     * @param wxGzhMsg
+     * @throws BusinessException 
+     * @throws UnsupportedEncodingException 
+     */
+    public WxGzhMsg subscribeGzh(WxGzhMsg wxGzhMsg) throws BusinessException, UnsupportedEncodingException
+    {
+        //根据公众号openId找用户
+        String accessToken = accessTokenService.getLatestToken(AccessTokenType.gzh);
+        
+        //获取微信用户信息
+        WxUserInfo wxUserInfo = wxFeignClient.getUserInfo(accessToken, wxGzhMsg.getFromUserName());
+
+        //设置回复消息
+        WxGzhMsg wxGzhResp = null;
+        Date now = new Date();
+        wxUserInfo.setSubscribe("Y");
+        wxGzhResp = WxGzhMsg.builder().createTime((int) (now.getTime()/1000))
+                .msgType("text").fromUserName(wxGzhMsg.getToUserName())
+                .toUserName(wxGzhMsg.getFromUserName())
+                .content("Hi，感谢关注停车线！\n用停车线，超多停车场供您选择\n线上缴费不排队，无感支付畅通行\n空余车位实时显，计费标准实时更\n停车线，做您的停车好助手")
+                .build();
+        //保存微信用户
+        setupUser(wxUserInfo);
+        
+        return wxGzhResp;
+    }
+    
+    /**
+     * 取消订阅公众号
+     * @param wxGzhMsg
+     */
+    public void unsubscribeGzh(WxGzhMsg wxGzhMsg)
+    {
+        User user = userDao.findOneByWxGzhOpenId(wxGzhMsg.getFromUserName());
+        if (null == user)
+        {
+            return;
+        }
+        user.setSubscribe("N");
+        save(user);
     }
 }

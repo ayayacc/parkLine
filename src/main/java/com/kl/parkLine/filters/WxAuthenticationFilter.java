@@ -37,7 +37,6 @@ public class WxAuthenticationFilter
             body.append(inputStr);
         }
             
-        
         WxLoginParam wxLoginParam = JSONObject.parseObject(body.toString(), WxLoginParam.class);
         
         WxAuthenticationToken authRequest = new WxAuthenticationToken(wxLoginParam);

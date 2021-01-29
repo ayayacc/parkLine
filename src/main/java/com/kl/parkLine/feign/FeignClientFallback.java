@@ -7,6 +7,7 @@ import com.kl.parkLine.json.WxAccessTokenResult;
 import com.kl.parkLine.json.WxCode2SessionResult;
 import com.kl.parkLine.json.WxSendMsgResult;
 import com.kl.parkLine.json.WxTpltMsg;
+import com.kl.parkLine.json.WxUserInfo;
 
 @Component
 public class FeignClientFallback implements IWxFeignClient, IMapFeignClient
@@ -43,6 +44,14 @@ public class FeignClientFallback implements IWxFeignClient, IMapFeignClient
     {
         WxSendMsgResult result = new WxSendMsgResult();
         result.setErrmsg("sendWxMessage exception");
+        return result;
+    }
+
+    @Override
+    public WxUserInfo getUserInfo(String accessToken, String openId)
+    {
+        WxUserInfo result = new WxUserInfo();
+        result.setErrmsg("getUserInfo exception");
         return result;
     }
     

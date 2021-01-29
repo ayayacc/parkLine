@@ -10,6 +10,7 @@ import com.kl.parkLine.json.WxAccessTokenResult;
 import com.kl.parkLine.json.WxCode2SessionResult;
 import com.kl.parkLine.json.WxSendMsgResult;
 import com.kl.parkLine.json.WxTpltMsg;
+import com.kl.parkLine.json.WxUserInfo;
 
 @FeignClient(name="wxFeignClient", url="https://api.weixin.qq.com")
 public interface IWxFeignClient
@@ -21,8 +22,13 @@ public interface IWxFeignClient
     
     //https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET
     @GetMapping(value = "/cgi-bin/token?grant_type=client_credential&appid={APPID}&secret={APPSECRET}")
-    public WxAccessTokenResult getAccessToken(@RequestParam("APPID")String openId, 
-            @RequestParam("APPSECRET")String openSecret);
+    public WxAccessTokenResult getAccessToken(@RequestParam("APPID")String appId, 
+            @RequestParam("APPSECRET")String appSecret);
+    
+    //https://api.weixin.qq.com/cgi-bin/user/info?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN
+    @GetMapping(value = "/cgi-bin/user/info?access_token={ACCESS_TOKEN}&openid={OPENID}&lang=zh_CN")
+    public WxUserInfo getUserInfo(@RequestParam("ACCESS_TOKEN")String accessToken, 
+            @RequestParam("OPENID")String openId);
     
     //https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=ACCESS_TOKEN
     @PostMapping(value = "/cgi-bin/message/template/send?access_token= {ACCESS_TOKEN}")
