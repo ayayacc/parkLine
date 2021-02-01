@@ -37,12 +37,12 @@ public class ScheduleTask
     }
     
     /**
-     * 每天00:00:01秒执行,更新优惠券以及优惠券定义过期状态
+     * 每天00:00:01秒执行,刷新过期的月票状态
      */
     @Scheduled(cron = "2 00 00 * * ?")
     public void updateMontlyTkt()
     {
-        //刷新过期的月票状态以及
+        //刷新过期的月票状态
         try
         {
             orderService.updateExpiredMonthlyTkt();

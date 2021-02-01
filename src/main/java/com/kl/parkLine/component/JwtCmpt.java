@@ -71,10 +71,10 @@ public class JwtCmpt
             }
             
             //超时
-            if (signedJWT.getJWTClaimsSet().getExpirationTime().before(new Date()))
+            /*if (signedJWT.getJWTClaimsSet().getExpirationTime().before(new Date()))
             {
                 throw new BusinessException(RetCode.expiredToken, "登录信息已经超时，请重新登录");
-            }
+            }*/
         }
         catch (ParseException | JOSEException e)
         {

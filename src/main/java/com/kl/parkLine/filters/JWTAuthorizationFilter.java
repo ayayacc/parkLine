@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -24,9 +26,10 @@ import com.kl.parkLine.util.Const;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 
+
 public class JWTAuthorizationFilter extends OncePerRequestFilter 
 {
-    //private final static Logger logger = LoggerFactory.getLogger(JWTAuthorizationFilter.class);
+    private final static Logger logger = LoggerFactory.getLogger(JWTAuthorizationFilter.class);
     
     private JwtCmpt jwtCmpt;
 
@@ -95,6 +98,7 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
         }
         catch (ParseException | JOSEException e)
         {
+            logger.error("invalidToken");
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write(JSON.toJSONString(RestResult.failed(RetCode.invalidToken, e.getMessage())));
             return;
