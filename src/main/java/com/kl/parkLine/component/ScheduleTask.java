@@ -77,4 +77,21 @@ public class ScheduleTask
             e.printStackTrace();
         }
     }
+    
+    /**
+     * 每天00:00:01秒执行,发送即将过期的月票提醒
+     */
+    @Scheduled(cron = "00 30 10 * * ?")
+    public void sendExiringMsg()
+    {
+        //刷新过期的月票状态
+        try
+        {
+            orderService.updateExpiredMonthlyTkt();
+        }
+        catch (BusinessException e)
+        {
+            e.printStackTrace();
+        }
+    }
 }

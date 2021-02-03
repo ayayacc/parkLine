@@ -112,7 +112,7 @@ public class CarController
             carService.unbind(car);
             return RestResult.success();
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }
@@ -158,7 +158,7 @@ public class CarController
             //找到停车场信息
             return RestResult.success(orderService.findParkLocationByCar(car));
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }

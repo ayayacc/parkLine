@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.json.DecryptionParam;
-import com.kl.parkLine.json.DecryptionResult;
+import com.kl.parkLine.json.DecryptionPhoneNoResult;
 import com.kl.parkLine.json.MyInfo;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.json.SmsCheckParam;
@@ -148,7 +148,7 @@ public class UserController
             userService.checkValidCode(auth.getName(), smsCheckParam);
             return RestResult.success();
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.success(String.format("短信验证码失败: %s", e.getMessage()));
         }
@@ -166,7 +166,7 @@ public class UserController
     @PostMapping("/decryption")
     @ApiOperation(value="解密微信获取的敏感信息", notes="检查用户是否绑定了手机号")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<DecryptionResult> decryption(Authentication auth, @ApiParam(name="解密参数", required=true) @RequestBody(required=true) DecryptionParam decryptionParam)
+    public RestResult<DecryptionPhoneNoResult> decryption(Authentication auth, @ApiParam(name="解密参数", required=true) @RequestBody(required=true) DecryptionParam decryptionParam)
     {
         try
         {

@@ -1,7 +1,6 @@
 package com.kl.parkLine.component;
 
 import java.text.ParseException;
-import java.util.Date;
 
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;

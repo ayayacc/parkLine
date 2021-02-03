@@ -7,6 +7,9 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import com.kl.parkLine.exception.BusinessException;
+import com.kl.parkLine.json.RestResult;
 @Aspect
 @Component
 public class LogAspect
@@ -61,7 +64,14 @@ public class LogAspect
             e.printStackTrace();
             sb.append(String.format("Exception: %s", e.getStackTrace().toString()));
             logger.error(sb.toString());
-            throw new RuntimeException(e);
+            if (e instanceof BusinessException)
+            {
+                result = RestResult.failed(((BusinessException) e).getRetCode(), e.getMessage());
+            }
+            else
+            {
+                result = RestResult.failed(e.getMessage());
+            }
         } 
 
         return result;

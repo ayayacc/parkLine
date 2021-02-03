@@ -11,4 +11,8 @@ public class WxLoginParam
 {
     private String code;
     private WxUserInfo userInfo;
+    private String rawData;
+    private String signature;
+    private String encryptedData;
+    private String iv;
 }

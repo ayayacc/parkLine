@@ -6,7 +6,6 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 
 import com.kl.parkLine.json.WxLoginParam;
-import com.kl.parkLine.json.WxUserInfo;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -17,13 +16,13 @@ import lombok.Setter;
 public class WxAuthenticationToken extends AbstractAuthenticationToken
 {
     private final Object principal;
-    private WxUserInfo wxUserInfo;
+    private WxLoginParam wxLoginParam;
 
     public WxAuthenticationToken(WxLoginParam wxLoginParam) 
     {
         super(null);
         this.principal = wxLoginParam.getCode();
-        this.wxUserInfo = wxLoginParam.getUserInfo();
+        this.wxLoginParam = wxLoginParam;
         setAuthenticated(false);
     }
     

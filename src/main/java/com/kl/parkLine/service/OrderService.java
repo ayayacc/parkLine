@@ -71,6 +71,7 @@ import com.kl.parkLine.json.ContentLines;
 import com.kl.parkLine.json.EventResult;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
+import com.kl.parkLine.json.RefundParam;
 import com.kl.parkLine.json.TimePoint;
 import com.kl.parkLine.json.WxPayNotifyParam;
 import com.kl.parkLine.json.WxUnifiedOrderResult;
@@ -1164,9 +1165,7 @@ public class OrderService
                         qOrderPayment.walletBalance,
                         qOrderPayment.paymentTime,
                         qOrder.startDate.as("orderStartDate"),
-                        qOrder.endDate.as("orderEndDate"),
-                        qOrder.inImgCode.as("orderInImgCode"),
-                        qOrder.outImgCode.as("orderOutImgCode")))
+                        qOrder.endDate.as("orderEndDate")))
                 .from(qOrderPayment).leftJoin(qOrder).on(qOrderPayment.order.eq(qOrder))
                 .leftJoin(qPark).on(qOrder.park.eq(qPark))
                 .leftJoin(qCar).on(qOrder.car.eq(qCar))
@@ -1387,7 +1386,7 @@ public class OrderService
      * @param monthlyTktParam
      * @throws Exception 
      */
-    public BigDecimal inqueryMonthlyTkt(MonthlyTktParam monthlyTktParam) throws Exception
+    public BigDecimal inqueryMonthlyTkt(MonthlyTktParam monthlyTktParam) throws BusinessException
     {
         //找到停车场
         Park park = parkService.findOneById(monthlyTktParam.getParkId());
@@ -1454,7 +1453,7 @@ public class OrderService
      * @param monthlyTktParam
      * @throws Exception 
      */
-    public OrderVo createMonthlyTkt(MonthlyTktParam monthlyTktParam, String userName) throws Exception
+    public OrderVo createMonthlyTkt(MonthlyTktParam monthlyTktParam, String userName) throws BusinessException
     {
         User owner = userService.findByName(userName);
         Park park = parkService.findOneById(monthlyTktParam.getParkId());
@@ -1919,11 +1918,13 @@ public class OrderService
         //微信付款特有
         orderPayment.setBankType(bankType);
         
-        //钱包付款特有
-        if (null != order.getOwner()) //现金付款时，订单可能无拥有者
+        //现金付款时，订单可能无拥有者
+        if (null != order.getOwner()) 
         {
             orderPayment.setWalletBalance(order.getOwner().getBalance());
         }
+        
+        //钱包付款特有
         orderPayment.setUsedCoupon(coupon);
         
         order.setLastPaymentTime(paymentTime);
@@ -1951,6 +1952,11 @@ public class OrderService
             case monthlyTicket: //月租成功
                 //停车场可用月租数量-1
                 parkService.changeMonthlyAvaliableCnt(order, -1);
+                break;
+            case refund: //退款
+                owner = order.getOwner();
+                owner.setBalance(owner.getBalance().subtract(order.getAmt()));
+                orderPayment.setWalletBalance(owner.getBalance());//记录钱包余额
                 break;
             default:
                 break;
@@ -2049,6 +2055,63 @@ public class OrderService
         order.setRemark(xjPayParam.getRemark());
         order.setCashPayee(xjPayParam.getPayee());
         order.appedChangeRemark(String.format("现金收款人: %s", xjPayParam.getPayee()));
+        //记录备注
+        this.save(order);
+    }
+    
+    /**
+     * 记录退款
+     * @param wxPayNotifyParam
+     * @throws UnsupportedEncodingException 
+     */
+    public void refundSuccess(RefundParam refundParam) throws BusinessException, UnsupportedEncodingException
+    {
+        //获取私钥
+        KeyMap keyMap = keyMapService.findOneByPublicKey(refundParam.getPublicKey());
+        if (null == keyMap)
+        {
+            throw new BusinessException(String.format("无效的公钥: %s", refundParam.getPublicKey()));
+        }
+        
+        //校验参数签名
+        String parmas = String.format("userId=%d&amt=%.2f&refundBy=%s&refundTime=%d&remark=%s&publicKey=%s&privateKey=%s", 
+                refundParam.getUserId(),
+                refundParam.getAmt().setScale(2, RoundingMode.HALF_UP).floatValue(), 
+                refundParam.getRefundBy(), refundParam.getRefundTime(),
+                refundParam.getRemark(), refundParam.getPublicKey(), keyMap.getPrivateKey());
+        String md5 = DigestUtils.md5DigestAsHex(parmas.getBytes("UTF-8"));
+        if (!md5.equals(refundParam.getSign()))
+        {
+            logger.error(String.format("%s,%s,%s", md5, refundParam.getSign(), parmas));
+            throw new BusinessException("无效的签名");
+        }
+        
+        //找到对应user
+        User user = userService.findOneById(refundParam.getUserId());
+        if (null == user)
+        {
+            throw new BusinessException(String.format("无效的用户Id: %d", refundParam.getUserId()));
+        }
+        
+        //钱包余额不足
+        if (0 > user.getBalance().compareTo(refundParam.getAmt()))
+        {
+            throw new BusinessException("用户余额不足");
+        }
+        
+        //新增退款订单
+        Order order = new Order();
+        order.setCode(util.makeCode(OrderType.refund));
+        order.setOwner(user);
+        order.setType(OrderType.refund);
+        order.setAmt(refundParam.getAmt());
+        order.setRealUnpayedAmt(refundParam.getAmt());
+        paySucess(order, PaymentType.wx, null, null, new Date(refundParam.getRefundTime()));
+        
+        //记录退款操作人
+        order.setRemark(refundParam.getRemark());
+        order.appedChangeRemark(String.format("退款操作人: %s", refundParam.getRefundBy()));
+        
         //记录备注
         this.save(order);
     }

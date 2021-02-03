@@ -97,7 +97,7 @@ public class InvoiceController
             invoiceService.save(invoice);
             return RestResult.success();
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }

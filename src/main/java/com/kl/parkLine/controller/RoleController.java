@@ -95,7 +95,7 @@ public class RoleController
             roleService.save(role);
             return RestResult.success();
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }

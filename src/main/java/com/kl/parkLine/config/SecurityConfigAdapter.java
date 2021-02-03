@@ -133,7 +133,7 @@ public class SecurityConfigAdapter extends WebSecurityConfigurerAdapter
                 "/sms", "/sms/**", 
                 "/orders/wxpay/notify","/orders/calAmt",
                 "/parks/nearby","/orders/xjpay/notify",
-                "/gzh/**").permitAll()
+                "/orders/refund", "/gzh/**").permitAll()
         .and()
         .authorizeRequests()
         .anyRequest().authenticated()

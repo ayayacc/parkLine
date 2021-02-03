@@ -63,7 +63,7 @@ public class CouponController
                     .build();
             return RestResult.success(couponVo);
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }

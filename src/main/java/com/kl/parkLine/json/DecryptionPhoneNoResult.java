@@ -9,7 +9,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @ApiModel("解密结果")
-public class DecryptionResult
+public class DecryptionPhoneNoResult
 {
     //用户绑定的手机号（国外手机号会有区号）
     private String phoneNumber;

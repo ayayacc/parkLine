@@ -20,7 +20,10 @@ public enum OrderType implements BaseEnum
     coupon(3, "优惠券激活"),
     
     @ApiModelProperty("4:钱包充值")
-    walletIn(4, "钱包充值");
+    walletIn(4, "钱包充值"),
+    
+    @ApiModelProperty("5:退款")
+    refund(5, "退款");
     
     private Integer value;
     private String text;

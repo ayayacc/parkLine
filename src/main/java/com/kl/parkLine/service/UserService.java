@@ -26,7 +26,7 @@ import com.kl.parkLine.enums.Gender;
 import com.kl.parkLine.exception.BusinessException;
 import com.kl.parkLine.feign.IWxFeignClient;
 import com.kl.parkLine.json.DecryptionParam;
-import com.kl.parkLine.json.DecryptionResult;
+import com.kl.parkLine.json.DecryptionPhoneNoResult;
 import com.kl.parkLine.json.MobileBindResult;
 import com.kl.parkLine.json.MyInfo;
 import com.kl.parkLine.json.SmsCheckParam;
@@ -125,6 +125,10 @@ public class UserService
         {
             user = new User();
             user.setEnabled(true);
+            Set<Role> roles = new HashSet<>();
+            Role role = roleService.findOneByCode(RoleCode.END_USER);
+            roles.add(role);
+            user.setRoles(roles);
         }
         user.setName(userName);
         user.setNickName(wxUserInfo.getNickName());
@@ -164,10 +168,6 @@ public class UserService
                 break;
         }
         
-        Set<Role> roles = new HashSet<>();
-        Role role = roleService.findOneByCode(RoleCode.END_USER);
-        roles.add(role);
-        user.setRoles(roles);
         save(user);
         return user;
     }
@@ -323,12 +323,12 @@ public class UserService
      * @return
      * @throws Exception 
      */
-    public DecryptionResult decryption(String userName, DecryptionParam decryptionParam) throws Exception
+    public DecryptionPhoneNoResult decryption(String userName, DecryptionParam decryptionParam) throws Exception
     {
         User user = findByName(userName);
         String text = utils.decrypt(user.getWxSessionKey(), decryptionParam.getIv(), decryptionParam.getEncryptedData());
         
-        return JSON.parseObject(text, DecryptionResult.class);
+        return JSON.parseObject(text, DecryptionPhoneNoResult.class);
     }
     
     /**
@@ -373,5 +373,14 @@ public class UserService
         }
         user.setSubscribe("N");
         save(user);
+    }
+    
+    /**
+     * 根据Id查找唯一用户
+     * @param userId
+     */
+    public User findOneById(Integer userId)
+    {
+        return userDao.findById(userId).get();
     }
 }

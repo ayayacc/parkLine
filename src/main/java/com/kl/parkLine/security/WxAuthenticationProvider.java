@@ -2,6 +2,7 @@ package com.kl.parkLine.security;
 
 import java.io.UnsupportedEncodingException;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -11,9 +12,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.alibaba.fastjson.JSON;
+import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.entity.User;
 import com.kl.parkLine.feign.IWxFeignClient;
+import com.kl.parkLine.json.DecryptionUserResult;
 import com.kl.parkLine.json.WxCode2SessionResult;
+import com.kl.parkLine.json.WxLoginParam;
 import com.kl.parkLine.json.WxUserInfo;
 import com.kl.parkLine.service.UserService;
 
@@ -32,6 +37,9 @@ public class WxAuthenticationProvider implements AuthenticationProvider
     @Autowired
     private UserService userService;
     
+    @Autowired
+    private Utils utils;
+    
     @Override
     @Transactional
     public Authentication authenticate(Authentication authentication)
@@ -44,8 +52,34 @@ public class WxAuthenticationProvider implements AuthenticationProvider
             throw new WxAuthenticationException(result.getErrmsg());
         }
         WxAuthenticationToken wxAuthenticationToken = (WxAuthenticationToken)authentication;
-        WxUserInfo wxUserInfo = wxAuthenticationToken.getWxUserInfo();
-        wxUserInfo.setUnionId(result.getUnionid());
+        WxLoginParam wxLoginParam = wxAuthenticationToken.getWxLoginParam();
+        WxUserInfo wxUserInfo = wxLoginParam.getUserInfo();
+        if (!StringUtils.isEmpty(result.getUnionid())) //code2Session返回了Id
+        {
+            wxUserInfo.setUnionId(result.getUnionid());
+        }
+        else 
+        {
+            String sign = DigestUtils.sha1Hex(wxLoginParam.getRawData()+result.getSessionKey());
+            if (sign.equalsIgnoreCase(wxLoginParam.getSignature()))
+            {
+                throw new WxAuthenticationException("密文验证失败");
+            }
+            try
+            {
+                String text = utils.decrypt(result.getSessionKey(), wxLoginParam.getIv(), wxLoginParam.getEncryptedData());
+                DecryptionUserResult userInfo = JSON.parseObject(text, DecryptionUserResult.class);
+                wxUserInfo.setUnionId(userInfo.getUnionId());
+            }
+            catch (Exception e)
+            {
+                throw new WxAuthenticationException(e.getMessage());
+            }
+        }
+        if (StringUtils.isEmpty(wxUserInfo.getUnionId()))
+        {
+            throw new WxAuthenticationException("获取OpenId失败");
+        }
         wxUserInfo.setWxXcxOpenId(result.getOpenid());
         wxUserInfo.setSessionKey(result.getSessionKey());
         User user;
@@ -60,7 +94,7 @@ public class WxAuthenticationProvider implements AuthenticationProvider
         
         if (!user.isEnabled())
         {
-            throw new SmsAuthenticationException("您的帐号已被禁用");
+            throw new WxAuthenticationException("您的帐号已被禁用");
         }
         
         WxAuthenticationToken token = new WxAuthenticationToken(user.getUsername(), user.getAuthorities());

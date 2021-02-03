@@ -39,6 +39,7 @@ import com.kl.parkLine.json.ChargeOpts;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.MonthlyTktParam;
 import com.kl.parkLine.json.PayOrderParam;
+import com.kl.parkLine.json.RefundParam;
 import com.kl.parkLine.json.RestResult;
 import com.kl.parkLine.json.WxPayNotifyParam;
 import com.kl.parkLine.json.WxUnifiedOrderResult;
@@ -86,7 +87,7 @@ public class OrderController
         {
             return RestResult.success(orderService.inqueryMonthlyTkt(monthlyTktParam));
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }
@@ -105,7 +106,7 @@ public class OrderController
         {
             return RestResult.success(orderService.createMonthlyTkt(monthlyTktParam, auth.getName()));
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }
@@ -292,7 +293,7 @@ public class OrderController
         {
             return RestResult.success(orderService.inqueryParking(payParam, auth.getName()));
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }
@@ -521,6 +522,22 @@ public class OrderController
         try
         {
             return RestResult.success(orderService.calOrderAmt(calOrderAmtParam));
+        }
+        catch (Exception e)
+        {
+            return RestResult.failed(e.getMessage());
+        }
+    }
+    
+    
+    @PostMapping(value = "/refund")
+    @ApiOperation(value="记录退款", notes="记录退款")
+    public RestResult<Object> refund(@ApiParam(name="记录退款", required=true) @RequestBody RefundParam refundParam)
+    {
+        try
+        {
+            orderService.refundSuccess(refundParam);
+            return RestResult.success("退款成功");
         }
         catch (Exception e)
         {

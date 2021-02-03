@@ -63,6 +63,7 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter
         {
             //验证jwt
             SignedJWT signedJWT = jwtCmpt.verifyJwt(tokenHeader);
+            logger.info(String.format("Token: %s", signedJWT));
             
             //得到用户名
             String username = (String) signedJWT.getJWTClaimsSet().getClaim(Const.JWT_CLAIM_USER_NAME);

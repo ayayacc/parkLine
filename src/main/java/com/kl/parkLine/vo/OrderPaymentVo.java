@@ -97,16 +97,4 @@ public class OrderPaymentVo
     @JSONField(format="yyyy-MM-dd",name="endDate")
     @ApiModelProperty(name="结束时间", value="startDate")
     private Date orderEndDate; 
-    
-    /**
-     * 入场截图url
-     */
-    @JSONField(name="inImgCode")
-    private String orderInImgCode;
-    
-    /**
-     * 出场截图url
-     */
-    @JSONField(name="outImgCode")
-    private String orderOutImgCode;
 }

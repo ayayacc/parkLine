@@ -51,7 +51,7 @@ public class CouponDefController
                     .couponDefId(couponDef.getCouponDefId()).build();
             return RestResult.success(couponDefVo);
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }

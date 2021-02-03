@@ -70,7 +70,7 @@ public class SmsController
                 return RestResult.success(codeVo);
             }
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }

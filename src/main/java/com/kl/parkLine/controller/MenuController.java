@@ -95,7 +95,7 @@ public class MenuController
             menuService.save(menu);
             return RestResult.success();
         }
-        catch (Exception e)
+        catch (BusinessException e)
         {
             return RestResult.failed(e.getMessage());
         }

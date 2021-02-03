@@ -243,6 +243,9 @@ public class Utils
             case walletIn: //钱包充值
                 prefix = "CZ";
                 break;
+            case refund: //退款
+                prefix = "TK";
+                break;
             default:
                 break;
         }
