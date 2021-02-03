@@ -46,23 +46,17 @@ public class CarController
      * @param authentication 当前登录用户
      * @param carNo 车牌号码
      * @return
+     * @throws BusinessException 
      */
     @PostMapping("/bind")
     @ApiOperation(value="将车牌绑定到当前登录用户", notes="一个用户可以绑定多个车牌，但是一个车牌只能绑定到一个用户，必须先将车牌解绑后，才能绑定到新的用户")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<CarVo> bind(@ApiParam(name="车牌号码", required=true) @RequestBody(required=true) CarParam bindCarParam, 
-            Authentication auth)
+            Authentication auth) throws BusinessException
     {
-        try
-        {
-            //将车辆绑定到当前用户
-            Car car = carService.bind(auth.getName(), bindCarParam);
-            return RestResult.success(CarVo.builder().carId(car.getCarId()).build());
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+      //将车辆绑定到当前用户
+        Car car = carService.bind(auth.getName(), bindCarParam);
+        return RestResult.success(CarVo.builder().carId(car.getCarId()).build());
     }
     
     @PostMapping("/lock/{carId}")
@@ -70,22 +64,14 @@ public class CarController
     @ApiImplicitParam(name="Authorization", value="登录令牌",required=true, paramType="header")
     public RestResult<DrivingLicenseVo> lock(@ApiParam(name="车辆Id", type="string")@PathVariable Integer carId, 
             @ApiIgnore @PathVariable(name = "carId", required = true) Car car,
-            @ApiParam(name="行驶证照片照片") @RequestParam("licenseImg") MultipartFile licenseImg, Authentication auth)
+            @ApiParam(name="行驶证照片照片") @RequestParam("licenseImg") MultipartFile licenseImg, Authentication auth) throws BusinessException
     {
         if (null == car)
         {
-            return RestResult.failed(String.format("无效的车辆Id: %d", carId));
+            throw new BusinessException(String.format("无效的车辆Id: %d", carId));
         }
         
-        try
-        {
-            //上传车辆行驶证,锁定车辆
-            return RestResult.success(carService.lock(auth.getName(), car, licenseImg));
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        return RestResult.success(carService.lock(auth.getName(), car, licenseImg));
     }
     
     /**
@@ -93,29 +79,23 @@ public class CarController
      * @param authentication 当前登录用户
      * @param carNo 车牌号码
      * @return
+     * @throws BusinessException 
      */
     @GetMapping(value = "/unbind/{carId}")
     @ApiOperation(value="将车牌从绑定用户解绑", notes="若车牌号不存在，接口会自动创建车辆但是并不绑定到用户，返回成功；如果车辆当前并未绑定用户，接口直接返回成功")
     @ApiImplicitParam(name="Authorization", value="登录令牌",required=true, paramType="header")
     public RestResult<Car> unbind(@ApiParam(name="车辆Id") @PathVariable(name = "carId", required = true) Integer carId,
             @ApiIgnore @PathVariable(name = "carId", required = true) Car car,
-            Authentication auth)
+            Authentication auth) throws BusinessException
     {
         if (null == car)
         {
-            return RestResult.failed(String.format("无效的车辆Id: %d", carId));
+            throw new BusinessException(String.format("无效的车辆Id: %d", carId));
         }
         
-        try
-        {
-            //将车辆解绑
-            carService.unbind(car);
-            return RestResult.success();
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        //将车辆解绑
+        carService.unbind(car);
+        return RestResult.success();
     }
     
     /**
@@ -140,27 +120,21 @@ public class CarController
      * @param pageable 分页条件
      * @param auth 当前登录用户
      * @return 查询结果
+     * @throws BusinessException 
      */
     @GetMapping("/getParkLocation/{carId}")
     @ApiOperation(value="根据车牌号查找停车地点", notes="根据车牌号查找停车地点")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<ParkLocationVo> getParkLocation(@ApiParam(name="车辆Id") @PathVariable(name = "carId", required = true) Integer carId,
             @ApiIgnore @PathVariable(name = "carId", required = true) Car car,
-            Authentication auth)
+            Authentication auth) throws BusinessException
     {
         if (null == car)
         {
-            return RestResult.failed(String.format("无效的车辆Id: %d", carId));
+            throw new BusinessException(String.format("无效的车辆Id: %d", carId));
         }
         
-        try
-        {
-            //找到停车场信息
-            return RestResult.success(orderService.findParkLocationByCar(car));
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        //找到停车场信息
+        return RestResult.success(orderService.findParkLocationByCar(car));
     }
 }

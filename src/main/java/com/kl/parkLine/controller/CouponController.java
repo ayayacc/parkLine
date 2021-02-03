@@ -43,30 +43,23 @@ public class CouponController
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     @GetMapping("/apply/{couponDefId}")
     public RestResult<CouponVo> apply(@ApiParam(name="优惠券定义Id",type="path") @PathVariable("couponDefId") Integer couponDefId, 
-            @ApiIgnore @PathVariable("couponDefId") CouponDef couponDef, Authentication auth)
+            @ApiIgnore @PathVariable("couponDefId") CouponDef couponDef, Authentication auth) throws BusinessException
     {
-        try
-        {
-            Coupon coupon = couponService.apply(couponDef, auth.getName());
-            CouponVo couponVo = CouponVo.builder().couponId(coupon.getCouponId())
-                    .code(coupon.getCode())
-                    .discount(coupon.getDiscount())
-                    .activePrice(coupon.getActivePrice())
-                    .name(coupon.getName())
-                    .status(coupon.getStatus())
-                    .startDate(coupon.getStartDate())
-                    .endDate(coupon.getEndDate())
-                    .couponDefCode(couponDef.getCode())
-                    .couponDefCouponDefId(couponDef.getCouponDefId())
-                    .ownerName(auth.getName())
-                    .maxAmt(coupon.getMaxAmt())
-                    .build();
-            return RestResult.success(couponVo);
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        Coupon coupon = couponService.apply(couponDef, auth.getName());
+        CouponVo couponVo = CouponVo.builder().couponId(coupon.getCouponId())
+                .code(coupon.getCode())
+                .discount(coupon.getDiscount())
+                .activePrice(coupon.getActivePrice())
+                .name(coupon.getName())
+                .status(coupon.getStatus())
+                .startDate(coupon.getStartDate())
+                .endDate(coupon.getEndDate())
+                .couponDefCode(couponDef.getCode())
+                .couponDefCouponDefId(couponDef.getCouponDefId())
+                .ownerName(auth.getName())
+                .maxAmt(coupon.getMaxAmt())
+                .build();
+        return RestResult.success(couponVo);
     }
     
     /**
@@ -91,25 +84,19 @@ public class CouponController
      * @param pageable 分页条件
      * @param auth 当前登录优惠券
      * @return 优惠券查询结果
+     * @throws BusinessException 
      */
     @GetMapping("/available")
     @ApiOperation(value="查询适用于订单的优惠券清单", notes="根据订单Id分页查询适用的优惠券清单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<Page<CouponVo>> available4Order(@ApiParam(name="查询条件",type="query") @RequestParam("orderId") Integer orderId, 
             @ApiIgnore @RequestParam("orderId") Order order,
-            @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth)
+            @ApiParam(name="分页信息",type="query") Pageable pageable, Authentication auth) throws BusinessException
     {
         if (null == order)
         {
-            return RestResult.failed(String.format("无效的订单Id: %d", orderId));
+            throw new BusinessException(String.format("无效的订单Id: %d", orderId));
         }
-        try
-        {
-            return RestResult.success(couponService.available4Order(order, pageable));
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        return RestResult.success(couponService.available4Order(order, pageable));
     }
 }

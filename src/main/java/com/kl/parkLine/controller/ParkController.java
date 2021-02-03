@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -42,18 +43,11 @@ public class ParkController
     @ApiOperation(value="附近停车场信息", notes="查询附近停车场")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<List<ParkLocationVo>> nearby(@ApiParam(name="查询条件",type="query") @RequestBody NearbyParam nearbyParam,
-            Authentication auth)
+            Authentication auth) throws ParseException
     {
-        try
-        {
-            Geometry point = wktReader.read(nearbyParam.getCenterPoint());
-            Point centerPoint = point.getInteriorPoint();
-            return RestResult.success(parkService.findNearby(centerPoint, nearbyParam.getDistanceKm()));
-        }
-        catch (Exception e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        Geometry point = wktReader.read(nearbyParam.getCenterPoint());
+        Point centerPoint = point.getInteriorPoint();
+        return RestResult.success(parkService.findNearby(centerPoint, nearbyParam.getDistanceKm()));
     }
     
     /**

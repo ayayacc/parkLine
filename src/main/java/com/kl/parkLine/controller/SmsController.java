@@ -54,26 +54,18 @@ public class SmsController
     @PostMapping("/getCode")
     @ApiOperation(value="获取短信验证码", notes="验证码2分钟内有效，使用该验证码通过/sms/login登录  \n若用户首次登录，则自动注册")
     @ApiImplicitParam(name="mobile",value="手机号码",required=true)
-    public RestResult<SmsCodeVo> getSmsCode(@ApiIgnore @RequestBody JSONObject o)
+    public RestResult<SmsCodeVo> getSmsCode(@ApiIgnore @RequestBody JSONObject o) throws BusinessException
     {
-        try
+        String mobile = (String) o.get("mobile");
+        SmsCode smsCode = smsCodeService.sendSmsCode(mobile);
+        SmsCodeVo codeVo = SmsCodeVo.builder().code(smsCode.getCode()).build();
+        if (!active.equalsIgnoreCase("dev"))
         {
-            String mobile = (String) o.get("mobile");
-            SmsCode smsCode = smsCodeService.sendSmsCode(mobile);
-            SmsCodeVo codeVo = SmsCodeVo.builder().code(smsCode.getCode()).build();
-            if (!active.equalsIgnoreCase("dev"))
-            {
-                return RestResult.success();  //正式机不返回验证码给前端
-            }
-            else
-            {
-                return RestResult.success(codeVo);
-            }
+            return RestResult.success();  //正式机不返回验证码给前端
         }
-        catch (BusinessException e)
+        else
         {
-            return RestResult.failed(e.getMessage());
+            return RestResult.success(codeVo);
         }
-        
     }
 }

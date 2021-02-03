@@ -2,6 +2,8 @@ package com.kl.parkLine.controller;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -76,76 +78,52 @@ public class OrderController
     
     /**
      * 查询月票价格
+     * @throws BusinessException 
      */
     @PostMapping("/monthlyTkt/inquiry")
     @ApiOperation(value="查询月票价格", notes="根据停车场，起止时间，查询停车场月票价格")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<Object> inquiryMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody(required=true) MonthlyTktParam monthlyTktParam, 
-            Authentication auth)
+            Authentication auth) throws BusinessException
     {
-        try
-        {
-            return RestResult.success(orderService.inqueryMonthlyTkt(monthlyTktParam));
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        return RestResult.success(orderService.inqueryMonthlyTkt(monthlyTktParam));
     }
     
     /**
      * 购买月票
+     * @throws BusinessException 
      */
     @PostMapping("/monthlyTkt/create")
     @ApiOperation(value="购买月票", notes="新建一张月票；")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<OrderVo> createMonthlyTkt(@ApiParam(name="月票参数", required=true) @RequestBody(required=true) MonthlyTktParam monthlyTktParam, 
-            Authentication auth)
+            Authentication auth) throws BusinessException
     {
-        try
-        {
-            return RestResult.success(orderService.createMonthlyTkt(monthlyTktParam, auth.getName()));
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        return RestResult.success(orderService.createMonthlyTkt(monthlyTktParam, auth.getName()));
     }
     
     /**
      * 购买月票
+     * @throws Exception 
      */
     @PostMapping("/wallet/charge")
     @ApiOperation(value="钱包充值", notes="钱包充值")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<WxUnifiedOrderResult> chargeWallet(@ApiParam(name="充值参数", required=true) @RequestBody ChargeWalletParam walletChargeParam, Authentication auth)
+    public RestResult<WxUnifiedOrderResult> chargeWallet(@ApiParam(name="充值参数", required=true) @RequestBody ChargeWalletParam walletChargeParam, Authentication auth) throws Exception
     {
-        try
-        {
-            return RestResult.success(orderService.createWalletChargeOrder(walletChargeParam, auth.getName()));
-        }
-        catch (Exception e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        return RestResult.success(orderService.createWalletChargeOrder(walletChargeParam, auth.getName()));
     }
     
     /**
      * 激活优惠券
+     * @throws Exception 
      */
     @PostMapping("/coupon/active")
     @ApiOperation(value="激活优惠券", notes="将优惠券的有效期延期一周")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Object> activeCoupon(@ApiParam(name="优惠券参数", required=true) @RequestBody ActiveCouponParam activeCouponParam, Authentication auth)
+    public RestResult<Object> activeCoupon(@ApiParam(name="优惠券参数", required=true) @RequestBody ActiveCouponParam activeCouponParam, Authentication auth) throws Exception
     {
-        try
-        {
-            return RestResult.success(orderService.createActiveCouponOrder(activeCouponParam, auth.getName()));
-        }
-        catch (Exception e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        return RestResult.success(orderService.createActiveCouponOrder(activeCouponParam, auth.getName()));
     }
     
     /**
@@ -184,17 +162,18 @@ public class OrderController
      * 查询订单明细
      * @param orderId 订单Id
      * @return 订单明细
+     * @throws BusinessException 
      */
     @GetMapping(value = "/{orderId}")
     @PreAuthorize("hasPermission(#order, 'read')")
     @ApiOperation(value="查询订单明细", notes="根据订单Id")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<OrderVo> getOrder(@ApiParam(name="订单Id",type="path") @PathVariable("orderId") Integer orderId, 
-            @ApiIgnore @PathVariable("orderId") Order order)
+            @ApiIgnore @PathVariable("orderId") Order order) throws BusinessException
     {
         if (null == order)
         {
-            return RestResult.failed(String.format("无效的订单Id: %d", orderId));
+            throw new BusinessException(String.format("无效的订单Id: %d", orderId));
         }
         else 
         {
@@ -219,84 +198,61 @@ public class OrderController
      * @param carId 车辆Id
      * @param car 车辆对象
      * @return
+     * @throws BusinessException 
+     * @throws ParseException 
      */
     @GetMapping(value = "/parking/needToPayByCar/{carId}")
     @ApiOperation(value="根据车辆Id查询到需要付款的停车订单", notes="根据车辆Id查询到需要付款的停车订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<OrderVo> getNeedToPayByCar(@ApiParam(name="车辆Id",type="path") @PathVariable("carId") Integer carId, 
-            @ApiIgnore @PathVariable("carId") Car car)
+            @ApiIgnore @PathVariable("carId") Car car) throws BusinessException, ParseException
     {
         if (null == car)
         {
-            return RestResult.failed(String.format("无效的车辆Id: %d", carId));
+            throw new BusinessException(String.format("无效的车辆Id: %d", carId));
         }
         
-        try
-        {
-            return RestResult.success(orderService.findParkingByCar(car));
-        }
-        catch (Exception e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        return RestResult.success(orderService.findParkingByCar(car));
     }
     
     /**
      * 使用微信支付订单
+     * @throws Exception 
      */
     @PostMapping("/wxPay")
     @ApiOperation(value="支付订单", notes="发起订单支付")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<WxUnifiedOrderResult> payByWx(@ApiParam(name="订单支付参数", required=true) @RequestBody PayOrderParam payParam,
-            Authentication auth)
+            Authentication auth) throws Exception
     {
-        try
-        {
-            return RestResult.success(orderService.payByWx(payParam, auth.getName()));
-        }
-        catch (Exception e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        return RestResult.success(orderService.payByWx(payParam, auth.getName()));
     }
     
     /**
      * 使用钱包支付订单
+     * @throws BusinessException 
      */
     @PostMapping("/walletPay")
     @ApiOperation(value="支付订单", notes="发起订单支付")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<Object> payByWallet(@ApiParam(name="订单支付参数", required=true) @RequestBody PayOrderParam payParam,
-            Authentication auth)
+            Authentication auth) throws BusinessException
     {
-        try
-        {
-            orderService.payByWallet(payParam, auth.getName());
-            return RestResult.success();
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getRetCode(), e.getMessage());
-        }
+        orderService.payByWallet(payParam, auth.getName());
+        return RestResult.success();
     }
     
     /**
      * 使用钱包支付停车订单前，计算优惠券价格
+     * @throws BusinessException 
      */
     @PostMapping("/parking/inquery")
     @ApiOperation(value="支付订单", notes="发起订单支付")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
     public RestResult<Object> inqueryParkingOrder(@ApiParam(name="订单支付参数", required=true) @RequestBody PayOrderParam payParam,
-            Authentication auth)
+            Authentication auth) throws BusinessException
     {
-        try
-        {
-            return RestResult.success(orderService.inqueryParking(payParam, auth.getName()));
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        return RestResult.success(orderService.inqueryParking(payParam, auth.getName()));
     }
 
     /**
@@ -504,44 +460,23 @@ public class OrderController
     @ApiOperation(value="现金支付通知", notes="现金支付完成通知")
     public RestResult<Object> xjPayNotify(@RequestBody XjPayParam xjPayParam) throws Exception
     {
-        try
-        {
-            orderService.xjPaySuccess(xjPayParam);
-            return RestResult.success("支付成功");
-        }
-        catch (Exception e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        orderService.xjPaySuccess(xjPayParam);
+        return RestResult.success("支付成功");
     }
     
     @PostMapping(value = "/calAmt")
     @ApiOperation(value="计算停车订单金额", notes="计算停车订单金额")
-    public RestResult<CalOrderAmtResult> calAmt(@ApiParam(name="计算订单价格参数", required=true) @RequestBody CalOrderAmtParam calOrderAmtParam)
+    public RestResult<CalOrderAmtResult> calAmt(@ApiParam(name="计算订单价格参数", required=true) @RequestBody CalOrderAmtParam calOrderAmtParam) throws BusinessException, ParseException
     {
-        try
-        {
-            return RestResult.success(orderService.calOrderAmt(calOrderAmtParam));
-        }
-        catch (Exception e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        return RestResult.success(orderService.calOrderAmt(calOrderAmtParam));
     }
     
     
     @PostMapping(value = "/refund")
     @ApiOperation(value="记录退款", notes="记录退款")
-    public RestResult<Object> refund(@ApiParam(name="记录退款", required=true) @RequestBody RefundParam refundParam)
+    public RestResult<Object> refund(@ApiParam(name="记录退款", required=true) @RequestBody RefundParam refundParam) throws UnsupportedEncodingException, BusinessException
     {
-        try
-        {
-            orderService.refundSuccess(refundParam);
-            return RestResult.success("退款成功");
-        }
-        catch (Exception e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        orderService.refundSuccess(refundParam);
+        return RestResult.success("退款成功");
     }
 }

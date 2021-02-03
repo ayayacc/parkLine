@@ -88,16 +88,9 @@ public class RoleController
     @PostMapping("/save")
     @ApiOperation(value="新增/编辑角色", notes="普通角色只能编辑自己的信息，管理员可以编辑所有角色，name，Id等系统生成的字段不能修改")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<RoleVo> save(@ApiParam(name="角色信息") @RequestBody Role role)
+    public RestResult<RoleVo> save(@ApiParam(name="角色信息") @RequestBody Role role) throws BusinessException
     {
-        try
-        {
-            roleService.save(role);
-            return RestResult.success();
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        roleService.save(role);
+        return RestResult.success();
     }
 }

@@ -90,17 +90,10 @@ public class InvoiceController
     @PostMapping("/save")
     @ApiOperation(value="新增发票申请")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<InvoiceVo> apply(@ApiParam(name="发票信息") @RequestBody Invoice invoice)
+    public RestResult<InvoiceVo> apply(@ApiParam(name="发票信息") @RequestBody Invoice invoice) throws BusinessException
     {
-        try
-        {
-            invoiceService.save(invoice);
-            return RestResult.success();
-        }
-        catch (BusinessException e)
-        {
-            return RestResult.failed(e.getMessage());
-        }
+        invoiceService.save(invoice);
+        return RestResult.success();
     }
     
 }
