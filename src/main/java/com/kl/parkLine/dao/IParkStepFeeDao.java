@@ -10,5 +10,6 @@ import com.kl.parkLine.enums.CarType;
 @Repository
 public interface IParkStepFeeDao extends JpaRepository<ParkStepFee, Integer>
 {
-    public ParkStepFee findOneByParkAndCarTypeAndStartMinLessThanEqualAndEndMinGreaterThan(Park park, CarType carType, Integer lessThan, Integer GreaterThan);
+    public ParkStepFee findTopByParkAndCarTypeOrderByEndMinDesc(Park park, CarType carType);
+    public ParkStepFee findOneByParkAndCarTypeAndStartMinLessThanEqualAndEndMinGreaterThanEqual(Park park, CarType carType, Integer lessThan, Integer GreaterThan);
 }

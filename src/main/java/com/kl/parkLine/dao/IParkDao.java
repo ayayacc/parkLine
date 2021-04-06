@@ -19,5 +19,7 @@ public interface IParkDao extends JpaRepository<Park, Integer>
     @Query(value = "select *,st_astext(geo) as geotext, round(st_distance_sphere(geo, :centerPoint)/1000, 2) as dist from TC_PARK where round(st_distance_sphere(geo, :centerPoint)/1000, 2)<:distanceKm and enabled='Y' order by dist desc", nativeQuery = true)
     List<Map<String, Object>> findNearby(@Param("centerPoint")Point centerPoint, @Param("distanceKm")Double distanceKm);
     
+    @Query(value = "select *,st_astext(geo) as geotext, round(st_distance_sphere(geo, :centerPoint)/1000, 2) as dist from TC_PARK where round(st_distance_sphere(geo, :centerPoint)/1000, 2)<:distanceKm and enabled='Y' order by dist desc", nativeQuery = true)
+    List<Park> findNearby2(@Param("centerPoint")Point centerPoint, @Param("distanceKm")Double distanceKm);
 
 }

@@ -1,5 +1,11 @@
 package com.kl.parkLine.vo;
 
+import java.util.List;
+
+import com.kl.parkLine.entity.ParkFixedFee;
+import com.kl.parkLine.entity.ParkStepFee;
+import com.kl.parkLine.enums.ChargeType;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -33,6 +39,12 @@ public class ParkLocationVo
     @ApiModelProperty("可用车位")
     private Integer availableTmpCnt;
     
+    @ApiModelProperty("是否有地面车位") 
+    private Boolean hasGroundPlace;
+    
+    @ApiModelProperty("是否有地下车位") 
+    private Boolean hasUndergroundPlace;
+    
     @ApiModelProperty("地面月租车位总数量")
     private Integer totalGroundMonthlyCnt;
     
@@ -44,6 +56,9 @@ public class ParkLocationVo
     
     @ApiModelProperty("当前可用地下月租车位数量")
     private Integer availableUndergroundMonthlyCnt;
+    
+    @ApiModelProperty("月票说明")
+    private String monthlyTktRemark;
     
     @ApiModelProperty("经度")
     private Double lng;
@@ -62,4 +77,22 @@ public class ParkLocationVo
     
     @ApiModelProperty("地址")
     private String address;
+    
+    @ApiModelProperty("计费类型")
+    private ChargeType chargeType;
+    
+    @ApiModelProperty("燃油车固定计费规则")
+    private ParkFixedFee fuelFixedFee;
+    
+    @ApiModelProperty("新能源车固定计费规则")
+    private ParkFixedFee newEnergyFixedFee;
+    
+    @ApiModelProperty("燃油车阶梯计费规则")
+    private List<ParkStepFee> fuelStepFees;
+    
+    @ApiModelProperty("新能源车阶梯计费规则")
+    private List<ParkStepFee> newEnergyStepFees;
+    
+    @ApiModelProperty("计费规则说明")
+    private String feeRules;
 }

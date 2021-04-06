@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.wxpay.sdk.WXPay;
 import com.github.wxpay.sdk.WXPayUtil;
-import com.kl.parkLine.entity.Car;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.enums.DeviceUseage;
 import com.kl.parkLine.exception.BusinessException;
@@ -37,6 +36,7 @@ import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.Base64Img;
 import com.kl.parkLine.json.CalOrderAmtParam;
 import com.kl.parkLine.json.CalOrderAmtResult;
+import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.ChargeOpts;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.MonthlyTktParam;
@@ -121,7 +121,7 @@ public class OrderController
     @PostMapping("/coupon/active")
     @ApiOperation(value="激活优惠券", notes="将优惠券的有效期延期一周")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<Object> activeCoupon(@ApiParam(name="优惠券参数", required=true) @RequestBody ActiveCouponParam activeCouponParam, Authentication auth) throws Exception
+    public RestResult<WxUnifiedOrderResult> activeCoupon(@ApiParam(name="优惠券参数", required=true) @RequestBody ActiveCouponParam activeCouponParam, Authentication auth) throws Exception
     {
         return RestResult.success(orderService.createActiveCouponOrder(activeCouponParam, auth.getName()));
     }
@@ -201,18 +201,13 @@ public class OrderController
      * @throws BusinessException 
      * @throws ParseException 
      */
-    @GetMapping(value = "/parking/needToPayByCar/{carId}")
-    @ApiOperation(value="根据车辆Id查询到需要付款的停车订单", notes="根据车辆Id查询到需要付款的停车订单")
+    @PostMapping(value = "/parking/needToPayByCar")
+    @ApiOperation(value="根据车辆参数查询到需要付款的停车订单", notes="根据车辆参数查询到需要付款的停车订单")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<OrderVo> getNeedToPayByCar(@ApiParam(name="车辆Id",type="path") @PathVariable("carId") Integer carId, 
-            @ApiIgnore @PathVariable("carId") Car car) throws BusinessException, ParseException
+    public RestResult<OrderVo> getNeedToPayByCar(@ApiParam(name="车辆参数", required=true) @RequestBody(required=true) CarParam carParam, 
+            Authentication auth) throws BusinessException, ParseException
     {
-        if (null == car)
-        {
-            throw new BusinessException(String.format("无效的车辆Id: %d", carId));
-        }
-        
-        return RestResult.success(orderService.findParkingByCar(car));
+        return RestResult.success(orderService.findParkingByCar(carParam, auth.getName()));
     }
     
     /**

@@ -76,7 +76,7 @@ public class WxCmpt
         //body
         reqData.put("body", order.getType().getText());
         //out_trade_no
-        reqData.put("out_trade_no", order.getCode());
+        reqData.put("out_trade_no", order.getPayCode());
         //total_fee, 将单位从元转换成分
         reqData.put("total_fee", order.getRealUnpayedAmt().multiply(new BigDecimal(100)).setScale(0).toString());
         //spbill_create_ip

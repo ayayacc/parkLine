@@ -45,6 +45,7 @@ public class ParkStepFee implements java.io.Serializable
     @Id
     @Column(name = "park_step_fee_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JSONField(serialize = false)
     private Integer parkStepFeeId;
     
     /**
@@ -60,6 +61,7 @@ public class ParkStepFee implements java.io.Serializable
      */
     @Column(name = "car_type", nullable = false, columnDefinition="varchar(32) comment '适用车型: fuel(燃油车)/newEnergy(新能源车)'")
     @Enumerated(EnumType.STRING)
+    @JSONField(serialize = false)
     private CarType carType;
     
     /**

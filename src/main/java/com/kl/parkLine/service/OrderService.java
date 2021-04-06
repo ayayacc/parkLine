@@ -56,6 +56,7 @@ import com.kl.parkLine.enums.ChargeType;
 import com.kl.parkLine.enums.CouponStatus;
 import com.kl.parkLine.enums.DeviceUseage;
 import com.kl.parkLine.enums.EventType;
+import com.kl.parkLine.enums.MonthlyMode;
 import com.kl.parkLine.enums.OrderStatus;
 import com.kl.parkLine.enums.OrderType;
 import com.kl.parkLine.enums.PaymentType;
@@ -66,6 +67,7 @@ import com.kl.parkLine.json.ActiveCouponParam;
 import com.kl.parkLine.json.Base64Img;
 import com.kl.parkLine.json.CalOrderAmtParam;
 import com.kl.parkLine.json.CalOrderAmtResult;
+import com.kl.parkLine.json.CarParam;
 import com.kl.parkLine.json.ChargeWalletParam;
 import com.kl.parkLine.json.ContentLines;
 import com.kl.parkLine.json.EventResult;
@@ -94,6 +96,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 public class OrderService
 {
     private final Logger logger = LoggerFactory.getLogger(OrderService.class);
+    
+    private final Integer EXPIRED_DAYS = 7;
     
     @Autowired
     private IOrderDao orderDao;
@@ -253,8 +257,40 @@ public class OrderService
      * @throws BusinessException 
      * @throws ParseException 
      */
-    public OrderVo findParkingByCar(Car car) throws ParseException, BusinessException
+    public OrderVo findParkingByCar(CarParam carParam, String userName) throws ParseException, BusinessException
     {
+        Car car = null;
+        //根据车辆Id获取车辆
+        if (null != carParam.getCarId())
+        {
+            car = carService.findOneById(carParam.getCarId());
+            if (null == car)
+            {
+                throw new BusinessException(String.format("无效的车辆Id: %d", carParam.getCarId()));
+            }
+            carParam.setCarNo(car.getCarNo());
+            carParam.setPlateColor(car.getPlateColor());
+        }
+        //根据车牌号码和颜色获取车辆
+        else 
+        {
+            if (null == carParam.getCarNo())
+            {
+                throw new BusinessException("车牌号为空");
+            }
+            
+            if (null == carParam.getPlateColor())
+            {
+                throw new BusinessException("车牌号颜色为空");
+            }
+            car = carService.getCar(carParam.getCarNo(), carParam.getPlateColor());
+        }
+        //绑定车辆
+        if (null == car.getUser())
+        {
+            carService.bind(userName, carParam);
+        }
+        
         //找到最近的车辆在场订单
         Order order = orderDao.findTopByCarAndTypeAndIsOutIsFalseOrderByInTimeDesc(car, OrderType.parking);
         
@@ -283,7 +319,16 @@ public class OrderService
                     .realPayedAmt(order.getRealPayedAmt())
                     .realUnpayedAmt(order.getRealUnpayedAmt())
                     .inTime(order.getInTime())
-                    .status(order.getStatus())
+                    .outTime(order.getOutTime())
+                    .type(order.getType())
+                    .inImgCode(order.getInImgCode())
+                    .outImgCode(order.getOutImgCode())
+                    .payedAmt(order.getPayedAmt())
+                    .realPayedAmt(order.getRealPayedAmt())
+                    .lastPaymentTime(order.getLastPaymentTime())
+                    .startDate(order.getStartDate())
+                    .endDate(order.getEndDate())
+                    .status(OrderStatus.needToPay)
                     .build();
         }
         return orderVo;
@@ -497,7 +542,7 @@ public class OrderService
         Car car = carService.getCar(event.getPlateNo(), event.getPlateColor());
         
         //检查车辆是否重复入场
-        if (existsByTypeAndCarAndStatus(OrderType.parking, car, OrderStatus.in))
+        /*if (existsByTypeAndCarAndStatus(OrderType.parking, car, OrderStatus.in))
         {
             return EventResult.notOpen(ContentLines.builder()
                     .line1(Const.TIME_STAMP)
@@ -505,7 +550,7 @@ public class OrderService
                     .line3("车已在场")
                     .line4(" ")
                     .voice("车已在场").build());
-        }
+        }*/
         
         //检查是否为月票车
         Order monthlyTck = this.findValidMonthlyTck(car, park);
@@ -559,6 +604,7 @@ public class OrderService
         {
             DateTime now = new DateTime(event.getTimeIn());
             DateTime endDate = new DateTime(monthlyTck.getEndDate());
+            order.setUsedMonthlyTkt(monthlyTck);
             //月租车提示
             int nDay = Days.daysBetween(now, endDate).getDays();
             eventResult = EventResult.open(ContentLines.builder()
@@ -625,12 +671,13 @@ public class OrderService
         {
             //找到最近的入场订单
             Car car = carService.getCar(event.getPlateNo(), event.getPlateColor());
-            order = orderDao.findTopByCarAndTypeAndIsOutIsFalseOrderByInTimeDesc(car, OrderType.parking);
+            Device device = deviceService.findOneBySerialNo(event.getDeviceSn());
+            order = orderDao.findTopByCarAndParkAndTypeAndIsOutIsFalseOrderByInTimeDesc(car, device.getPark(), OrderType.parking);
         }
         
-        if (null == order) //无入场记录,开闸
+        if (null == order) //无入场记录,不开闸
         {
-            return EventResult.open(ContentLines.builder()
+            return EventResult.notOpen(ContentLines.builder()
                     .line1(Const.TIME_STAMP)
                     .line2(event.getPlateNo())
                     .line3("无入场")
@@ -690,7 +737,7 @@ public class OrderService
                 Period period = new Period(inTime, outTime, PeriodType.time());
                 String line3 = String.format("停车%d小时%d分", 
                         period.getHours(), period.getMinutes());
-                String line4 = String.format("请交费%.2f元", 
+                String line4 = String.format("%.2f元", 
                         order.getAmt().floatValue());
                 //用户开通了无感支付
                 if (null!=order.getOwner() && order.getOwner().getIsQuickPay())
@@ -726,7 +773,7 @@ public class OrderService
                                 .line3(line3)
                                 .line4(line4)
                                 .dr((byte) 0)
-                                .voice(String.format("%s,%s", event.getPlateNo(),line4))
+                                .voice(String.format("%s,请交费%s", event.getPlateNo(),line4))
                                 .build());
                     }
                 }
@@ -738,7 +785,7 @@ public class OrderService
                             .line2(event.getPlateNo())
                             .line3(line3)
                             .line4(line4)
-                            .voice(String.format("%s,%s", event.getPlateNo(),line4))
+                            .voice(String.format("%s,请交费%s", event.getPlateNo(),line4))
                             .dr((byte) 0)
                             .build());
                 }
@@ -767,7 +814,7 @@ public class OrderService
                 //提示
                 String line3 = String.format("停车%d小时%d分", 
                         period.getHours(), period.getMinutes());
-                String line4 = String.format("请交费%.2f元", 
+                String line4 = String.format("%.2f元", 
                         order.getAmt().floatValue());
                 if (order.getStatus().equals(OrderStatus.needToPay))  //产生新的费用
                 {
@@ -799,7 +846,7 @@ public class OrderService
                                     .line2(event.getPlateNo())
                                     .line3(line3)
                                     .line4(line4)
-                                    .voice(String.format("%s,%s", event.getPlateNo(), line4))
+                                    .voice(String.format("%s,请缴费%s", event.getPlateNo(), line4))
                                     .dr((byte) 0)
                                     .build());
                         }
@@ -812,10 +859,10 @@ public class OrderService
                                 .line2(event.getPlateNo())
                                 .line3(String.format("超时%d小时%d分", 
                                         period.getHours(), period.getMinutes()))
-                                .line4(String.format("请补交费%.2f元", 
+                                .line4(String.format("%.2f元", 
                                         order.getAmt().floatValue()))
                                 .dr((byte) 0)
-                                .voice(String.format("%s,%s", event.getPlateNo(),line4))
+                                .voice(String.format("%s,请交费%s", event.getPlateNo(),line4))
                                 .build());
                     }
                 }
@@ -1059,18 +1106,28 @@ public class OrderService
         
         //结合月票，计算停车时长
         Integer minutes = this.getParkingMinutes(order, outTime);
+        if (0 == minutes)
+        {
+            order.setAmt(BigDecimal.ZERO);
+            order.setRealUnpayedAmt(BigDecimal.ZERO);
+            return;
+        }
         
         //阶梯计费
         if (park.getChargeType().equals(ChargeType.step))
         {
-            ParkStepFee parkStepFee = parkStepFeeDao.findOneByParkAndCarTypeAndStartMinLessThanEqualAndEndMinGreaterThan(
+            //找到最大的计费周期
+            ParkStepFee parkStepFee = parkStepFeeDao.findTopByParkAndCarTypeOrderByEndMinDesc(park, car.getCarType());
+            amt = new BigDecimal(minutes).divide(new BigDecimal(parkStepFee.getEndMin()),RoundingMode.DOWN).multiply(parkStepFee.getAmt());
+            minutes = minutes % parkStepFee.getEndMin();
+            parkStepFee = parkStepFeeDao.findOneByParkAndCarTypeAndStartMinLessThanEqualAndEndMinGreaterThanEqual(
                     park, car.getCarType(), minutes, minutes);
             if (null == parkStepFee)
             {
                 throw new BusinessException(String.format("停车场  %s 阶梯费用配置错误, 缺少: %s 车  %d 分钟收费配置", 
                         park.getName(), car.getCarType().getText(), minutes));
             }
-            amt = parkStepFee.getAmt();
+            amt = amt.add(parkStepFee.getAmt());
         }
         //固定费率
         else if (park.getChargeType().equals(ChargeType.fixed))
@@ -1238,13 +1295,15 @@ public class OrderService
     public void wxPaySuccess(WxPayNotifyParam wxPayNotifyParam) throws BusinessException
     {
         //找到付款订单
-        Order order = orderDao.findOneByCode(wxPayNotifyParam.getOutTradeNo());
+        Order order = orderDao.findOneByPayCode(wxPayNotifyParam.getOutTradeNo());
         if (null == order)
         {
+            logger.info(String.format("无效的订单号:%s", wxPayNotifyParam.getOutTradeNo()));
             return;
         }
-        if (!order.getStatus().equals(OrderStatus.needToPay))  //已经处理过付款通知(微信会重复推送同一张订单的付款通知)
+        if (!canBePay(order))  //已经处理过付款通知(微信会重复推送同一张订单的付款通知)
         {
+            logger.info(String.format("订单: %s 无需支付", order.getCode()));
             return;
         }
         //修改订单状态
@@ -1317,7 +1376,37 @@ public class OrderService
     }
     
     /**
+     * 是否使用老月票价格进行续费
+     * @param oldTkt 老的月票订单
+     * @param placeType 新的车位类型
+     * @return
+     */
+    private boolean useOldTktPrice(Order oldTkt, PlaceType placeType)
+    {
+        //老订单有值
+        if (null == oldTkt)
+        {
+            return false;
+        }
+        
+        //停车场设置,非灵活月票价格
+        if (!oldTkt.getPark().getMonthlyMode().equals(MonthlyMode.noFix))
+        {
+            return false;
+        }
+        
+        //车位类型新老一致
+        if (!oldTkt.getPlaceTye().equals(placeType))
+        {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
      * 计算月票价格
+     * @param oldTkt 被续费的订单
      * @param park 停车场
      * @param car 车辆
      * @param dateTimeStart 开始时间
@@ -1325,39 +1414,47 @@ public class OrderService
      * @return
      * @throws BusinessException 
      */
-    private BigDecimal calMonthlyTktAmt(Park park, Car car, PlaceType placeType, Date startDate, Date endDate) throws BusinessException
+    private BigDecimal calMonthlyTktAmt(Order oldTkt, Park park, Car car, PlaceType placeType, Date startDate, Date endDate) throws BusinessException
     {
         BigDecimal amt = BigDecimal.ZERO;
         BigDecimal price = BigDecimal.ZERO;
-        if (placeType.equals(PlaceType.ground))
+        if (useOldTktPrice(oldTkt, placeType)) // 老月票续费并且车位类型相同,根据老订单取价格
         {
-            if (!park.getHasGroundPlace())
+            price = oldTkt.getMonthlyPrice();
+        }
+        else
+        {
+            if (placeType.equals(PlaceType.ground))
             {
-                throw new BusinessException(String.format("该停车场不支持 %s 车位", placeType.getText()));
+                if (!park.getHasGroundPlace())
+                {
+                    throw new BusinessException(String.format("该停车场不支持 %s 车位", placeType.getText()));
+                }
+                price = park.getFuelGroundMonthlyPrice(); //默认按照燃油车计费
+                if (car.getCarType().equals(CarType.newEnergy))
+                {
+                    price = park.getNewEnergyGroundMonthlyPrice();
+                }
             }
-            price = park.getFuelGroundMonthlyPrice(); //默认按照燃油车计费
+            else
+            {
+                if (!park.getHasUndergroundPlace())
+                {
+                    throw new BusinessException(String.format("该停车场不支持 %s 车位", placeType.getText()));
+                }
+                price = park.getFuelUndergroundMonthlyPrice(); //默认按照燃油车计费
+                if (car.getCarType().equals(CarType.newEnergy))
+                {
+                    price = park.getNewEnergyUndergroundMonthlyPrice();
+                }
+            }
+            park.getFuelGroundMonthlyPrice(); //默认按照燃油车计费
             if (car.getCarType().equals(CarType.newEnergy))
             {
                 price = park.getNewEnergyGroundMonthlyPrice();
             }
         }
-        else
-        {
-            if (!park.getHasUndergroundPlace())
-            {
-                throw new BusinessException(String.format("该停车场不支持 %s 车位", placeType.getText()));
-            }
-            price = park.getFuelUndergroundMonthlyPrice(); //默认按照燃油车计费
-            if (car.getCarType().equals(CarType.newEnergy))
-            {
-                price = park.getNewEnergyUndergroundMonthlyPrice();
-            }
-        }
-        park.getFuelGroundMonthlyPrice(); //默认按照燃油车计费
-        if (car.getCarType().equals(CarType.newEnergy))
-        {
-            price = park.getNewEnergyGroundMonthlyPrice();
-        }
+        
         
         //开始结束时间
         DateTime dateTimeStart = new DateTime(startDate);
@@ -1388,18 +1485,19 @@ public class OrderService
      */
     public BigDecimal inqueryMonthlyTkt(MonthlyTktParam monthlyTktParam) throws BusinessException
     {
-        //找到停车场
-        Park park = parkService.findOneById(monthlyTktParam.getParkId());
-        if (null == park)
+        Order oldTkt = null;
+        Park park = null;
+        Car car = null;
+        if (null != monthlyTktParam.getOrderId())
         {
-            throw new BusinessException(String.format("无效的停车场Id: %d", monthlyTktParam.getParkId()));
+            oldTkt = findOneByOrderId(monthlyTktParam.getOrderId());
+            park = oldTkt.getPark();
+            car = oldTkt.getCar();
         }
-        
-        //找到车辆
-        Car car = carService.findOneById(monthlyTktParam.getCarId());
-        if (null == car)
+        else
         {
-            throw new BusinessException(String.format("无效的车辆Id: %d", monthlyTktParam.getCarId()));
+            park = parkService.findOneById(monthlyTktParam.getParkId());
+            car = carService.findOneById(monthlyTktParam.getCarId());
         }
         
         checkMonthlyTktDate(monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
@@ -1410,7 +1508,7 @@ public class OrderService
             throw new BusinessException("请勿重复购买月票");
         }
         
-        return calMonthlyTktAmt(park, car, monthlyTktParam.getPlaceType(), monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
+        return calMonthlyTktAmt(oldTkt, park, car, monthlyTktParam.getPlaceType(), monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
     }    
     
     /**
@@ -1455,18 +1553,26 @@ public class OrderService
      */
     public OrderVo createMonthlyTkt(MonthlyTktParam monthlyTktParam, String userName) throws BusinessException
     {
-        User owner = userService.findByName(userName);
-        Park park = parkService.findOneById(monthlyTktParam.getParkId());
-        
-        //找到车辆
-        Car car = carService.findOneById(monthlyTktParam.getCarId());
-        if (null == car)
+        Order oldTkt = null;
+        User owner = null;
+        Park park = null;
+        Car car = null;
+        if (null != monthlyTktParam.getOrderId())
         {
-            throw new BusinessException(String.format("无效的车辆Id: %d", monthlyTktParam.getCarId()));
+            oldTkt = findOneByOrderId(monthlyTktParam.getOrderId());
+            owner = oldTkt.getOwner();
+            park = oldTkt.getPark();
+            car = oldTkt.getCar();
+        }
+        else
+        {
+            owner = userService.findByName(userName);
+            park = parkService.findOneById(monthlyTktParam.getParkId());
+            car = carService.findOneById(monthlyTktParam.getCarId());
         }
         
         //检查月票订单参数
-        this.checkMonthlyTktDate(monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
+        //this.checkMonthlyTktDate(monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
         
         //检查是否有重复的月票订单
         if (this.existsValidMonthlyTkt(car, park, monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate()))
@@ -1475,7 +1581,7 @@ public class OrderService
         }
         
         String code = util.makeCode(OrderType.monthlyTicket);
-        BigDecimal amt = this.calMonthlyTktAmt(park, car, monthlyTktParam.getPlaceType(), monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
+        BigDecimal amt = this.calMonthlyTktAmt(oldTkt, park, car, monthlyTktParam.getPlaceType(), monthlyTktParam.getStartDate(), monthlyTktParam.getEndDate());
         
         //创建订单
         Order order = Order.builder()
@@ -1511,6 +1617,7 @@ public class OrderService
         //创建订单
         Order order = Order.builder()
                 .code(code)
+                .payCode(code)
                 .amt(walletChargeParam.getAmt())
                 .realUnpayedAmt(walletChargeParam.getAmt())
                 .type(OrderType.walletIn)
@@ -1559,6 +1666,7 @@ public class OrderService
         //创建订单
         Order order = Order.builder()
                 .code(code)
+                .payCode(code)
                 .amt(activeCouponParam.getAmt())
                 .realUnpayedAmt(activeCouponParam.getAmt())
                 .activatedCoupon(coupon)
@@ -1644,7 +1752,7 @@ public class OrderService
      * @param order
      * @return
      */
-    private boolean canBePay(Order order, Date now) 
+    private boolean canBePay(Order order) 
     {
         //需要付款
         if (order.getStatus().equals(OrderStatus.needToPay))  
@@ -1659,6 +1767,7 @@ public class OrderService
         }
         
         //已经付过款，但是超过了出场时间限制(提前付款超时未出场)
+        Date now = new Date();
         if (order.getStatus().equals(OrderStatus.payed) && now.after(order.getOutTimeLimit()))
         {
             return true;
@@ -1681,7 +1790,7 @@ public class OrderService
             throw new BusinessException(String.format("无效的订单Id: %d", payParam.getOrderId()));
         }
         //检查订单状态
-        if (!canBePay(order, new Date()))
+        if (!canBePay(order))
         {
             throw new BusinessException(String.format("订单: %s 无需支付", order.getCode()));
         }
@@ -1693,6 +1802,17 @@ public class OrderService
             throw new BusinessException(String.format("无效的用户: %d", payerName));
         }
         order.setOwner(payer);
+        
+        //PayCode 为了防止提前支付停车订单超时后，由于单号重复无法微信支付的问题
+        if (0 == order.getOrderPayments().size())
+        {
+            order.setPayCode(order.getCode());
+        }
+        else
+        {
+            order.setPayCode(String.format("%s-%d", order.getCode(), order.getOrderPayments().size()));
+        }
+        this.save(order);
         
         return wxCmpt.unifiedOrder(order);
     }
@@ -1720,7 +1840,7 @@ public class OrderService
         order.setOwner(payer);
         
         //检查订单状态
-        if (!canBePay(order, new Date()))
+        if (!canBePay(order))
         {
             throw new BusinessException(String.format("订单: %s 无需支付", order.getCode()));
         }
@@ -1750,7 +1870,7 @@ public class OrderService
     public void quickPayByWallet(Order order) throws Exception
     {
         //检查订单状态
-        if (!canBePay(order, new Date()))
+        if (!canBePay(order))
         {
             throw new BusinessException(String.format("订单: %s 无需支付", order.getCode()));
         }
@@ -1847,17 +1967,6 @@ public class OrderService
         Date today = new DateTime().withTimeAtStartOfDay().toDate();
         return orderDao.countByOwnerAndTypeAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
                 owner, OrderType.monthlyTicket, OrderStatus.payed, today, today);
-    }
-    
-    /**
-     * 设置车辆是否抬杆出场
-     * @param order
-     * @throws BusinessException 
-     */
-    public void setOut(Order order, boolean isOut) throws BusinessException
-    {
-        order.setIsOut(isOut);
-        this.save(order);
     }
     
     /**
@@ -2114,5 +2223,16 @@ public class OrderService
         
         //记录备注
         this.save(order);
+    }
+    
+    /**
+     * 找到即将过期的月票
+     * @return
+     */
+    public List<Order> findExpiringMonthlyTkt()
+    {
+        DateTime now = new DateTime();
+        DateTime endDate = now.withMillisOfDay(0).plusDays(EXPIRED_DAYS); //提前7天发过期提醒
+        return orderDao.findExpiringMonthlyTkt(endDate.toDate());
     }
 }

@@ -16,7 +16,7 @@ public class LogAspect
 {
     private final static Logger logger = LoggerFactory.getLogger(LogAspect.class);
      
-    @Pointcut("execution(* com.kl.parkLine.controller..*.*(..)) && !execution(* com.kl.parkLine.controller.BoyueController.comet(..)) ")
+    @Pointcut("execution(* com.kl.parkLine.controller..*.*(..)) && !execution(* com.kl.parkLine.controller.BoyueController.*(..))")
     //@Pointcut("execution(* com.kl.parkLine.controller..*.*(..))")
     public void log()
     {}
@@ -61,9 +61,7 @@ public class LogAspect
             logger.info(sb.toString());
         } catch (Throwable e) {
             //异常
-            e.printStackTrace();
-            sb.append(String.format("Exception: %s", e.getStackTrace().toString()));
-            logger.error(sb.toString());
+            logger.error(sb.toString() + ", Exception", e);
             if (e instanceof BusinessException)
             {
                 result = RestResult.failed(((BusinessException) e).getRetCode(), e.getMessage());

@@ -51,7 +51,7 @@ public class CarController
     @PostMapping("/bind")
     @ApiOperation(value="将车牌绑定到当前登录用户", notes="一个用户可以绑定多个车牌，但是一个车牌只能绑定到一个用户，必须先将车牌解绑后，才能绑定到新的用户")
     @ApiImplicitParam(name="Authorization", value="登录令牌", required=true, paramType="header")
-    public RestResult<CarVo> bind(@ApiParam(name="车牌号码", required=true) @RequestBody(required=true) CarParam bindCarParam, 
+    public RestResult<CarVo> bind(@ApiParam(name="车辆参数", required=true) @RequestBody(required=true) CarParam bindCarParam, 
             Authentication auth) throws BusinessException
     {
       //将车辆绑定到当前用户

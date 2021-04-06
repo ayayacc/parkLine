@@ -11,9 +11,12 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@ApiModel("绑定或解绑车辆参数")
+@ApiModel("车辆参数")
 public class CarParam
 {
+    @ApiModelProperty(required = true, name="车辆Id")
+    private Integer carId;
+    
     @ApiModelProperty(required = true, name="车牌号码")
     private String carNo;
     

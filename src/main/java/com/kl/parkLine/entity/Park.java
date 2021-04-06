@@ -29,6 +29,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.alibaba.fastjson.annotation.JSONField;
 import com.kl.parkLine.annotation.NeedToCompare;
 import com.kl.parkLine.enums.ChargeType;
+import com.kl.parkLine.enums.MonthlyMode;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -143,6 +144,13 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     @Column(name = "charge_type", nullable = false, columnDefinition = "varchar(64) comment '计费类型: 固定计费/阶梯计费'")
     @Enumerated(EnumType.STRING)
     private ChargeType chargeType;
+    
+    /**
+     * 月票计费类型: 固定模式/无固定模式
+     */
+    @Column(name = "monthly_mode", nullable = false, columnDefinition = "varchar(64) default 'fix' comment '月票计费类型: 固定模式/无固定模式'")
+    @Enumerated(EnumType.STRING)
+    private MonthlyMode monthlyMode;
 
     /**
      * 白名单
@@ -299,8 +307,7 @@ public class Park extends AbstractDateEntity implements java.io.Serializable
     /**
      * 操作记录
      */
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade =
-    { CascadeType.ALL })
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "park", cascade = { CascadeType.ALL })
     @OrderBy(value = "createdDate desc")
     @JSONField(serialize = false)
     private List<ParkLog> logs;

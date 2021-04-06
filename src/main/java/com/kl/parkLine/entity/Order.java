@@ -76,6 +76,12 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     private String code;
     
     /**
+     * 订单微信付款编号
+     */
+    @Column(name = "pay_code",unique = true, length = 128, columnDefinition="varchar(128) comment '订单微信付款编号,每次付款会自动更新,避免提前支付的停车订单超时后无法继续支付'")
+    private String payCode;
+    
+    /**
      * 订单类型: 停车订单/月票订单/优惠券激活订单/钱包充值订单
      */
     @Enumerated(EnumType.STRING)
@@ -202,6 +208,8 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
     @Column(name = "place_type", columnDefinition="varchar(16) comment '订单类型:ground(地面)/underground(地下)'")
     private PlaceType placeTye;
     
+    
+    
     /*优惠券激活订单特有字段*/
     /**
      * 被激活的优惠券
@@ -257,6 +265,12 @@ public class Order extends AbstractDateEntity implements java.io.Serializable, C
      */
     @Column(name = "real_payed_amt", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '使用优惠券后实际已付金额(元)'")
     private BigDecimal realPayedAmt;
+    
+    /**
+     * 月票单价
+     */
+    @Column(name = "monthly_price", precision = 15 ,scale = 2, columnDefinition="decimal(15,2) comment '月票单价(元)'")
+    private BigDecimal monthlyPrice;
     
     /**
      * 最后一次付款时间

@@ -69,7 +69,7 @@ public class BoyueEventAdapter implements IEventAdapter<BoyueEvent, BoyueResp>
     
     //博粤开闸
     private final String BOYUE_OPEN = "ok";
-    private final String BOYUE_NOT_OPEN = "notok";
+    private final String BOYUE_NOT_OPEN = "notopen";
     
     private String TIME_STAMP = "`Y-`M-`D `g星期`V `r`H:`N:`S";
     
@@ -139,8 +139,7 @@ public class BoyueEventAdapter implements IEventAdapter<BoyueEvent, BoyueResp>
             }
             catch (IOException e)
             {
-                logger.error(String.format("图片上传阿里云失败:%s", e.getMessage()));
-                e.printStackTrace();
+                logger.error("图片上传阿里云失败:", e);
             }
         }
         

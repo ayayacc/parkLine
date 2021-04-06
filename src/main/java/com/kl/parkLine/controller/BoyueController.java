@@ -2,6 +2,8 @@ package com.kl.parkLine.controller;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -9,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONException;
 import com.kl.parkLine.boyue.BoyueEvent;
 import com.kl.parkLine.boyue.BoyueResp;
 import com.kl.parkLine.boyue.BoyueRespWrap;
@@ -23,6 +27,8 @@ import com.kl.parkLine.service.OrderService;
 @RequestMapping(value="/boyue", produces="application/json;charset=utf-8")
 public class BoyueController
 {
+    private final Logger logger = LoggerFactory.getLogger(BoyueController.class);
+    
     @Autowired
     private BoyueEventAdapter eventAdatper;
     
@@ -41,8 +47,24 @@ public class BoyueController
      * @throws NoSuchFieldException 
      */
     @PostMapping("/plateNotify")
-    public BoyueRespWrap plateNotify(@RequestBody BoyueEvent boyueEvent) throws IOException
+    public BoyueRespWrap plateNotify(@RequestBody String body) throws IOException
     {
+        logger.info("plateNotify");
+        //存在一体机发来的消息不是完整json的情况，所以需要自行处理后转换
+        BoyueEvent boyueEvent = null;
+        try
+        {
+            boyueEvent = JSON.parseObject(body, BoyueEvent.class);
+        }
+        catch (JSONException e)
+        {
+            logger.error(String.format("异常JSON: %s", body, e.getMessage()));
+            StringBuffer sbBody = new StringBuffer(body).append("\"}}}}");
+            body = sbBody.toString();
+            boyueEvent = JSON.parseObject(body, BoyueEvent.class);
+        }
+        
+        logger.info(String.format("boyueEvent=%s", boyueEvent));
         BoyueResp resp = null;
         Event event = null;
         try
@@ -64,6 +86,8 @@ public class BoyueController
         catch (Exception e)
         {
             //发生异常，开闸
+            logger.error(String.format("异常开闸:%s", body));
+            logger.error("Exception:", e);
             resp = eventAdatper.failedResp(e.getMessage());
             if (null != event)
             {
@@ -74,6 +98,7 @@ public class BoyueController
         
         BoyueRespWrap boyueRespWrap = new BoyueRespWrap();
         boyueRespWrap.setBoyueResp(resp);
+        logger.info(String.format("boyueRespWrap=%s", boyueRespWrap));
         return boyueRespWrap;
     }
     
@@ -100,6 +125,8 @@ public class BoyueController
         {
             //发生异常，开闸
             resp = eventAdatper.failedResp(e.getMessage());
+            logger.error(String.format("异常开闸:%s", serialno));
+            logger.error("Exception: ", e);
         }
         
         BoyueRespWrap boyueRespWrap = new BoyueRespWrap();

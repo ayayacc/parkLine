@@ -327,8 +327,10 @@ public class UserService
     {
         User user = findByName(userName);
         String text = utils.decrypt(user.getWxSessionKey(), decryptionParam.getIv(), decryptionParam.getEncryptedData());
-        
-        return JSON.parseObject(text, DecryptionPhoneNoResult.class);
+        DecryptionPhoneNoResult result = JSON.parseObject(text, DecryptionPhoneNoResult.class);
+        user.setMobile(result.getPurePhoneNumber());
+        this.save(user);
+        return result;
     }
     
     /**
@@ -352,7 +354,7 @@ public class UserService
         wxGzhResp = WxGzhMsg.builder().createTime((int) (now.getTime()/1000))
                 .msgType("text").fromUserName(wxGzhMsg.getToUserName())
                 .toUserName(wxGzhMsg.getFromUserName())
-                .content("Hi，感谢关注停车线！\n用停车线，超多停车场供您选择\n线上缴费不排队，无感支付畅通行\n空余车位实时显，计费标准实时更\n停车线，做您的停车好助手")
+                .content("欢迎您关注停车线！\n用停车线，停车场即在您身边，方便您的出行停车。\n\n缴费流程：\n\n①点击下方菜单栏【停车服务】中的“马上缴费”；\n\n②进入停车线小程序；\n\n③一键登录后，绑定车牌信息；\n\n④支付停车费用后，即可快速离场。\n\n<a data-miniprogram-appid=\"wx2ec5535c6fc7cb67\" data-miniprogram-path=\"pages/base_redirect/base_redirect?to=1\">点击立即交费</a>")
                 .build();
         //保存微信用户
         setupUser(wxUserInfo);

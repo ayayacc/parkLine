@@ -138,7 +138,6 @@ public class UserController
     {
         userService.checkValidCode(auth.getName(), smsCheckParam);
         return RestResult.success();
-        
     }
     
     @GetMapping("/isMobileBinded")

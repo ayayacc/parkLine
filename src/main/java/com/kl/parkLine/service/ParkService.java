@@ -23,6 +23,7 @@ import com.kl.parkLine.component.Utils;
 import com.kl.parkLine.dao.IParkDao;
 import com.kl.parkLine.entity.Order;
 import com.kl.parkLine.entity.Park;
+import com.kl.parkLine.entity.ParkFixedFee;
 import com.kl.parkLine.entity.ParkLog;
 import com.kl.parkLine.entity.ParkStepFee;
 import com.kl.parkLine.enums.ChargeType;
@@ -73,32 +74,59 @@ public class ParkService
      */
     public List<ParkLocationVo> findNearby(Point centerPoint, Double distanceKm) throws ParseException
     {
-        //找到附近停车场
+        //找到附近自营停车场
         List<Map<String, Object>> rows = parkDao.findNearby(centerPoint, distanceKm);
-        
         List<ParkLocationVo> ret = new ArrayList<>();
         //遍历所有结果行
         for (Map<String, Object> row : rows)
         {
+            StringBuffer feeRules = new StringBuffer();
             Integer freeTimeMin = 0;
             Park park = this.findOneByCode(row.get("code").toString());
             if (park.getChargeType().equals(ChargeType.fixed))
             {
-                freeTimeMin = park.getFuelFixedFee().getFreeTime();
+                //燃油车
+                feeRules.append("燃油车：\n");
+                ParkFixedFee fixedFee = park.getFuelFixedFee();
+                freeTimeMin = fixedFee.getFreeTime();
+                feeRules.append(formatFixFee(fixedFee));
+                
+                //新能源车
+                fixedFee = park.getFuelFixedFee();
+                if (null != fixedFee)
+                {
+                    feeRules.append("\n新能源：\n");
+                    feeRules.append(formatFixFee(fixedFee));
+                }
             }
             else
             {
-                for (ParkStepFee parkSetpFee : park.getFuelStepFees())
+                //燃油车
+                for (ParkStepFee parkStepFee : park.getFuelStepFees())
                 {
-                    if (parkSetpFee.getAmt().setScale(0).equals(BigDecimal.ZERO))
+                    if (parkStepFee.getAmt().setScale(0).equals(BigDecimal.ZERO))
                     {
-                        freeTimeMin = parkSetpFee.getEndMin();
-                        break;
+                        freeTimeMin = parkStepFee.getEndMin();
                     }
+                    feeRules.append("燃油车：\n");
+                    feeRules.append(formatSteoFee(parkStepFee));
+                }
+                
+                //新能源车
+                for (ParkStepFee parkStepFee : park.getNewEnergyStepFees())
+                {
+                    feeRules.append("新能源：\n");
+                    feeRules.append(formatSteoFee(parkStepFee));
                 }
             }
                 
             //获取自运营停车场数据
+            
+            String monthlyTktRemark = "";
+            if (null != row.get("monthly_tkt_remark"))
+            {
+                monthlyTktRemark = row.get("monthly_tkt_remark").toString();
+            }
             Geometry geometry = wktReader.read(row.get("geotext").toString());
             Point point = geometry.getInteriorPoint();
             ParkLocationVo nearByParkVo = ParkLocationVo.builder().parkId((Integer)row.get("park_id"))
@@ -116,6 +144,15 @@ public class ParkService
                     .distance((Double)row.get("dist"))
                     .freeTimeMin(freeTimeMin)
                     .address(row.get("address").toString())
+                    .chargeType(ChargeType.valueOf(row.get("charge_type").toString()))
+                    .fuelFixedFee(park.getFuelFixedFee())
+                    .newEnergyFixedFee(park.getNewEnergyFixedFee())
+                    .fuelStepFees(park.getFuelStepFees())
+                    .newEnergyStepFees(park.getNewEnergyStepFees())
+                    .feeRules(feeRules.toString())
+                    .monthlyTktRemark(monthlyTktRemark)
+                    .hasGroundPlace((Boolean)row.get("has_ground_place"))
+                    .hasUndergroundPlace((Boolean)row.get("has_underground_place"))
                     .build();
             
             ret.add(nearByParkVo);
@@ -145,6 +182,21 @@ public class ParkService
         }
         
         return ret;
+    }
+    
+    private String formatFixFee(ParkFixedFee parkFixedFee)
+    {
+        return String.format("%d分钟内免费，每%d分钟收费%.2f元, %d小时内，最高%.2f元", 
+                parkFixedFee.getFreeTime(), parkFixedFee.getFeePeriod(),
+                parkFixedFee.getPrice().floatValue(), parkFixedFee.getMaxPeriod(),
+                parkFixedFee.getMaxAmt().floatValue());
+    }
+    
+    private String formatSteoFee(ParkStepFee parkStepFee)
+    {
+        return String.format("%d分钟---%d分钟收费%.2f元\n", 
+                parkStepFee.getStartMin(), parkStepFee.getEndMin(),
+                parkStepFee.getAmt().floatValue());
     }
     
     public Park findOneById(Integer parkId) throws BusinessException

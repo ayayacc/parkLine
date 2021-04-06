@@ -26,6 +26,9 @@ public class MonthlyTktParam
     @ApiModelProperty(required = true, name = "车位类型:ground(地面)/underground(地下)")
     private PlaceType placeType;
     
+    @ApiModelProperty(required = true, name = "正在续费的月票Id")
+    private Integer orderId;
+    
     /**
      * 有效期开始时间
      */
