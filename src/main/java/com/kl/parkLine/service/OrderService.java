@@ -738,7 +738,7 @@ public class OrderService
                 String line3 = String.format("停车%d小时%d分", 
                         period.getHours(), period.getMinutes());
                 String line4 = String.format("%.2f元", 
-                        order.getAmt().floatValue());
+                        order.getRealUnpayedAmt().floatValue());
                 //用户开通了无感支付
                 if (null!=order.getOwner() && order.getOwner().getIsQuickPay())
                 {
@@ -815,7 +815,7 @@ public class OrderService
                 String line3 = String.format("停车%d小时%d分", 
                         period.getHours(), period.getMinutes());
                 String line4 = String.format("%.2f元", 
-                        order.getAmt().floatValue());
+                        order.getRealUnpayedAmt().floatValue());
                 if (order.getStatus().equals(OrderStatus.needToPay))  //产生新的费用
                 {
                     //BigDecimal unPayedAmt = order.getAmt().subtract(order.getPayedAmt());
@@ -859,8 +859,7 @@ public class OrderService
                                 .line2(event.getPlateNo())
                                 .line3(String.format("超时%d小时%d分", 
                                         period.getHours(), period.getMinutes()))
-                                .line4(String.format("%.2f元", 
-                                        order.getAmt().floatValue()))
+                                .line4(line4)
                                 .dr((byte) 0)
                                 .voice(String.format("%s,请交费%s", event.getPlateNo(),line4))
                                 .build());
@@ -2164,6 +2163,7 @@ public class OrderService
         order.setRemark(xjPayParam.getRemark());
         order.setCashPayee(xjPayParam.getPayee());
         order.appedChangeRemark(String.format("现金收款人: %s", xjPayParam.getPayee()));
+        order.setIsOut(true);
         //记录备注
         this.save(order);
     }
