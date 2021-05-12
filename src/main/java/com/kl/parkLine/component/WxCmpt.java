@@ -142,6 +142,10 @@ public class WxCmpt
      */
     public WxSendMsgResult sendMonthlyTktExpireNote(Order order) throws BusinessException
     {
+        if (null == order.getOwner())
+        {
+            throw new BusinessException(String.format("月票Id: %d 无拥有者信息", order.getOrderId()));
+        }
         if (StringUtils.isEmpty(order.getOwner().getWxGzhOpenId())
                 ||order.getOwner().getSubscribe().equalsIgnoreCase("N"))
         {

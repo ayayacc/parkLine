@@ -1,6 +1,7 @@
 package com.kl.parkLine.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -11,6 +12,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.joda.time.Days;
+import org.joda.time.LocalDate;
 import org.joda.time.Minutes;
 import org.joda.time.Period;
 import org.joda.time.PeriodType;
@@ -290,6 +293,10 @@ public class OrderServiceTest
         order.setOutTime(outTime);
         minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
         assertEquals(4*24*60+60, minutes);
+        
+        order = orderService.findOneByOrderId(53048);
+        minutes = orderService.getParkingMinutes(order, new DateTime(order.getOutTime()));
+        assertEquals(0, minutes);
     }
     
     @Test
@@ -315,6 +322,17 @@ public class OrderServiceTest
         startPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:00:10"));
         endPoint = new DateTime(simpleDateFormat.parse("2021-01-10 10:01:18"));
         assertEquals(1, Minutes.minutesBetween(startPoint, endPoint).getMinutes());
+    }
+    
+    @Test
+    public void testDaysBetween() throws ParseException
+    {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        DateTime startPoint = new DateTime(simpleDateFormat2.parse("2021-04-29 10:12:48"));
+        DateTime endPoint = new DateTime(simpleDateFormat.parse("2021-04-30"));
+        int days = Days.daysBetween(new LocalDate(startPoint), new LocalDate(endPoint)).getDays();
+        assertEquals(0, days);
     }
     
     //固定费率燃油车订单
@@ -827,5 +845,12 @@ public class OrderServiceTest
     {
         Order order = orderService.findOneByOrderId(150);
         orderService.setAmtAndOutTimeLimit(order);
+    }
+    
+    @Test
+    public void testCompare() throws BusinessException
+    {
+        Order order = orderService.findOneByOrderId(70908);
+        assertTrue(0 > order.getPayedAmt().compareTo(order.getAmt()));
     }
 }

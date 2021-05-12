@@ -24,7 +24,7 @@ import com.kl.parkLine.vo.OrderVo;
 public interface IOrderDao extends JpaRepository<Order, Integer>, QuerydslPredicateExecutor<OrderVo>
 {
     public Order findOneByActId(String actId);
-    public List<Order> findByTypeAndCarAndParkAndStatusOrderByStartDate(OrderType orderType, Car car, Park park, OrderStatus status);
+    public List<Order> findByTypeAndCarAndParkAndStatusInOrderByStartDate(OrderType orderType, Car car, Park park, List<OrderStatus> status);
     public Order findTopByTypeAndCarAndParkAndStatusAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByEndDateDesc(OrderType type, Car car, Park park, OrderStatus status, Date endDate, Date startDate);
     public Order findTopByTypeAndCarAndParkOrderByEndDateDesc(OrderType type, Car car, Park park);
     public Order findTopByPlateIdOrderByInTimeDescCreatedDateDesc(Integer plateId);

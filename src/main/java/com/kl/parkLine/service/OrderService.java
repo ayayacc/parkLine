@@ -14,6 +14,7 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.joda.time.Days;
+import org.joda.time.LocalDate;
 import org.joda.time.Minutes;
 import org.joda.time.Period;
 import org.joda.time.PeriodType;
@@ -149,6 +150,9 @@ public class OrderService
     //已经完成的订单状态
     private final List<OrderStatus> completedStauts = new ArrayList<OrderStatus>();
     
+    //可用于减免停车时间的月票状态
+    private final List<OrderStatus> usefulMonthlyTktStatus = new ArrayList<OrderStatus>();
+    
     public OrderService()
     {
         //检查重复订单包含的状态: 存在等待付款和已经付款的月票订单时，不能再次创建重复的月票
@@ -157,6 +161,10 @@ public class OrderService
         //已经完成的订单状态：已经付款的或者无需支付的
         completedStauts.add(OrderStatus.payed);
         completedStauts.add(OrderStatus.noNeedToPay);
+        
+        //月票可用状态包含过期的，避免入场后，系统自动过期月票导致多收入场时间费用
+        usefulMonthlyTktStatus.add(OrderStatus.payed);
+        usefulMonthlyTktStatus.add(OrderStatus.expired);
     }  
     
     /**
@@ -304,6 +312,10 @@ public class OrderService
             if (!arrivedGate(order)) //车辆未到达道闸,提前支付
             {
                 setAmtAndOutTimeLimit(order);
+                if (0 < order.getRealUnpayedAmt().compareTo(BigDecimal.ZERO))
+                {
+                    order.setStatus(OrderStatus.needToPay);
+                }
                 save(order);
             }
             orderVo = OrderVo.builder().orderId(order.getOrderId())
@@ -606,7 +618,7 @@ public class OrderService
             DateTime endDate = new DateTime(monthlyTck.getEndDate());
             order.setUsedMonthlyTkt(monthlyTck);
             //月租车提示
-            int nDay = Days.daysBetween(now, endDate).getDays();
+            int nDay = Days.daysBetween(new LocalDate(now), new LocalDate(endDate)).getDays();
             eventResult = EventResult.open(ContentLines.builder()
                     .line1(Const.TIME_STAMP)
                     .line2("欢迎光临")
@@ -708,7 +720,7 @@ public class OrderService
                 Order monthlyTkt = order.getUsedMonthlyTkt();
                 if (null != monthlyTkt)
                 {
-                    int nDay = Days.daysBetween(new DateTime(now), new DateTime(monthlyTkt.getEndDate())).getDays();
+                    int nDay = Days.daysBetween( new LocalDate(now), new LocalDate(monthlyTkt.getEndDate())).getDays();
                     eventResult = EventResult.open(ContentLines.builder()
                             .line1(Const.TIME_STAMP)
                             .line2("一路平安")
@@ -995,7 +1007,7 @@ public class OrderService
     {
         //月票
         //找到车子在该停车场的有效月票
-        List<Order> monthlyTkts = orderDao.findByTypeAndCarAndParkAndStatusOrderByStartDate(OrderType.monthlyTicket, order.getCar(), order.getPark(), OrderStatus.payed);
+        List<Order> monthlyTkts = orderDao.findByTypeAndCarAndParkAndStatusInOrderByStartDate(OrderType.monthlyTicket, order.getCar(), order.getPark(), usefulMonthlyTktStatus);
         List<TimePoint> timePoints = new ArrayList<>();
         for (Order monthlyTkt : monthlyTkts)
         {
@@ -2114,7 +2126,12 @@ public class OrderService
         {
             throw new BusinessException("入场时间为空");
         }
-        order.setOutTime(calOrderAmtParam.getOutTime());
+        
+        //以摄像头识别时间为准
+        if (null == order.getOutTime())
+        {
+            order.setOutTime(calOrderAmtParam.getOutTime());
+        }
         this.setAmtAndOutTimeLimit(order);
         this.save(order);
         return CalOrderAmtResult.builder().amt(order.getAmt()).build();
