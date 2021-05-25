@@ -58,7 +58,7 @@ public class BoyueController
         }
         catch (JSONException e)
         {
-            logger.error(String.format("异常JSON: %s", body, e.getMessage()));
+            logger.error(String.format("异常JSON: %s", e.getMessage()));
             StringBuffer sbBody = new StringBuffer(body).append("\"}}}}");
             body = sbBody.toString();
             boyueEvent = JSON.parseObject(body, BoyueEvent.class);

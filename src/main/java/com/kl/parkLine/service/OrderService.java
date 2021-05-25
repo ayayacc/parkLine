@@ -1006,8 +1006,9 @@ public class OrderService
     public Integer getParkingMinutes(Order order, DateTime outTime)
     {
         //月票
-        //找到车子在该停车场的有效月票
-        List<Order> monthlyTkts = orderDao.findByTypeAndCarAndParkAndStatusInOrderByStartDate(OrderType.monthlyTicket, order.getCar(), order.getPark(), usefulMonthlyTktStatus);
+        //找到车子在该停车场的有效月票 EndDateNotBeforeInTime
+        Date inTimeZero = new DateTime(order.getInTime()).withMillisOfDay(0).toDate(); 
+        List<Order> monthlyTkts = orderDao.findByTypeAndCarAndParkAndEndDateGreaterThanEqualAndStatusInOrderByStartDate(OrderType.monthlyTicket, order.getCar(), order.getPark(), inTimeZero, usefulMonthlyTktStatus);
         List<TimePoint> timePoints = new ArrayList<>();
         for (Order monthlyTkt : monthlyTkts)
         {
@@ -1041,11 +1042,13 @@ public class OrderService
         Collections.sort(timePoints);
         Integer minutes = 0;
         Boolean covering = false;  //是否被月票覆盖中
+        Boolean isIn = false; //是否开始计时
         TimePoint startPoint = null;
         for (TimePoint currentPoint : timePoints)
         {
             if (currentPoint.getKey().equals("inTime"))  //入场点
             {
+                isIn = true;
                 if (!covering) //如果没有被月票覆盖，开始计时
                 {
                     startPoint = currentPoint;
@@ -1063,7 +1066,10 @@ public class OrderService
             else if (currentPoint.getKey().equals("endDate")) //月票终止点
             {
                 covering = false;  //结束被月票覆盖，设置计时开始点
-                startPoint = currentPoint;
+                if (isIn) //此时已经入场才开始计费
+                {
+                    startPoint = currentPoint;
+                }
                 continue;
             }
             else if (currentPoint.getKey().equals("outTime")) //出场点
@@ -1821,7 +1827,8 @@ public class OrderService
         }
         else
         {
-            order.setPayCode(String.format("%s-%d", order.getCode(), order.getOrderPayments().size()));
+            String payCode = String.valueOf(new Date().getTime()) + order.getCode();
+            order.setPayCode(payCode);
         }
         this.save(order);
         

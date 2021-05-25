@@ -294,8 +294,13 @@ public class OrderServiceTest
         minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
         assertEquals(4*24*60+60, minutes);
         
-        order = orderService.findOneByOrderId(53048);
+        order = orderService.findOneByOrderId(72668);
         minutes = orderService.getParkingMinutes(order, new DateTime(order.getOutTime()));
+        assertEquals(0, minutes);
+        
+        order = orderService.findOneByOrderId(79795);
+        outTime = simpleDateFormat.parse("2021-05-18 08:29:53");
+        minutes = orderService.getParkingMinutes(order, new DateTime(outTime));
         assertEquals(0, minutes);
     }
     
